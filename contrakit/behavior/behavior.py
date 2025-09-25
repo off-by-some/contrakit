@@ -251,7 +251,8 @@ class Behavior(BaseBehavior, BehaviorAnalysisMixin):
         # Check for overlapping contexts
         overlapping = set(self.distributions) & set(other.distributions)
         if overlapping:
-            raise ValueError(f"Cannot compare behaviors with overlapping contexts: {sorted(overlapping)}")
+            overlapping_obs = sorted(tuple(ctx.observables) for ctx in overlapping)
+            raise ValueError(f"Cannot compare behaviors with overlapping contexts: {overlapping_obs}")
 
         # Merge distributions. Keys are Context objects already, so
         # construct the combined Behavior directly rather than using

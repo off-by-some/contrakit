@@ -112,7 +112,7 @@ class Behavior:
     def frame_independent(cls, space: Space, contexts: Sequence[Sequence[str]],
                          assignment_weights: Optional[np.ndarray] = None) -> Behavior:
         """Create FI behavior from global assignment distribution."""
-        assignments = space.assignments()
+        assignments = list(space.assignments())
         n = space.assignment_count()
 
         if assignment_weights is None:
@@ -180,7 +180,7 @@ class Behavior:
             behavior = Behavior.from_mu(space, contexts, mu)
         """
         # Get all possible global assignments
-        all_assignments = space.assignments()
+        all_assignments = list(space.assignments())
         expected_length = space.assignment_count()
 
         if len(mu) != expected_length:

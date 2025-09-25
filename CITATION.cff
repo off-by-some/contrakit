@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "A Mathematical Theory of Contradiction — supplementary materials"
+authors:
+  - family-names: Bridges
+    given-names: Cassidy
+    email: cassidybridges@gmail.com
+    website: "https://off-by-some.github.io/web/"
+year: 2025
+date-released: 2025-09-13
+repository-code: "https://github.com/off-by-some/mathematical-theory-of-contradiction"
+url: "https://github.com/off-by-some/mathematical-theory-of-contradiction"
+keywords:
+  - information theory
+  - contradiction bits
+  - perspectival contradiction
+  - paraconsistency
+  - contextuality
+  - theory
+license: CC-BY-4.0
+preferred-citation:
+  type: article
+  title: "A Mathematical Theory of Contradiction"
+  authors:
+    - family-names: Bridges
+      given-names: Cassidy
+  year: 2025
+  notes: "Preprint; cite the paper when published."
+  url: "https://github.com/off-by-some/mathematical-theory-of-contradiction"

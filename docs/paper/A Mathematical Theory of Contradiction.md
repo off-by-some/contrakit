@@ -11,13 +11,13 @@ https://off-by-some.github.io/web/
 
 ## Abstract
 
-We develop an information-theoretic framework for **perspectival contradiction**—situations where multiple legitimate frames yield observations that cannot be reconciled by any single, frame-independent account. From six elementary axioms, we prove inevitability: any admissible contradiction measure must equal
-$$
-K(P)=-\log_2 \alpha^\star(P),\quad \alpha^\star(P)=\max_{Q\in \mathrm{FI}}\;\min_{c}\;\mathrm{BC}\!\big(p_c,q_c\big),
-$$
-where $\mathrm{FI}$ is the frame-independent polytope and $\mathrm{BC}$ is Bhattacharyya affinity. Thus $K$ is the unique scalar (in bits) that vanishes exactly on frame-independent behaviors, is monotone under free operations, and is additive under independent composition. The same $\alpha^\star$ governs fundamental limits across distinct tasks: (i) error exponents for testing real behavior against any unified simulation, (ii) classical resource overheads for simulating multi-context data with a single story, and (iii) irreducible predictive regret for frame-independent models. A minimal three-view "odd-cycle" device illustrates computability and yields $K=\tfrac12\log_2(3/2)$ per observation.
+We introduce an information-theoretic framework for quantifying *perspectival contradiction*—situations where multiple legitimate observational contexts yield data that no single, frame-independent account can reconcile. Starting from six elementary axioms, we prove that any admissible contradiction measure must take the form $K(P) = -\log_2 \alpha^*(P)$, where $\alpha^*(P) = \max_{Q \in \mathrm{FI}} \min_{c} \mathrm{BC}(p_c,q_c)$. Here, $\mathrm{FI}$ represents the frame-independent polytope and $\mathrm{BC}$ denotes Bhattacharyya affinity.
 
-The framework recovers quantum contextuality as a special case—becoming a valid contextuality monotone when $\mathrm{FI}$ is the non-contextual set—while generalizing to any domain with context-indexed data and a defined unified baseline. We argue that **contradiction bits** extend Shannon's theory: entropy prices randomness within a frame; $K$ prices incompatibility across frames.
+The first set of theorems establishes the axiomatic core (minimax representation, Bhattacharyya as the unique kernel, logarithmic formula, additivity, and monotonicity). The second set derives operational laws: $+K$ bits/symbol in compression, type-II testing exponents, $\geq 2K$ predictive regret, communication penalties, and a Hellinger-geometry view of composition.
+
+We demonstrate computational tractability through a minimal three-view odd-cycle device yielding $K = 0.5 \cdot \log_2(3/2)$ bits per observation, alongside a convex minimax program and plug-in estimator with bootstrap confidence intervals implemented in our reference software ([*contrakit*](https://github.com/off-by-some/contrakit)). The framework naturally recovers quantum contextuality as a special case—$K$ serves as a contextuality monotone when $\mathrm{FI}$ represents the non-contextual set—while generalizing to arbitrary domains with context-indexed observations.
+
+In essence, while entropy quantifies the cost of randomness within a single frame, $K$ measures the fundamental price of incompatibility across multiple frames of reference.
 
 
 
@@ -532,7 +532,7 @@ Let's recall what the coin revealed:
 
 Taken together, these insights tell us what contradiction must be. They narrow the field of admissible measures—ruling out those that ignore ambiguity, neglect context, or fail to track structural strain. An ablation analysis is available within App. B.3 for readers that are interested. We’ll now formalize these constraints as six axioms. They are elementary, but together, they uniquely determine the contradiction measure:
 $$
-K(P) = -\log_2 \alpha^\star(P) $$
+K(P) = -\log_2 \alpha^\star(P)
 $$
 
 

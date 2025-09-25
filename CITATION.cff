@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite it as below."
-title: "A Mathematical Theory of Contradiction — supplementary materials"
+title: "A Mathematical Theory of Contradiction — contrakit"
 authors:
   - family-names: Bridges
     given-names: Cassidy
@@ -25,5 +25,7 @@ preferred-citation:
     - family-names: Bridges
       given-names: Cassidy
   year: 2025
-  notes: "Preprint; cite the paper when published."
-  url: "https://github.com/off-by-some/mathematical-theory-of-contradiction"
+  version: "1.0.0"
+  doi: "10.5281/zenodo.17203336"
+  url: "https://doi.org/10.5281/zenodo.17203336"
+  notes: "Preprint v1 on Zenodo; cite updated versions if available."

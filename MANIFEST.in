@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include LICENSE-CC-BY-4.0
+include CITATION.cff
+recursive-include docs *.md *.png *.pdf
+recursive-include examples *.py *.md
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo

@@ -142,7 +142,7 @@ The Magic Square represents the clearest example in our collection—a scenario 
 
 **Reproduce:**
 ```shell
-$ poetry run python -m src.examples.quantum.magic_squares
+$ poetry run python -m examples.quantum.magic_squares
 ```
 → saves `figures/magic_square_analysis.png`
 
@@ -185,7 +185,7 @@ The CHSH inequality, derived from John Bell's work, demonstrates that quantum pa
 
 **Reproduce:**
 ```shell
-$ poetry run python -m src.examples.quantum.CHSH
+$ poetry run python -m examples.quantum.CHSH
 ```
 → saves `figures/bell_chsh_analysis.png`
 
@@ -200,6 +200,8 @@ Our theoretical predictions achieve high precision when compared to computationa
 **Exact theoretical agreement.** The fundamental relationship $`K = -\log_2(\alpha^*)`$ holds to better than $10^{-12}$ relative error across all scenarios in our analyses, confirming the mathematical consistency of the framework.
 
 **Physical constraint satisfaction.** All quantum scenarios satisfy fundamental physical principles, including no-signalling constraints, to better than $10^{-12}$ precision in our implementations. This validates that our quantum models represent physically realizable systems.
+
+**Dependencies:** Requires matplotlib and qutip. Install with `poetry install --with examples`
 
 **Numerics:** All runs use SCS via CVXPY; invariants verified to $\leq 10^{-9}$ where expected. Tiny offsets at sweep endpoints reflect grid resolution and solver tolerance.
 
@@ -232,7 +234,7 @@ The KCBS scenario reveals a subtle aspect of quantum mechanics: the impossibilit
 
 **Reproduce:**
 ```shell
-$ poetry run python -m src.examples.quantum.KCBS
+$ poetry run python -m examples.quantum.KCBS
 ```
 → saves `figures/kcbs_contextuality_analysis.png`
 
@@ -371,7 +373,7 @@ Each example includes:
 
 **Run all examples:**
 ```shell
-$ poetry run python -m src.examples.quantum.run
+$ poetry run python -m examples.quantum.run
 ```
 → generates all three analysis figures
 

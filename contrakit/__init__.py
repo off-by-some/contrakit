@@ -1,5 +1,12 @@
 """Mathematical Theory of Contradiction - A Python package for exploring contradiction mathematics."""
 
+import importlib.metadata
+
+try:
+    __version__ = importlib.metadata.version("contrakit")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "1.0.1-dev"
+
 # Core classes
 from .space import Space
 from .context import Context

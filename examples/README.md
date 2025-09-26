@@ -5,12 +5,17 @@ This directory contains practical demonstrations of the contrakit library. The e
 
 ## 60-Second Quickstart
 
-**Prerequisites**: Python 3.9+ and [Poetry](https://python-poetry.org/docs/#installation) installed
+**Prerequisites**: Python 3.10+ and [Poetry](https://python-poetry.org/docs/#installation) installed
 
 ```bash
 # From the contrakit repository root
 poetry install
 poetry run python examples/intuitions/day_or_night.py
+```
+
+**Note**: Some examples (statistics and quantum) require additional dependencies:
+```bash
+poetry install --with examples  # Install matplotlib and qutip for plotting/visualization
 ```
 
 ## Directory Structure
@@ -117,6 +122,8 @@ These examples show you how contrakit can be used for representing different per
 
    You'll learn to model incompatible statistical relationships using lens spaces, detect structural contradictions that traditional analysis misses, and resolve contradictions by including context (school) as an explicit variable. The example demonstrates that when perspectives clash due to hidden context differences, adding context variables can eliminate contradictions entirely.
 
+   *Requires matplotlib for visualization. Install with `poetry install --with examples`*
+
    ```python
    # Frame integration: add context to resolve contradiction
    resolved_behavior = Behavior.from_counts(
@@ -129,6 +136,8 @@ These examples show you how contrakit can be used for representing different per
 ## Quantum Modeling Examples
 
 The quantum examples show how to model quantum mechanical phenomena using contrakit. They demonstrate different types of quantum behavior and their contradiction costs.
+
+*Requires matplotlib and qutip for visualization and quantum computations. Install with `poetry install --with examples`*
 
 9. **File: [`quantum/CHSH.py`](quantum/CHSH.py)** — Bell inequality violations and quantum correlation analysis
 
@@ -165,9 +174,11 @@ poetry run python examples/quickstart/observatory.py
 # Basic framework usage (from repo root)
 poetry run python examples/intuitions/day_or_night.py
 poetry run python examples/intuitions/meta_lens.py
+
+# Statistics examples (require matplotlib)
 poetry run python examples/statistics/simpsons_paradox.py
 
-# Quantum applications
+# Quantum applications (require matplotlib + qutip)
 poetry run python -m examples.quantum.CHSH
 poetry run python -m examples.quantum.KCBS
 poetry run python -m examples.quantum.magic_squares
@@ -182,10 +193,10 @@ poetry run python -m examples.quickstart.run
 # Run all intuition-building examples
 poetry run python -m examples.intuitions.run
 
-# Run all statistical paradox examples
+# Run all statistical paradox examples (require matplotlib)
 poetry run python -m examples.statistics.run
 
-# Run all quantum examples
+# Run all quantum examples (require matplotlib + qutip)
 poetry run python -m examples.quantum.run
 ```
 

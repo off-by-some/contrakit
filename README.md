@@ -1,144 +1,140 @@
-# Contrakit: A Python Library for Contradiction
-*Measure the information cost of incompatible perspectives*
+# Contrakit
 
-Contrakit implements the mathematical theory of contradiction—a framework for quantifying when multiple valid observations cannot be reconciled within a single coherent explanation. It provides tools to measure contradiction costs in bits, identify optimal detection strategies, and analyze the boundaries between classical and quantum-like behavior across domains.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/off-by-some/contrakit/main/docs/images/contrakit-banner.png" height="300" alt="Contrakit banner">
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/contrakit/"><img src="https://img.shields.io/pypi/v/contrakit?label=PyPI" alt="PyPI"></a>
+  <a href="https://pypi.org/project/contrakit/"><img src="https://img.shields.io/pypi/pyversions/contrakit" alt="Python"></a>
+  <a href="https://github.com/off-by-some/contrakit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/off-by-some/contrakit/tree/main/docs"><img src="https://img.shields.io/badge/docs-reference-blue.svg" alt="Docs"></a>
+</p>
+
+When multiple experts give conflicting advice about the same problem, most systems try to force artificial consensus or pick a single "winner." 
+
+**Contrakit takes a different approach:** it measures exactly how much those perspectives actually contradict—in bits.
+
+
+## What is Contrakit?
+
+Most tools treat disagreement as error—something to iron out until every model or expert agrees. But not all clashes are noise. Some are structural: valid perspectives that simply refuse to collapse into one account. **Contrakit is the first Python toolkit to measure that irreducible tension**, and to treat it as information—just as Shannon treated randomness. Our work has shown it's not only measurable, but it's useful too. 
+
+It tells you things like:
+
+1. How close can all perspectives get to a single account? (agreement $α^\star$)
+2. How expensive is it to pretend they agree? (contradiction bits $K(P)$)
+3. Which contexts drive the conflict? (witness weights $λ^\star$)
+
+Think of it as an information-theoretic microscope for disagreement. Just as entropy priced *randomness*, Contrakit prices *contradiction*—so you can see exactly what it costs to flatten diverse perspectives into one.
+
+
 
 ## Quickstart
 
-**Prerequisites**: Python 3.9+ and [Poetry](https://python-poetry.org/docs/#installation)
+**Install:**
 
 ```bash
-# Clone and install
-git clone https://github.com/off-by-some/contrakit.git && cd contrakit
-poetry install
-
-# Run a basic example
-poetry run python examples/day_or_night.py
-
-# Run quantum examples (generates figures/)
-poetry run python -m examples.quantum.run
+pip install contrakit
 ```
 
-Results appear in the [`figures/`](figures/) directory as PNG visualizations.
-
-## What This Measures
-
-The framework provides three core quantities:
-
-- **K(P)**: Contradiction measure in bits—the information cost of forcing incompatible perspectives into one story
-- **α\***: Best possible overlap with any classical (frame-independent) model  
-- **λ\***: Optimal strategy for detecting contradictions across contexts
-
-**Key insight**: K(P) = 0 for classically explainable behavior, K(P) > 0 for quantum-like contradictions.
-
-## Core Usage Pattern
+**Quickstart:**
 
 ```python
-from contrakit import Space, Behavior
+from contrakit import Observatory
 
-# 1. Define measurement space
-space = Space.create(
-    A0=[-1, +1], A1=[-1, +1],  # Alice's measurements
-    B0=[-1, +1], B1=[-1, +1]   # Bob's measurements
-)
+# 1) Model perspectives
+obs = Observatory.create(symbols=["Yes","No"])
+Y = obs.concept("Outcome")
+with obs.lens("ExpertA") as A: A.perspectives[Y] = {"Yes": 0.8, "No": 0.2}
+with obs.lens("ExpertB") as B: B.perspectives[Y] = {"Yes": 0.3, "No": 0.7}
 
-# 2. Specify experimental contexts and probabilities
-contexts = {
-    ("A0", "B0"): {(+1,+1): 0.25, (+1,-1): 0.25, (-1,+1): 0.25, (-1,-1): 0.25},
-    ("A0", "B1"): {(+1,+1): 0.427, (+1,-1): 0.073, (-1,+1): 0.073, (-1,-1): 0.427},
-    # ... more measurement combinations
-}
+# 2) Export behavior and quantify reconcilability
+behavior = (A | B).to_behavior()  # compose lenses → behavior
+print("alpha*:", round(behavior.alpha_star, 3))  # 0.965 (high agreement)
+print("K(P):  ", round(behavior.contradiction_bits, 3), "bits")  # 0.051 bits (low cost)
 
-# 3. Analyze contradiction
-behavior = Behavior.from_contexts(space, contexts)
-print(f"Contradiction cost: {behavior.contradiction_bits:.3f} bits")
-print(f"Classical overlap: {behavior.alpha_star:.3f}")
-
-# 4. Find optimal detection strategy  
+# 3) Where to look next (witness design)
 witness = behavior.least_favorable_lambda()
-print(f"Focus on contexts: {witness}")
+print("lambda*:", witness)  # ~0.5 each expert (balanced conflict)
 ```
 
-## Examples and Applications
+## Why This Matters
+Computational systems have long handled multiple perspectives—but only by forcing consensus or averaging them away. What has been missing is a way to measure epistemic tension itself: to treat contradiction not as noise, but as structured information.
 
-The [`examples/`](examples/) directory demonstrates the framework across different domains:
+Without this, information is lost. Standard models can’t register paradox as paradox; they flatten it. Contrakit flips the script: when experts or models disagree, you don’t lose information—you gain direction. Each contradiction becomes a gradient pointing toward the boundaries of current understanding. You don’t just resolve conflicts—you use them to build better models.
 
-**File: [`day_or_night.py`](examples/day_or_night.py)** — Multiple observer perspectives using different valid measurement methods
+The loop is simple: perspectives clash → Contrakit measures the clash → $λ*$ shows you where to investigate → your next reasoning step is guided by the structure of the disagreement itself.
 
-**File: [`meta_lens.py`](examples/meta_lens.py)** — Recursive application across organizational hierarchies (reviewers → supervisors → directors)
+By quantifying epistemic tension, Contrakit shows not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of—how far it can stretch, where it breaks, and what it leaves out. In this way, contradiction becomes more than a clash; it becomes the lens that reveals what a “viewpoint” really is, and the information that drives resolution.
 
-**File: [`simpsons_paradox.py`](examples/simpsons_paradox.py)** — Frame integration to resolve statistical contradictions by adding context variables
 
-**File: [`quantum/CHSH.py`](examples/quantum/CHSH.py)** — Bell inequality violations and quantum correlation analysis
+## The K(P) Tax
+Contrakit’s measure of epistemic tension isn’t ad-hoc. It follows from six simple axioms about how perspectives should combine. From these, a unique formula emerges: contradiction bits K(P), built from the Bhattacharyya overlap between distributions. That’s why the measure behaves consistently across domains—from distributed consensus to ensemble learning to quantum contextuality.
 
-**File: [`quantum/KCBS.py`](examples/quantum/KCBS.py)** — Quantum contextuality measurement scenarios
+And contradiction isn’t free. The same tension that guides reasoning also imposes an exact tax: across compression, communication, and simulation, disagreement costs K(P) bits per symbol. In practice, this means real performance deficits in any engineering task that must reconcile contextual data—unless you use the signal of contradiction itself to guide resolution.
 
-**File: [`quantum/magic_squares.py`](examples/quantum/magic_squares.py)** — Algebraic quantum contradictions that resolve classical logical impossibilities
+| Task | Impact |
+|---|---|
+| Compression/shared representation | $+K(P)$ extra bits needed |
+| Communication with disagreement | $-K(P)$ bits of capacity lost |
+| Simulation with conflicting models | $×(2^{2K(P)} - 1)$ variance penalty |
 
-Run all examples:
+
+We can now use $λ^\star$ to target measurements and understand where this will have the most impact. Reduce $K(P)$ by mixing in feasible "compromise" distributions.
+
+
+## API Reference
+
+* **Core classes:** [`Observatory`](https://github.com/off-by-some/contrakit/blob/main/docs/api/observatory.md), [`Behavior`](https://github.com/off-by-some/contrakit/blob/main/docs/api/behavior.md), [`Space`](https://github.com/off-by-some/contrakit/blob/main/docs/api/space.md)
+* **Key properties:** `contradiction_bits`, `alpha_star` 
+* **Key methods:** `least_favorable_lambda()`, `to_behavior()`
+* **Full API:** [docs/api/](https://github.com/off-by-some/contrakit/tree/main/docs/api/) | **Theory:** [docs/paper/](https://github.com/off-by-some/contrakit/tree/main/docs/paper/)
+
+
+## Examples
+
 ```bash
-# Individual examples
-poetry run python examples/day_or_night.py
-poetry run python examples/simpsons_paradox.py
+# Epistemic modeling examples
+poetry run python examples/intuitions/day_or_night.py      # Observer perspective conflicts
+poetry run python examples/statistics/simpsons_paradox.py # Statistical paradox resolution
 
-# All quantum examples with visualizations
+# Quantum contextuality (writes analysis PNGs to figures/)
 poetry run python -m examples.quantum.run
 ```
 
-## Contradiction Cost Taxonomy
+## Installing from Source
 
-The examples reveal different types of contradictions:
 
-| Type | Cost (bits) | Examples | Properties |
-|------|-------------|----------|------------|
-| Probabilistic | ~0.012 | CHSH, KCBS | Statistical violations, state-dependent |
-| Algebraic | ~0.132 | Magic Square | Logical impossibilities, state-independent |  
-| Hierarchical | Variable | Meta-lenses | Scales with organizational complexity |
+```bash
+# Clone the repository
+$ git clone https://github.com/off-by-some/contrakit.git && cd contrakit
 
-## Limitations and Caveats
+# Install dependencies
+$ poetry install
 
-- **Finite domains only**: Framework requires finite outcome alphabets and context sets
-- **No noise modeling**: Current implementation assumes perfect measurements
-- **Computational scaling**: Large context sets may require approximation methods
-- **Deterministic results**: Examples use fixed random seeds for reproducibility
+# Run tests
+$ poetry run pytest -q
+```
 
-## Troubleshooting
 
-**Poetry not found**: Install Poetry first: `curl -sSL https://install.python-poetry.org | python3 -`
+## A Mathematical Theory of Contradiction
 
-**Module import errors**: Ensure you're in the contrakit directory and run `poetry install`
-
-**Missing figures directory**: The `figures/` directory is created automatically when running quantum examples
-
-## Documentation and Theory
-
-- **Mathematical foundations**: [`docs/paper.md`](docs/paper.md) — Complete theoretical framework
-- **Implementation details**: [`docs/all.md`](docs/all.md) — Full API documentation  
-- **Research paper**: [`docs/paper/`](docs/paper/) — Formal mathematical treatment
-
-## Contributing
-
-This library implements research from *A Mathematical Theory of Contradiction*. For contributions:
-
-1. Check existing [issues](https://github.com/off-by-some/contrakit/issues) and examples
-2. Follow the established patterns in [`examples/`](examples/)
-3. Add tests for new functionality in [`tests/`](tests/)
-4. Update documentation as needed
+Contrakit is powered by a formal framework introduced in [A Mathematical Theory of Contradiction](https://zenodo.org/records/17203336). The paper lays out the six axioms, derives the unique measure K(P), and proves its consequences across compression, communication, and simulation. If you'd like to see the mathematics in full details, make suggestions, comments, or contribute check out [docs/paper/](https://github.com/off-by-some/contrakit/tree/main/docs/paper/)
 
 ## License
 
-This repository is **dual-licensed**:
-- **Code**: MIT License — see [`LICENSE`](LICENSE)
-- **Documentation, figures, and written materials**: CC BY 4.0 — see [`LICENSE-CC-BY-4.0`](LICENSE-CC-BY-4.0)
+Dual-licensed: **MIT** for code (`LICENSE`), **CC BY 4.0** for docs/figures (`LICENSE-CC-BY-4.0`).
 
 ## Citation
 
 ```bibtex
 @software{bridges2025contrakit,
   author = {Bridges, Cassidy},
-  title = {Contrakit: A Python Library for Contradiction},
-  year = {2025},
-  url = {https://github.com/off-by-some/contrakit},
-  license = {MIT, CC-BY-4.0}
+  title  = {Contrakit: A Python Library for Contradiction},
+  year   = {2025},
+  url    = {https://github.com/off-by-some/contrakit},
+  license= {MIT, CC-BY-4.0}
 }
 ```
+

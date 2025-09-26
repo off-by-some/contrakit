@@ -1,7 +1,7 @@
 # Appendix B — Worked Examples
 This appendix provides proofs and technical details for the mathematical framework introduced in *The Mathematical Theory of Contradiction*.
 
-## **B.1 Worked Example: The Irreducible Perspective: Carrying the Frame.**
+## B.1 Worked Example: The Irreducible Perspective: Carrying the Frame.
 
 Let's consider an example. Let's say there are three friends—*Nancy*, *Dylan*, *Tyler*—watch the coin from three seats: $\text{LEFT}$, $\text{MIDDLE}$, and $\text{RIGHT}$. After each flip they copy only the three words they saw, comma-separated, into a shared notebook. Each knew where they sat, and the order the games went, so they didn't think to write the positions.
 
@@ -86,9 +86,11 @@ $$
 
 and show $\alpha^\star(P)=\sqrt{\tfrac23}$, hence $K(P)=\tfrac12\log_2\!\frac32$.
 
-### B.2.1 Universal Upper Bound: $\alpha^\star\le \sqrt{2/3}$
+#### B.2.1 Universal Upper Bound: $\alpha^\star\le \sqrt{2/3}$
 
-**Lemma B.2.2 (Upper Bound).** Let $Q\in\mathrm{FI}$ arise from a global law $\mu$ on $\{0,1\}^3$. For a context $c=\{i,j\}$, write the induced pair distribution
+#### Lemma B.2.2 (Upper Bound).
+
+Let $Q\in\mathrm{FI}$ arise from a global law $\mu$ on $\{0,1\}^3$. For a context $c=\{i,j\}$, write the induced pair distribution
 
 $$
 q_c(00),\ q_c(01),\ q_c(10),\ q_c(11)\quad\text{and}\quad
@@ -129,9 +131,11 @@ $$
 \alpha^\star(P)\ \le\ \sqrt{2/3}
 $$
 
-### B.2.2 Achievability: An Explicit Optimal $\mu^\star$
+#### B.2.2 Achievability: An Explicit Optimal $\mu^\star$
 
-**Proposition B.2.3 (Achievability).** Let $\mu^\star$ be the **uniform** distribution over the six nonconstant bitstrings:
+#### Proposition B.2.3 (Achievability).
+
+Let $\mu^\star$ be the **uniform** distribution over the six nonconstant bitstrings:
 
 $$
 \mu^\star=\text{Unif}\big(\{100,010,001,011,101,110\}\big)
@@ -166,7 +170,9 @@ $$
 K(P)=-\log_2\alpha^\star(P)=\tfrac12\log_2\!\frac32\ }
 $$
 
-**Corollary B.2.4 (Optimal Witness).** By symmetry, any optimal contradiction witness $\lambda^\star$ can be taken **uniform** on the three contexts. Moreover, the equalization $\mathrm{BC}(p_c,q_c^\star)=\alpha^\star$ on all edges shows $\lambda^\star$ may place positive mass on each context (cf. the support condition in the minimax duality).
+#### Corollary B.2.4 (Optimal Witness).
+
+By symmetry, any optimal contradiction witness $\lambda^\star$ can be taken **uniform** on the three contexts. Moreover, the equalization $\mathrm{BC}(p_c,q_c^\star)=\alpha^\star$ on all edges shows $\lambda^\star$ may place positive mass on each context (cf. the support condition in the minimax duality).
 
 ## B.3 Axiom Ablation Analysis
 
@@ -179,7 +185,7 @@ In this resource theory, frame-independent behaviors $\mathrm{FI}$ constitute th
 
 To establish the robustness of this framework, we examine both weakenings and violations of each axiom. This analysis serves two purposes: it demonstrates that our axioms capture the minimal necessary structure, and it illuminates how each constraint contributes to the theory's coherence.
 
-### B.3.1 Axiom Weakening
+#### B.3.1 Axiom Weakening
 
 Several axioms admit natural weakenings that preserve the main theoretical results while relaxing technical requirements:
 
@@ -205,22 +211,22 @@ More generally, we obtain subadditivity $K(P\otimes R) \leq K(P) + K(R)$ with eq
 
 We now demonstrate that each axiom is essential by constructing explicit counterexamples that satisfy all remaining axioms while violating the target property. 
 
-### **B.3.2 Label Invariance (A0).**
+#### B.3.2 Label Invariance (A0).
 
 *Counterexample:* Define $\tilde K(P) := \|p(\cdot\!\mid c_0) - p(\cdot\!\mid c_1)\|_1$ for fixed context labels $c_0, c_1$.
 *Failure mode:* Context relabeling changes $\tilde K$ despite identical behavioral content, violating the principle that physical properties should depend only on operational statistics.
 
-### **B.3.3 FI-Characterization (A1).**
+#### B.3.3 FI-Characterization (A1).
 
 *Counterexample:* Define $\tilde K(P) := \min_c \|p(\cdot\!\mid c) - u\|_1$ where $u$ is the uniform distribution.
 *Failure mode:* For $P \in \mathrm{FI}$ with non-uniform rows, $\tilde K(P) > 0$, incorrectly assigning nonzero contradiction to some frame-independent behaviors.
 
-### **B.3.4 Continuity (A2).**
+#### B.3.4 Continuity (A2).
 
 *Counterexample:* Define $\tilde K(P) := \mathbf{1}\{\alpha^\star(P) < 1\}$.
 *Failure mode:* Consider a sequence $P_n \to P$ with $\alpha^\star(P_n) \uparrow 1$. Then $\tilde K(P_n) = 1$ for all $n$, but $\tilde K(P) = 0$, creating a discontinuous jump at the $\mathrm{FI}$ boundary.
 
-### **B.3.5 Data-Processing Monotonicity (A3).**
+#### B.3.5 Data-Processing Monotonicity (A3).
 
 *Counterexample:* Replace Bhattacharyya coefficient with linear overlap:
 
@@ -239,7 +245,7 @@ $$
 
 gives $\Lambda p=\Lambda q=(1/2,1/2)$ and $\langle \Lambda p,\Lambda q\rangle=1/2<1$, so similarity decreases under processing, allowing coarse-graining to artificially increase contradiction.
 
-### **B.3.6 Context Grouping (A4).**
+#### B.3.6 Context Grouping (A4).
 
 *Counterexample:* Define
 
@@ -250,7 +256,7 @@ $$
 
 *Failure mode:* When one context acts as a bottleneck (smallest Bhattacharyya coefficient), duplicating that context row decreases the arithmetic mean, causing $\tilde K$ to increase despite unchanged behavioral content.
 
-### **B.3.7 Additivity (A5).**
+#### B.3.7 Additivity (A5).
 
 *Counterexample:* Retain Bhattacharyya coefficient but use non-logarithmic aggregation $h(x) = 1-x$:
 
@@ -270,7 +276,7 @@ Choosing bits as our unit fixes $k=1/\ln 2$, yielding $h(x) = -\log_2 x$. (Note 
 
 </aside>
 
-### B.3.8 Ablation Summary
+#### B.3.8 Ablation Summary
 
 Thus, additivity on independent systems forces a logarithmic form. Fixing base-2 units (bits) then yields the unique measure consistent with A0–A5:
 
@@ -282,7 +288,7 @@ Equivalently, every halving of $\alpha^\star$ increases $K$ by one bit. Any othe
 
 ---
 
-# B.4 Consensus as Decoding: $K(P)$ Tax
+## B.4 Consensus as Decoding: $K(P)$ Tax
 
 This section shows that when distributed systems must reach consensus despite frame-dependent disagreements, any protocol forcing a single committed decision pays an unavoidable overhead of exactly $K(P)$ bits per decision beyond the Shannon baseline. This is a direct consequence of the operational theorems in §6.
 
@@ -290,13 +296,13 @@ These are information-rate lower bounds, not round-complexity bounds. They coexi
 
 ---
 
-## B.4.1 Setup
+### B.4.1 Setup
 
 Consider a distributed consensus protocol where replicas must agree on proposals. Each replica evaluates proposals using its own local validity predicate—rules derived from the replica's particular message history and context. The question is: what's the fundamental cost of forcing agreement when these local contexts lead to systematically different judgments?
 
 This isn't about noisy communication or Byzantine faults. Even with perfect replicas and reliable channels, structural disagreements emerge when local contexts are legitimately incompatible.
 
-### Assumptions
+#### Assumptions
 
 Standing assumptions from §2 apply (finite alphabets; $\mathrm{FI}$ convex/compact; product-closure when used).
 
@@ -308,9 +314,9 @@ Standing assumptions from §2 apply (finite alphabets; $\mathrm{FI}$ convex/comp
 
 ---
 
-## B.4.2 Mathematical Model
+### B.4.2 Mathematical Model
 
-### Contexts and Behaviors
+#### Contexts and Behaviors
 
 - **Local validity:** For proposal π, replica i evaluates predicate $V_i(\pi)$ based on its message history, yielding $X_i^{\pi} \in \{YES, NO\}$
 - **Contexts:** A context c represents a subset of replicas observed under particular scheduling conditions (e.g., pair {i,j} with their joint reports)
@@ -326,7 +332,7 @@ By our axioms, $K(P)$ uniquely measures contradiction: $K(P) = 0$ if and only if
 
 ---
 
-## B.4.3 Why Odd Cycles Create Contradiction
+### B.4.3 Why Odd Cycles Create Contradiction
 
 Suppose an adversary schedules messages so three correct replicas A, B, C produce pairwise disagreements in pairwise contexts:
 
@@ -348,7 +354,7 @@ The optimal frame-independent approximation assigns outcomes uniformly over the 
 
 ---
 
-## B.4.4 Consensus as Common Decoding
+### B.4.4 Consensus as Common Decoding
 
 A consensus decision is fundamentally a **common representation problem**: we need a finite string Z that every correct replica, using its own local context, can decode to recover the same decision sequence $X^n$.
 
@@ -356,7 +362,7 @@ This is precisely the setup analyzed in our operational theorems. Different repl
 
 ---
 
-## B.4.5 The Fundamental Lower Bound
+### B.4.5 The Fundamental Lower Bound
 
 **Theorem B.4.2 (The K(P) Tax):**
 
@@ -400,7 +406,7 @@ $$
 
 You can trade witness bits for statistical detectability, but their sum is bounded by $K(P)$.
 
-## B.4.6 Constructive Witnesses
+### B.4.6 Constructive Witnesses
 
 The bound is achievable: there exist witness strings $W_n$ of rate $K(P)+o(1)$ such that $\mathrm{TV}((X^n,W_n),\tilde{Q}_n)\to 0$. (Theorem 10)
 

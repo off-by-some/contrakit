@@ -1,10 +1,13 @@
 # Contrakit
 
 <p align="center">
-  <img src="https://github.com/off-by-some/contrakit/blob/main/docs/images/contrakit-banner.png?raw=true" height="300" alt="Contrakit banner">
+  <img src="https://raw.githubusercontent.com/off-by-some/contrakit/main/docs/images/contrakit-banner.png" height="300" alt="Contrakit banner">
 </p>
 
 <p align="center">
+  <a href="https://github.com/off-by-some/contrakit"><img src="https://img.shields.io/github/stars/off-by-some/contrakit?style=flat" alt="GitHub Stars"></a>
+  <a href="https://github.com/off-by-some/contrakit"><img src="https://img.shields.io/github/forks/off-by-some/contrakit?style=flat" alt="GitHub Forks"></a>
+  <a href="https://github.com/off-by-some/contrakit/issues"><img src="https://img.shields.io/github/issues/off-by-some/contrakit" alt="GitHub Issues"></a>
   <a href="https://pypi.org/project/contrakit/"><img src="https://img.shields.io/pypi/v/contrakit?label=PyPI" alt="PyPI"></a>
   <a href="https://pypi.org/project/contrakit/"><img src="https://img.shields.io/pypi/pyversions/contrakit" alt="Python"></a>
   <a href="https://github.com/off-by-some/contrakit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>

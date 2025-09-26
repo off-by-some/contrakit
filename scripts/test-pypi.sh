@@ -1,25 +1,39 @@
 #!/bin/bash
+#
+# TestPyPI Package Verification Script
+# Tests contrakit installation and functionality from TestPyPI using Docker
+#
+
 set -e
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🐳 Testing Contrakit from TestPyPI using Docker"
-echo "=============================================="
+echo "🐳 Contrakit TestPyPI Verification"
+echo "=================================="
 
 # Build and test the image
 echo "📦 Building Docker test image..."
-docker build -f "$SCRIPT_DIR/test-pypi.dockerfile" -t contrakit-test .
+if ! docker build -f "$SCRIPT_DIR/test-pypi.dockerfile" -t contrakit-test . > /dev/null 2>&1; then
+    echo "❌ Docker build failed"
+    echo ""
+    echo "Possible issues:"
+    echo "  • TestPyPI package not available or corrupted"
+    echo "  • Network connectivity issues"
+    echo "  • Docker not running"
+    echo ""
+    echo "Check: https://test.pypi.org/project/contrakit/"
+    exit 1
+fi
 
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Docker build successful!"
-    echo "🎉 Contrakit installs and works correctly from TestPyPI!"
-    
-    # Run a quick additional test
-    echo ""
-    echo "🧪 Running additional functionality test..."
-    docker run --rm contrakit-test python -c "
+echo "✅ Docker build successful"
+echo "🎉 Contrakit installs correctly from TestPyPI"
+
+# Run functional tests
+echo ""
+echo "🧪 Running functionality tests..."
+
+TEST_CMD="python -c \"
 import contrakit
 from contrakit import Observatory
 
@@ -30,27 +44,34 @@ with obs.lens('ExpertA') as A: A.perspectives[Y] = {'Yes': 0.8, 'No': 0.2}
 with obs.lens('ExpertB') as B: B.perspectives[Y] = {'Yes': 0.3, 'No': 0.7}
 
 behavior = (A | B).to_behavior()
-print('✅ Quickstart example works!')
-print('📊 alpha*:', round(behavior.alpha_star, 3))
-print('📊 K(P):  ', round(behavior.contradiction_bits, 3), 'bits')
-"
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ All tests passed!"
-    else
-        echo "❌ Additional tests failed"
-    fi
-    
-    # Clean up automatically
+print('✅ Quickstart example works')
+print('📊 alpha* =', round(behavior.alpha_star, 3))
+print('📊 K(P) =', round(behavior.contradiction_bits, 3), 'bits')
+\""
+
+if docker run --rm contrakit-test bash -c "$TEST_CMD" > /dev/null 2>&1; then
+    echo "✅ All functionality tests passed"
     echo ""
-    echo "🧹 Cleaning up Docker image..."
-    docker rmi contrakit-test > /dev/null 2>&1
-    echo "✅ Cleanup complete!"
-    
+    echo "📦 Package Status: VERIFIED"
+    echo "   • Installation: ✅ Working"
+    echo "   • Imports: ✅ Working"
+    echo "   • Core functionality: ✅ Working"
+    echo "   • Quickstart example: ✅ Working"
 else
-    echo "❌ Docker build failed - there's an issue with the TestPyPI package"
+    echo "❌ Functionality tests failed"
+    echo ""
+    echo "📦 Package Status: ISSUES DETECTED"
+    echo "   • Check TestPyPI package contents"
+    echo "   • Verify dependencies are available"
     exit 1
 fi
 
+# Clean up
 echo ""
-echo "🎉 TestPyPI package verification complete!"
+echo "🧹 Cleaning up..."
+docker rmi contrakit-test > /dev/null 2>&1
+echo "✅ Cleanup complete"
+
+echo ""
+echo "🎉 TestPyPI verification complete!"
+echo "🚀 Ready for production deployment"

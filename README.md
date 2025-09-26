@@ -1,7 +1,7 @@
 # Contrakit
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/off-by-some/contrakit/main/docs/images/contrakit-banner.png" height="300" alt="Contrakit banner">
+  <img src="https://github.com/off-by-some/contrakit/blob/main/docs/images/contrakit-banner.png?raw=true" height="300" alt="Contrakit banner">
 </p>
 
 <p align="center">

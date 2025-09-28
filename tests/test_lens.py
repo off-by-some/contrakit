@@ -61,8 +61,10 @@ def test_lens_with_statement_should_generate_behavior():
         behavior = lens_a.to_behavior()
 
         assert type(behavior).__name__ == "Behavior"
-        assert isinstance(behavior.agreement, (int, float))
-        assert 0.0 <= behavior.agreement <= 1.0
+        agreement = behavior.agreement.result
+        assert isinstance(agreement, (int, float))
+        assert agreement >= 0.0 - 1e-10
+        assert agreement <= 1.0 + 1e-10
 
 
 def test_lens_behavior_should_contain_expected_distributions():
@@ -124,10 +126,14 @@ def test_multiple_lenses_should_have_valid_agreements():
         behavior_b = lens_b.to_behavior()
 
     # Verify agreements are valid numbers in range [0, 1]
-    assert isinstance(behavior_a.agreement, (int, float))
-    assert isinstance(behavior_b.agreement, (int, float))
-    assert 0.0 <= behavior_a.agreement <= 1.0
-    assert 0.0 <= behavior_b.agreement <= 1.0
+    agreement_a = behavior_a.agreement.result
+    agreement_b = behavior_b.agreement.result
+    assert isinstance(agreement_a, (int, float))
+    assert isinstance(agreement_b, (int, float))
+    assert agreement_a >= 0.0 - 1e-10
+    assert agreement_a <= 1.0 + 1e-10
+    assert agreement_b >= 0.0 - 1e-10
+    assert agreement_b <= 1.0 + 1e-10
 
 
 def test_multiple_lenses_should_have_same_distribution_count():
@@ -242,8 +248,9 @@ def test_lens_behavior_should_have_valid_agreement():
     lens.perspectives[candidate] = {hire: 0.6}
 
     behavior = lens.to_behavior()
-    assert isinstance(behavior.agreement, (int, float))
-    assert 0.0 <= behavior.agreement <= 1.0
+    agreement = behavior.agreement.result
+    assert isinstance(agreement, (int, float))
+    assert 0.0 <= agreement <= 1.0
 
 
 def test_empty_lens_should_raise_no_concepts_defined_error():

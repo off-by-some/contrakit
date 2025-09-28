@@ -79,25 +79,37 @@ behavior = Behavior.from_contexts(space, {
 })
 ```
 
-### `Behavior.agreement_for_weights(weights) -> AgreementResult`
+### `Behavior.agreement -> Agreement`
 
-Compute agreement under custom context weighting.
-
-**Parameters**:
-
-* `weights` *(Dict)* — Context weights for custom perspective
+Fluent API for agreement calculations with various refinements.
 
 **Returns**:
 
-* *(AgreementResult)* — Agreement score, optimal explanation, and scenarios
+* *(Agreement)* — A query builder for fluent agreement calculations
 
 **Example**:
 
 ```python
+# Basic agreement (α*)
+agreement = behavior.agreement.result  # float: overall agreement score
+
+# Agreement by context
+per_context_scores = behavior.agreement.by_context().context_scores  # {context: agreement}
+bottleneck_score = behavior.agreement.by_context().result  # float: min of context scores
+
+# Weighted agreement
 weights = {("Morning",): 0.6, ("Evening",): 0.4}
-result = behavior.agreement_for_weights(weights)
-print(f"Agreement: {result.score:.6f}")
+weighted = behavior.agreement.for_weights(weights).result  # float: weighted agreement
+
+# Agreement given feature distribution
+hair_dist = np.array([0.7, 0.3])  # [blonde, brunette]
+feature_based = behavior.agreement.for_feature("Hair", hair_dist).result  # float: agreement with fixed feature
+
+# Get explanations and scenarios
+theta = behavior.agreement.explanation  # np.ndarray: scenario distribution
+scenarios = behavior.agreement.scenarios()  # list of (scenario, probability) pairs
 ```
+
 
 ### `Behavior.is_frame_independent(tol=1e-9) -> bool`
 

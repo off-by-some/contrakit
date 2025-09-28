@@ -238,12 +238,32 @@ class BehaviorAnalysisMixin:
 
         # stable order by observable names
         ctx_objs_sorted = sorted(self.distributions.keys(), key=lambda c: tuple(c.observables))
-        
+
+        # Detect duplicate observable-sets with differing pmfs
+        seen_by_obs = {}
+        for ctx_obj in ctx_objs_sorted:
+            key = tuple(ctx_obj.observables)
+            outs = list(ctx_obj.outcomes())
+            p = np.array([self.distributions[ctx_obj][o] for o in outs], float)
+
+            if key not in seen_by_obs:
+                seen_by_obs[key] = [(ctx_obj, outs, p)]
+            else:
+                # check if pmf differs from any already-seen pmf for same observables
+                if not any(np.allclose(p, p_prev, atol=1e-12) for _, _, p_prev in seen_by_obs[key]):
+                    raise ValueError(
+                        "Multiple contexts with the same observable set but different distributions "
+                        f"are not representable as-is: {key}. "
+                        "Use Behavior.duplicate_context(target_context, count) to tag copies, "
+                        "or add an explicit label observable (e.g., Witness ∈ {A,B,C})."
+                    )
+                seen_by_obs[key].append((ctx_obj, outs, p))
+
         # Group contexts by identical (observables, probability_distribution) patterns
         # This is a pure optimization - mathematically equivalent but faster
         unique_patterns = {}
         pattern_to_contexts = {}
-        
+
         for ctx_obj in ctx_objs_sorted:
             key = tuple(ctx_obj.observables)
             outs = list(ctx_obj.outcomes())
@@ -412,6 +432,63 @@ class BehaviorAnalysisMixin:
         """
         scores = self.per_context_scores(agreement=agreement, mu=mu)
         return float(aggregator(scores))
+
+    def check_consistency(self, atol: float = 1e-10) -> Dict[str, Any]:
+        """
+        Lightweight consistency report:
+          - For any joint context, compare its implied marginals to any
+            provided marginals over the same observables.
+          - Returns a dict with 'ok' flag and mismatches (if any).
+        """
+        report = {"ok": True, "mismatches": []}
+
+        # Index marginals provided by the user
+        provided = {}  # key: tuple(obs) -> (context, pmf-vector in the order of context.outcomes())
+        for ctx, dist in self.distributions.items():
+            key = tuple(ctx.observables)
+            provided[key] = (ctx, np.array([dist[o] for o in ctx.outcomes()], float))
+
+        # For each joint, compute implied marginals and compare
+        for ctx, dist in self.distributions.items():
+            if len(ctx.observables) <= 1:
+                continue  # nothing to marginalize
+
+            # All nonempty proper subsets
+            obs = ctx.observables
+            outcomes = list(ctx.outcomes())
+            probs = np.array([dist[o] for o in outcomes], float)
+
+            for k in range(1, len(obs)):
+                # iterate subsets
+                # we can use itertools.combinations
+                for subset in itertools.combinations(obs, k):
+                    sub_ctx = Context.make(self.space, list(subset))
+                    sub_outs = list(sub_ctx.outcomes())
+                    # implied marginal over subset
+                    implied = {o: 0.0 for o in sub_outs}
+
+                    # Sum probs over outcomes of the joint that restrict to the subset outcome
+                    idx_map = [obs.index(name) for name in subset]
+                    for out, p in zip(outcomes, probs):
+                        sub_out = tuple(out[i] for i in idx_map)
+                        implied[sub_out] += p
+
+                    implied_vec = np.array([implied[o] for o in sub_outs], float)
+
+                    # If user provided this marginal, compare
+                    key = tuple(subset)
+                    if key in provided:
+                        _, provided_vec = provided[key]
+                        if not np.allclose(provided_vec, implied_vec, atol=atol):
+                            report["ok"] = False
+                            report["mismatches"].append({
+                                "joint": tuple(obs),
+                                "marginal": key,
+                                "provided": provided_vec.tolist(),
+                                "implied": implied_vec.tolist(),
+                                "atol": atol,
+                            })
+        return report
 
     def fit_fi_to_empirical(self, hat_pc, mu_hat):
         """Fit FI model to empirical per-context distributions.

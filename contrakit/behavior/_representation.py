@@ -56,7 +56,8 @@ class Behavior:
     distributions: Dict[Context, Distribution] = field(default_factory=dict)
 
     @classmethod
-    def from_contexts(cls, space: Space, context_dists: Optional[Dict] = None) -> Behavior:
+    def from_contexts(cls, space: Space, context_dists: Optional[Dict] = None, *,
+                      atol: float = 1e-10) -> Behavior:
         """
         Create a behavior from a dictionary of context-specific probability distributions.
 
@@ -68,9 +69,15 @@ class Behavior:
             space: The observable space that defines what variables exist and their possible values
             context_dists: Dictionary mapping observational contexts to their probability distributions.
                           Keys can be tuples for multi-variable contexts or strings for single variables.
+                          Values can be either dictionaries (outcome -> probability) or Distribution objects.
+            atol: Absolute tolerance for consistency checking (default: 1e-10).
 
         Returns:
             A new Behavior instance with the specified distributions
+
+        Raises:
+            ValueError: If inconsistencies are detected between provided marginals and
+                       implied marginals from joint distributions.
 
         Examples:
             # Single-variable context (what fraction of people prefer coffee?)
@@ -96,15 +103,32 @@ class Behavior:
 
                 context = Context.make(space, ctx_observables)
 
+                # Handle both dict and Distribution inputs
+                if isinstance(pmf, Distribution):
+                    # For Distribution objects, convert to dict for processing
+                    pmf_dict = pmf.to_dict()
+                else:
+                    # Assume it's already a dict
+                    pmf_dict = pmf
+
                 # Validate pmf against context's outcome space
                 valid_outcomes = context.outcomes()
-                if not set(pmf).issubset(set(valid_outcomes)):
-                    extras = set(pmf) - set(valid_outcomes)
+                if not set(pmf_dict).issubset(set(valid_outcomes)):
+                    extras = set(pmf_dict) - set(valid_outcomes)
                     raise ValueError(f"Invalid outcomes for context {tuple(ctx_observables)}: {extras}")
 
                 # Fill missing outcomes with 0 probability (deterministic ordering)
-                full_pmf = {outcome: pmf.get(outcome, 0.0) for outcome in valid_outcomes}
+                full_pmf = {outcome: pmf_dict.get(outcome, 0.0) for outcome in valid_outcomes}
                 behavior[context] = Distribution.from_dict(full_pmf)
+
+        # Always check consistency to catch errors early
+        report = behavior.check_consistency(atol=atol)  # from mixin
+        if not report["ok"]:
+            pretty = "\n".join(
+                f"  joint {m['joint']} vs marginal {m['marginal']}: provided={m['provided']} implied={m['implied']}"
+                for m in report["mismatches"]
+            )
+            raise ValueError("Inconsistent contexts detected:\n" + pretty)
 
         return behavior
 
@@ -112,7 +136,7 @@ class Behavior:
     def frame_independent(cls, space: Space, contexts: Sequence[Sequence[str]],
                          assignment_weights: Optional[np.ndarray] = None) -> Behavior:
         """Create FI behavior from global assignment distribution."""
-        assignments = space.assignments()
+        assignments = list(space.assignments())  # Convert to list to avoid iterator exhaustion
         n = space.assignment_count()
 
         if assignment_weights is None:
@@ -305,6 +329,15 @@ class Behavior:
         """Set distribution for context."""
         if context.space != self.space:
             raise ValueError("Context must belong to the same space")
+
+        # Forbid multiple contexts with identical observable sets
+        for existing_ctx in self.distributions.keys():
+            if tuple(existing_ctx.observables) == tuple(context.observables):
+                raise ValueError(
+                    "Duplicate context with the same observables is not allowed: "
+                    f"{tuple(context.observables)}. Use Behavior.duplicate_context(...) "
+                    "to introduce tagged copies, or add a label observable."
+                )
 
         # Validate that distribution outcomes match context outcomes exactly
         want = tuple(context.outcomes())

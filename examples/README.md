@@ -100,8 +100,12 @@ These examples show you how contrakit can be used for representing different per
 
    ```python
    # Basic agreement measurement
-   agreement_coefficient = harris_method.agreement_with(ward_method)
+   combined_behavior = harris_method.union(ward_method)
+   agreement_coefficient = combined_behavior.agreement.result
    print(f"Methods align {agreement_coefficient*100:.1f}% of the time")
+
+   # Or using the convenient | operator:
+   agreement_coefficient = (harris_method | ward_method).agreement.result
    ```
 
 7. **File: [`intuitions/meta_lens.py`](intuitions/meta_lens.py)** — Recursive application across organizational hierarchies (reviewers → supervisors → directors)

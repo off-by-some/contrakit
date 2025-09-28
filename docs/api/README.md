@@ -14,7 +14,7 @@ obs = Observatory.create(symbols=["Yes", "No"])
 voter = obs.concept("Voter")
 obs.perspectives[voter] = {"Yes": 0.6, "No": 0.4}
 behavior = obs.perspectives.to_behavior()
-print(f"Agreement: {behavior.agreement_score():.3f}")
+print(f"Agreement: {behavior.agreement.result:.3f}")
 ```
 
 **Need help?** [Open an issue](https://github.com/off-by-some/contrakit/issues) or [start a discussion](https://github.com/off-by-some/contrakit/discussions).

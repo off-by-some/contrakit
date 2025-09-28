@@ -428,8 +428,15 @@ class LensPerspectiveProxy:
         # Check for missing observables (now includes observable lenses in space)
         missing = [n for n in ctx_base if n not in base_space.names]
         if missing:
-            raise ValueError(f"Unknown observables in context: {missing}. "
-                           "Make sure lenses are created with symbols to be observable.")
+            if len(missing) == 1:
+                obs_name = missing[0]
+                raise ValueError(f"Unknown observable '{obs_name}'.\n"
+                               f"Did you mean to call `obs.concept(\"{obs_name}\")` first?\n"
+                               f"Or, if this is a lens, pass `symbols=...` when creating it.")
+            else:
+                raise ValueError(f"Unknown observables: {missing}.\n"
+                               f"Did you mean to call `obs.concept(name)` first for each?\n"
+                               f"Or, if these are lenses, pass `symbols=...` when creating them.")
 
         # Normalize PMF outcomes to tuples of symbols
         pmf_base: Dict[Tuple, float] = {}
@@ -512,6 +519,11 @@ class LensScope:
     @property
     def perspectives(self) -> LensPerspectiveProxy:
         return LensPerspectiveProxy(self)
+
+    @property
+    def observable_name(self) -> str:
+        """Get the observable name of this lens."""
+        return self._axis_name
 
     @property
     def name(self) -> str:

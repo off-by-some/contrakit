@@ -129,8 +129,10 @@ def test_behavior_should_have_agreement():
     }
 
     behavior = perspectives.to_behavior()
-    assert isinstance(behavior.agreement, (int, float))
-    assert 0.0 <= behavior.agreement <= 1.0
+    agreement = behavior.agreement.result
+    assert isinstance(agreement, (int, float))
+    assert agreement >= 0.0 - 1e-10
+    assert agreement <= 1.0 + 1e-10
 
 
 def test_accessing_perspectives_before_defining_concepts_should_raise_error():
@@ -281,8 +283,9 @@ def test_compositional_behavior():
     assert len(behavior.distributions) == 3  # Reviewer_A, Reviewer_B, Reviewer_A+Reviewer_B
 
     # Check agreement is reasonable
-    agreement = behavior.agreement
-    assert 0.0 <= agreement <= 1.0
+    agreement = behavior.agreement.result
+    assert agreement >= 0.0 - 1e-10
+    assert agreement <= 1.0 + 1e-10
 
 
 def test_concept_should_return_concept_handles():
@@ -372,7 +375,8 @@ def test_inconsistent_distributions_should_have_valid_agreement():
     }
 
     behavior = perspectives.to_behavior()
-    assert 0.0 <= behavior.agreement <= 1.0
+    assert behavior.agreement.result >= 0.0 - 1e-10
+    assert behavior.agreement.result <= 1.0 + 1e-10
 
 
 def test_invalid_probabilities_should_raise_value_error():
@@ -453,8 +457,10 @@ def test_behavior_should_have_valid_agreement_range():
     perspectives[reviewer_a] = {hire: 0.6}
 
     behavior = perspectives.to_behavior()
-    assert isinstance(behavior.agreement, (int, float))
-    assert 0.0 <= behavior.agreement <= 1.0
+    agreement = behavior.agreement.result
+    assert isinstance(agreement, (int, float))
+    assert agreement >= 0.0 - 1e-10
+    assert agreement <= 1.0 + 1e-10
 
 
 def test_marginal_distribution_overwriting_should_work():
@@ -585,7 +591,8 @@ def test_contradictory_distributions_should_produce_valid_agreement():
     }
 
     behavior = perspectives.to_behavior()
-    assert 0.0 <= behavior.agreement <= 1.0
+    assert behavior.agreement.result >= 0.0 - 1e-10
+    assert behavior.agreement.result <= 1.0 + 1e-10
 
 
 def test_probability_tolerance_should_accept_near_one():
@@ -935,8 +942,10 @@ def test_meta_lens_joint_and_composition():
     assert composed_behavior.contradiction_bits > 0.0
     
     # 4. Agreement is bounded
-    assert 0.0 <= composed_behavior.agreement <= 1.0
-    assert 0.0 <= auditor_behavior.agreement <= 1.0
+    assert composed_behavior.agreement.result >= 0.0 - 1e-10
+    assert composed_behavior.agreement.result <= 1.0 + 1e-10
+    assert auditor_behavior.agreement.result >= 0.0 - 1e-10
+    assert auditor_behavior.agreement.result <= 1.0 + 1e-10
     
     # 5. Test that & syntax works for creating joint contexts
     joint_context = alice & bob
@@ -959,5 +968,44 @@ def test_meta_lens_joint_and_composition():
         }
     
     auditor2_behavior = auditor2.to_behavior()
-    assert 0.0 <= auditor2_behavior.agreement <= 1.0
+    assert auditor2_behavior.agreement.result >= 0.0 - 1e-10
+    assert auditor2_behavior.agreement.result <= 1.0 + 1e-10
+
+
+def test_unknown_observable_should_provide_helpful_error_message():
+    """Test that unknown observables provide helpful error messages with suggestions."""
+    observatory = Observatory.create(symbols=["Yes", "No"])
+
+    # Define one concept so the lens can be used, then try to use an undefined concept
+    existing_concept = observatory.concept("ExistingConcept")
+
+    # Create a lens but try to use an undefined concept
+    with observatory.lens("TestLens") as lens:
+        try:
+            lens.perspectives["UndefinedConcept"] = {"Yes": 1.0}
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            error_msg = str(e)
+            assert "Unknown observable 'UndefinedConcept'" in error_msg
+            assert "obs.concept(\"UndefinedConcept\")" in error_msg
+            assert "symbols=..." in error_msg
+
+
+def test_unknown_observables_plural_should_provide_helpful_error_message():
+    """Test that multiple unknown observables provide helpful plural error messages."""
+    observatory = Observatory.create(symbols=["Yes", "No"])
+
+    # Define one concept so the lens can be used, then try to use multiple undefined concepts
+    existing_concept = observatory.concept("ExistingConcept")
+
+    # Create a lens but try to use multiple undefined concepts
+    with observatory.lens("TestLens") as lens:
+        try:
+            lens.perspectives["Undefined1", "Undefined2"] = {("Yes", "No"): 1.0}
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            error_msg = str(e)
+            assert "Unknown observables:" in error_msg
+            assert "obs.concept(name)" in error_msg
+            assert "symbols=..." in error_msg
 

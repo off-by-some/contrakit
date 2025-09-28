@@ -13,7 +13,7 @@ Key Concepts Demonstrated:
 - Testing frame independence (consistency across all contexts)
 - Using different behavior constructors (from_mu, from_counts, random, frame_independent)
 - Understanding how behaviors represent multi-perspective observations
-- Comparing behaviors across different observational perspectives (agreement_with)
+- Comparing behaviors across different observational perspectives (union, | operator)
 - Analyzing contradiction costs in bits
 
 Behaviors are the fundamental objects for studying contradictions in
@@ -61,24 +61,20 @@ print(f"Consistent behavior has {len(consistent_weather)} contexts")
 print(f"Agreement coefficient: {consistent_weather.alpha_star:.6f} (perfect agreement)")
 print(f"Contradiction cost: {consistent_weather.K:.6f} bits (no contradiction)")
 
-# 2. Creating Contradictory Behaviors
-print("\n2. Creating Contradictory Behaviors")
-print("-" * 37)
 
-# Define a contradictory behavior (Simpson's paradox style)
-print("Creating a contradictory weather behavior...")
-contradictory_weather = Behavior.from_contexts(weather_space, {
-    (MORNING,): {(SUNNY,): 0.7, (RAINY,): 0.3},  # Morning tends to be sunny
-    (EVENING,): {(SUNNY,): 0.7, (RAINY,): 0.3},  # Evening also tends to be sunny
+# Create a behavior with moderate tension (different perspectives but still consistent)
+moderate_tension_weather = Behavior.from_contexts(weather_space, {
+    (MORNING,): {(SUNNY,): 0.6, (RAINY,): 0.4},
+    (EVENING,): {(SUNNY,): 0.5, (RAINY,): 0.5},
     (MORNING, EVENING): {
-        (SUNNY, SUNNY): 0.21, (SUNNY, RAINY): 0.28,  # Contradictory patterns!
-        (RAINY, SUNNY): 0.28, (RAINY, RAINY): 0.23   # Sunny mornings often have rainy evenings
+        (SUNNY, SUNNY): 0.3, (SUNNY, RAINY): 0.3,
+        (RAINY, SUNNY): 0.2, (RAINY, RAINY): 0.2
     }
 })
 
-print(f"Contradictory behavior has {len(contradictory_weather)} contexts")
-print(f"Agreement coefficient: {contradictory_weather.alpha_star:.6f} (imperfect agreement)")
-print(f"Contradiction cost: {contradictory_weather.K:.6f} bits (significant contradiction)")
+print(f"Moderate tension behavior has {len(moderate_tension_weather)} contexts")
+print(f"Agreement coefficient: {moderate_tension_weather.alpha_star:.6f} (good but imperfect agreement)")
+print(f"Contradiction cost: {moderate_tension_weather.K:.6f} bits (some tension)")
 
 # 3. Frame Independence Testing
 print("\n3. Frame Independence Testing")
@@ -86,7 +82,7 @@ print("-" * 31)
 
 print("Testing frame independence:")
 print(f"  Consistent behavior: {consistent_weather.is_frame_independent()}")
-print(f"  Contradictory behavior: {contradictory_weather.is_frame_independent()}")
+print(f"  Moderate tension behavior: {moderate_tension_weather.is_frame_independent()}")
 
 print("\nInterpretation:")
 print("  Frame-independent behaviors can be explained by a single underlying reality.")
@@ -97,7 +93,7 @@ print("\n4. Understanding Behavior Contexts")
 print("-" * 35)
 
 print(f"Consistent behavior contexts:")
-for i, ctx in enumerate(consistent_weather.context, 1):
+for i, ctx in enumerate(consistent_weather.distributions.keys(), 1):
     print(f"  {i}. {ctx.observables}: {len(ctx.outcomes())} possible outcomes")
 
 # 5. Creating Behaviors from Global Distributions
@@ -150,42 +146,45 @@ for ctx in count_behavior.context:
     ctx_key = tuple(ctx.observables)
     print(f"  {ctx_key}: {dict(count_behavior[ctx].to_dict())}")
 
-# 7. Advanced: Hiring Example with Contradiction
-print("\n7. Advanced: Hiring Example with Contradiction")
-print("-" * 45)
+# 7. Advanced: Hiring Example with Consistent Perspectives
+print("\n7. Advanced: Hiring Example with Consistent Perspectives")
+print("-" * 52)
 
-# Create a hiring scenario with reviewer contradictions
+# Create a hiring scenario with consistent reviewer behavior
 hiring_space = Space.create(**{
     REVIEWER_A: [H, N],
     REVIEWER_B: [H, N],
     REVIEWER_C: [H, N]
 })
 
-print("Creating hiring behavior with reviewer contradictions...")
+print("Creating hiring behavior with consistent reviewer perspectives...")
 hiring_behavior = Behavior.from_contexts(hiring_space, {
-    # Individual reviewer tendencies
+    # Individual reviewer tendencies (consistent with joints)
     (REVIEWER_A,): {(H,): 0.7, (N,): 0.3},  # A hires 70% of candidates
     (REVIEWER_B,): {(H,): 0.4, (N,): 0.6},  # B is more skeptical
-    (REVIEWER_C,): {(H,): 0.8, (N,): 0.2},  # C is more generous
+    (REVIEWER_C,): {(H,): 0.6, (N,): 0.4},  # C consistent with joint marginals
 
-    # Joint evaluations (showing contradictions)
+    # Joint evaluations (consistent with marginals)
     (REVIEWER_A, REVIEWER_B): {
         (H, H): 0.3, (H, N): 0.4,  # A says hire, B says no: 40%
-        (N, H): 0.1, (N, N): 0.2   # A says no, B says hire: 10% (rare)
+        (N, H): 0.1, (N, N): 0.2   # A says no, B says hire: 10%
     },
     (REVIEWER_B, REVIEWER_C): {
-        (H, H): 0.35, (H, N): 0.05,
-        (N, H): 0.35, (N, N): 0.25
+        (H, H): 0.32, (H, N): 0.08,  # B hire, C no: 8%
+        (N, H): 0.28, (N, N): 0.32   # B no, C hire: 32%
     },
     (REVIEWER_A, REVIEWER_C): {
-        (H, H): 0.6, (H, N): 0.1,
-        (N, H): 0.1, (N, N): 0.2
+        (H, H): 0.6, (H, N): 0.1,    # A hire, C no: 10%
+        (N, H): 0.0, (N, N): 0.3     # A no, C hire: 30%
     }
 })
 
 print(f"Hiring behavior has {len(hiring_behavior)} contexts")
-print(f"Overall agreement: {hiring_behavior.agreement:.6f}")
+print(f"Agreement coefficient: {hiring_behavior.alpha_star:.6f}")
 print(f"Contradiction cost: {hiring_behavior.contradiction_bits:.6f} bits")
+
+print("\nThis example shows how different reviewer perspectives can be")
+print("consistently modeled, even with varying individual tendencies.")
 
 # 8. Computing Agreement with Custom Weights
 print("\n8. Computing Agreement with Custom Weights")
@@ -198,20 +197,25 @@ trust_weights = {
     (REVIEWER_C,): 0.1   # Trust C least
 }
 
-result = hiring_behavior.agreement_for_weights(trust_weights)
-print(f"Agreement with custom weights: {result.score:.6f}")
+# Use the new fluent agreement API
+agreement_score = hiring_behavior.agreement.for_weights(trust_weights).result
+print(f"Agreement with custom weights: {agreement_score:.6f}")
 
-# Show top scenarios from the optimal explanation
-scenarios = result.scenarios()
-sorted_scenarios = sorted(scenarios, key=lambda x: x[1], reverse=True)
+# Get the explanation (scenario distribution)
+explanation = hiring_behavior.agreement.for_weights(trust_weights).explanation
 
 print("Top 3 scenarios from optimal explanation:")
-for i, (scenario, prob) in enumerate(sorted_scenarios[:3], 1):
+scenarios = hiring_behavior.agreement.for_weights(trust_weights).scenarios()
+for i, (scenario, prob) in enumerate(scenarios[:3]):
     # Map indices to reviewer names and decisions
     names = [REVIEWER_A, REVIEWER_B, REVIEWER_C]
     decisions = [H if s == 0 else N for s in scenario]  # Assuming H=0, N=1 in space order
     scenario_str = ", ".join(f"{name}: {dec}" for name, dec in zip(names, decisions))
-    print(f"  {i}. {scenario_str} ({prob:.1%})")
+    print(f"  {i+1}. {scenario_str} ({prob:.1%})")
+
+print("\nFeature distributions from optimal explanation:")
+reviewer_a_dist = hiring_behavior.agreement.for_weights(trust_weights).feature_distribution(REVIEWER_A)
+print(f"  {REVIEWER_A} distribution: {reviewer_a_dist}")
 
 # 9. Worst-Case Weights Analysis
 print("\n9. Worst-Case Weights Analysis")
@@ -263,7 +267,7 @@ print(f"Random morning: {dict(random_behavior[random_behavior.context[0]].to_dic
 
 # Frame-independent behavior
 fi_behavior = Behavior.frame_independent(weather_space, [[MORNING], [EVENING], [MORNING, EVENING]])
-print(f"Frame-independent behavior agreement: {fi_behavior.agreement:.6f} (should be 1.0)")
+print(f"Frame-independent behavior agreement: {fi_behavior.agreement.result:.6f} (should be 1.0)")
 
 # Per-context scores
 scores = hiring_behavior.per_context_scores()
@@ -296,20 +300,22 @@ ground_observer = Behavior.from_contexts(extended_space, {
     ("Humidity",): {("Dry",): 0.5, ("Humid",): 0.5}
 })
 
-comparison_score = sky_observer.agreement_with(ground_observer)
+comparison_score = (sky_observer | ground_observer).agreement.result
 print(f"Agreement between sky and ground weather observers: {comparison_score:.6f}")
 print("  (High agreement means their observations are reconcilable)")
 print("  (Low agreement would indicate fundamental conflicts between observers)")
 
 # Demonstrate comparison with custom trust weights
-weighted_comparison = sky_observer.agreement_with(ground_observer,
-    weights={("Morning",): 0.3, ("Evening",): 0.3, ("Cloud_Cover",): 0.2, ("Humidity",): 0.2})
+combined_observers = sky_observer | ground_observer
+weighted_comparison = combined_observers.agreement.for_weights({
+    ("Morning",): 0.3, ("Evening",): 0.3, ("Cloud_Cover",): 0.2, ("Humidity",): 0.2
+}).result
 print(f"Agreement with balanced trust across all observations: {weighted_comparison:.6f}")
 
-print("agreement_with() combines behaviors from the same space but different contexts,")
-print("computing overall agreement across the merged observational perspectives.")
-print("This enables cross-validation between different measurement approaches.")
+print("The | operator combines behaviors from the same space but different contexts,")
+print("creating a merged behavior. This enables cross-validation between different")
+print("measurement approaches: (sky_observer | ground_observer).agreement.result")
 
 
 print("\n")
-print_header("Behavior demonstration complete!")
+print_header("Behavior demonstration complete")

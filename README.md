@@ -31,9 +31,9 @@ It tells you things like:
 
 Think of it as an information-theoretic microscope for disagreement. Just as entropy priced *randomness*, Contrakit prices *contradiction*—so you can see exactly what it costs to flatten diverse perspectives into one.
 
-
-
 ## Quickstart
+> **⚠️ Under Construction**: This project is currently under active development. Currently i'm in the process of translating all of my Coq formalizations, notebooks, and personal scripts into API functionality and documentation. The core functionality is ready to use, but APIs, documentation, and features will change.
+
 
 **Install:**
 

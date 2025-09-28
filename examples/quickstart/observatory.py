@@ -102,7 +102,7 @@ print("-" * 55)
 # Create behavior object
 behavior = observatory.perspectives.to_behavior()
 print(f"Created behavior with {len(behavior)} contexts")
-print(f"Overall agreement: {behavior.agreement:.6f}")
+print(f"Overall agreement: {behavior.agreement.result:.6f}")
 print(f"Contradiction bits: {behavior.contradiction_bits:.3f}")
 
 # 7. Setting Up Contradictory Distributions
@@ -122,7 +122,7 @@ observatory.perspectives[voter, candidate] = {
 }
 
 behavior_contradictory = observatory.perspectives.to_behavior()
-print(f"Contradictory behavior agreement: {behavior_contradictory.agreement:.6f}")
+print(f"Contradictory behavior agreement: {behavior_contradictory.agreement.result:.6f}")
 print(f"Contradictory behavior contradiction: {behavior_contradictory.contradiction_bits:.3f} bits")
 
 # 8. Using Lenses for Different Perspectives
@@ -136,7 +136,7 @@ with observatory.lens(reviewer) as lens_r:
     lens_r.perspectives[local_concept] = {val1: 0.7, val2: 0.3}
     behavior_r = lens_r.to_behavior()
     print(f"Lens behavior created with {len(behavior_r)} contexts")
-    print(f"Lens agreement: {behavior_r.agreement:.6f}")
+    print(f"Lens agreement: {behavior_r.agreement.result:.6f}")
 
 # 9. Advanced Lens Features: Meta-Lenses
 print("\n9. Advanced Lens Features: Meta-Lenses")
@@ -184,8 +184,8 @@ with observatory.lens("Joint_Observer", symbols=["Agree", "Disagree"]) as joint_
 
 composed_behavior = composition.to_behavior()
 joint_behavior = joint_lens.to_behavior()
-print(f"Composed behavior agreement: {composed_behavior.agreement:.6f}")
-print(f"Joint observer agreement: {joint_behavior.agreement:.6f}")
+print(f"Composed behavior agreement: {composed_behavior.agreement.result:.6f}")
+print(f"Joint observer agreement: {joint_behavior.agreement.result:.6f}")
 print(f"Joint observer contradiction: {joint_behavior.contradiction_bits:.3f} bits")
 
 # 11. ValueHandle Advanced Operations

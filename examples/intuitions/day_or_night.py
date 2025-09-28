@@ -123,7 +123,7 @@ print("Information theory gives us a way to measure this precisely—the")
 print("probability that two methods would converge on the same answer.")
 print()
 
-agreement_coefficient = harris_method.agreement_with(ward_method)
+agreement_coefficient = (harris_method | ward_method).agreement.result
 
 print(f"Agreement coefficient: {agreement_coefficient:.4f}")
 print(f"They align {agreement_coefficient*100:.1f}% of the time")
@@ -222,8 +222,8 @@ print("actual patterns?")
 print()
 
 # Test each approach against ground truth
-harris_accuracy = physical_reality.agreement_with(harris_method)
-ward_accuracy = physical_reality.agreement_with(ward_method)
+harris_accuracy = (physical_reality | harris_method).agreement.result
+ward_accuracy = (physical_reality | ward_method).agreement.result
 
 print(f"Harris's accuracy: {harris_accuracy*100:.1f}%")
 print(f"Ward's accuracy: {ward_accuracy*100:.1f}%")

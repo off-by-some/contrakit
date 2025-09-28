@@ -166,6 +166,9 @@ class AlphaStar:
     def _extract_solution(self, theta_var: cp.Variable, problem: cp.Problem,
                          solver_name: str, dual_constraints: Optional[List] = None) -> Solution:
         """Extract solution components from solved problem."""
+        alpha_star = 0.0
+        lam_dict = {}
+        diagnostics = {}
         theta_star = np.asarray(theta_var.value).ravel()
 
         # Compute objective values for all contexts
@@ -175,6 +178,16 @@ class AlphaStar:
             ))
             for c in self.context.contexts
         ])
+
+        if g_vals.size == 0:
+            # No feasible context → total contradiction
+            return Solution(
+                objective=alpha_star,
+                weights=theta_star,
+                lambdas=lam_dict,
+                solver=solver_name,
+                diagnostics=diagnostics
+            )
 
         alpha_star = float(np.clip(g_vals.min(), 0.0, 1.0))
 

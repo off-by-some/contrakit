@@ -25,26 +25,33 @@ Standard architectures conflate these states. Softmax outputs treat everything a
 Many real-world tasks behave as partial functions. Some inputs have clear answers. Others legitimately have none—or multiple incompatible ones depending on context:
 
 ```python
-# A partial function: f is NOT defined everywhere
-PARTIAL_F = {
-    3: "B",
-    7: "A",
-    19: "D",
-    42: "C",
-}
+# A partial function: "What day comes after today?" is undefined without context
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-def world(x):
-    """Ground truth: returns None if undefined."""
-    return PARTIAL_F.get(x)
+def tomorrow(today):
+    """Ground truth: returns None if undefined (no context about what 'today' is)."""
+    if today not in DAYS:
+        return None  # Undefined: no information about what day it is
+    index = DAYS.index(today)
+    return DAYS[(index + 1) % 7]
 
-for x in [3, 7, 8, 19]:
-    print(x, "→", world(x))
+# Without context, the function is undefined
+print("What day comes after today?")
+print("tomorrow() →", tomorrow())  # Error: missing required argument
+
+# With context, it works perfectly
+print("\nWith context:")
+for day in ["Monday", "Tuesday", "Friday"]:
+    print(f"If today is {day}, tomorrow is {tomorrow(day)}")
 
 # Output:
-# 3 → B
-# 7 → A
-# 8 → None  # ← Ontological absence, not uncertainty
-# 19 → D
+# What day comes after today?
+# TypeError: tomorrow() missing 1 required positional argument: 'today'
+#
+# With context:
+# If today is Monday, tomorrow is Tuesday
+# If today is Tuesday, tomorrow is Wednesday
+# If today is Friday, tomorrow is Saturday
 ```
 
 The world genuinely has no answer for input 8. This is different from "unknown" (information exists but isn't accessible, like a password you don't have) and "low probability" (information is uncertain but has a distribution, like a coin flip before you observe it). Undefined means the function doesn't map there—no fact in reality corresponds to this query.

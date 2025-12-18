@@ -2,13 +2,15 @@
 
 **Statement.**
 
-Any contradiction measure $K$ obeying A0–A4 admits a minimax form 
+Any contradiction measure $K$ obeying A0–A4 admits a minimax form—
 
 $$
 K(P)=h\!\left(\max_{Q\in \mathrm{FI}}\min_{c\in\mathcal C} F(p_c,q_c)\right) = h\!\left(\min_{\lambda\in\Delta(\mathcal C)}\max_{Q\in\mathrm{FI}}\sum_c \lambda_c F(p_c,q_c)\right),
 $$
 
-for some per-context agreement kernel $F$ with normalization, symmetry, continuity, DPI, joint concavity, and calibration, and some strictly decreasing continuous $h$. Optima are attained. 
+for some per-context agreement kernel $F$ with normalization, symmetry, continuity, DPI, joint concavity, and calibration, and some strictly decreasing continuous $h$.
+
+Optima are attained. We establish this through careful construction. And we do this rigorously. 
 
 
 Any contradiction measure $K$ satisfying A0–A4 admits an adversarial (min–max) representation:
@@ -19,11 +21,13 @@ $$
 
 for some per-context agreement functional $F: \Delta(\mathcal{O})\times\Delta(\mathcal{O})\rightarrow[0,1]$ (for each finite alphabet $\mathcal{O}$) and a strictly decreasing, continuous scalar map $h:(0,1]\to\mathbb{R}_{\ge0}$.
 
-Equivalently,
+Equivalently—
 
 $$
 K(P)\;=\;h\!\left(\min_{\lambda\in\Delta(\mathcal C)}\ \max_{Q\in\mathrm{FI}}\ \sum_{c}\lambda_c\,F\big(p_c,q_c\big)\right).
 $$
+
+Put differently—this captures the adversarial nature.
 
 **Assumptions**
 

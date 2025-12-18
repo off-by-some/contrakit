@@ -2,7 +2,7 @@
 
 **Statement.**
 
-For independent systems on disjoint observables with product-closed $\mathrm{FI}$,
+For independent systems on disjoint observables with product-closed $\mathrm{FI}$—
 
 $$
 \alpha^\star(P\otimes R)=\alpha^\star(P)\,\alpha^\star(R)
@@ -10,19 +10,23 @@ $$
 K(P\otimes R)=K(P)+K(R).
 $$
 
+In short—this establishes additivity.
+
 **Assumptions.**
 
 Finite alphabets; $\mathrm{FI}$ convex/compact and product-closed (Prop. A.1.6, A.1.8); $F=\mathrm{BC}$ (Def. A.2.1; Lemma A.2.2).
 
 **Proof.**
 
-Let $P$ be a behavior on $(\mathcal{X},\mathcal{C})$ and $R$ on $(\mathcal{Y},\mathcal{D})$ with $\mathcal{X}\cap\mathcal{Y}=\emptyset$. Write
+Let $P$ be a behavior on $(\mathcal{X},\mathcal{C})$ and $R$ on $(\mathcal{Y},\mathcal{D})$ with $\mathcal{X}\cap\mathcal{Y}=\emptyset$. Write—
 
 $$
 \alpha^\star(P)=\max_{Q_A\in\mathrm{FI}_{\mathcal{X},\mathcal{C}}}\ \min_{c\in\mathcal{C}}\mathrm{BC}(p_c,q_c),
 \qquad
 \alpha^\star(R)=\max_{Q_B\in\mathrm{FI}_{\mathcal{Y},\mathcal{D}}}\ \min_{d\in\mathcal{D}}\mathrm{BC}(r_d,s_d).
 $$
+
+We now establish the bounds systematically—and we do this through careful analysis. Consider the implications thoroughly.
 
 **Lower bound ($\geq$).**
 

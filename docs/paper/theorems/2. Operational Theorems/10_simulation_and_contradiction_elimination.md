@@ -1,12 +1,12 @@
 # **Theorem 10** *(Witnessing for TV-Approximation)*
 
-There exist witnesses $W_n$ with rate $K(P)+o(1)$ and FI laws $\tilde{Q}_n$ such that $\mathrm{TV}((X^n, W_n), \tilde{Q}_n) \to 0$. No rate $< K(P)$ achieves vanishing $\mathrm{TV}$. (achievability via App. A.12; TV lower bound cf. App. A.11)
+There exist witnesses $W_n$ with rate $K(P)+o(1)$ and FI laws $\tilde{Q}_n$ such that $\mathrm{TV}((X^n, W_n), \tilde{Q}_n) \to 0$. No rate $< K(P)$ achieves vanishing $\mathrm{TV}$. Put differently—this establishes simulation bounds. And we do this through resolvability arguments.
 
 **Proof Strategy:**
 
-- *Achievability:* View the task as **distributed channel synthesis**: witnesses act as the **common randomness** that coordinates contexts. A resolvability-style construction (Han & Verdú, 1993) specialized to the distributed setting of Cuff (2013) draws a $2^{n(K(P)+\varepsilon)}$ FI codebook and selects an index passing a Bhattacharyya test; multiplicativity then gives $\mathrm{TV}\to 0$.
+- *Achievability:* View the task as **distributed channel synthesis**—witnesses act as the **common randomness** that coordinates contexts. A resolvability-style construction (Han & Verdú, 1993) specialized to the distributed setting of Cuff (2013) draws a $2^{n(K(P)+\varepsilon)}$ FI codebook and selects an index passing a Bhattacharyya test; multiplicativity then gives $\mathrm{TV}\to 0$.
 
-- *Converse:* A simulator with witness rate $< K(P)$ would contradict the exponent bound in Theorem 9.
+- *Converse:* A simulator with witness rate $< K(P)$ would contradict the exponent bound in Theorem 9. We establish this through contradiction.
 
   
 

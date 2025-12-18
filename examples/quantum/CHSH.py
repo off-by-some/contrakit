@@ -1,12 +1,6 @@
 # CHSH Inequality Analysis
 #
-# This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality,
-# a mathematical constraint that distinguishes between different types of
-# correlations. The CHSH inequality establishes that certain measurement
-# correlations cannot exceed a value of 2 when the underlying system follows
-# local realistic principles. Quantum mechanics predicts correlations that
-# violate this bound, demonstrating contextuality that cannot be explained
-# by any single unified classical model.
+# This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality—a mathematical constraint that distinguishes between different types of correlations. Formally, the CHSH inequality establishes that certain measurement correlations cannot exceed a value of 2 when the underlying system follows local realistic principles. Quantum mechanics predicts correlations that violate this bound—demonstrating contextuality that cannot be explained by any single unified classical model; the violation is fundamental.
 
 import numpy as np
 from math import cos, pi
@@ -61,14 +55,12 @@ def chsh_value(E00, E01, E10, E11):
     """
     Calculate the CHSH inequality value using the standard combination of signs.
 
-    The CHSH inequality tests whether the combination |E₀₀ + E₀₁ + E₁₀ - E₁₁| ≤ 2,
-    where Eᵢⱼ represents the correlation between measurement choices i and j.
+    The CHSH inequality tests whether |E₀₀ + E₀₁ + E₁₀ - E₁₁| ≤ 2—where Eᵢⱼ represents the correlation between measurement choices i and j. Put differently, this is just the standard Bell test statistic.
 
     Parameters
     ----------
     E00, E01, E10, E11 : float
-        Correlation coefficients for the four measurement combinations:
-        E00 = ⟨A₀B₀⟩, E01 = ⟨A₀B₁⟩, E10 = ⟨A₁B₀⟩, E11 = ⟨A₁B₁⟩
+        Correlation coefficients: E00 = ⟨A₀B₀⟩, E01 = ⟨A₀B₁⟩, E10 = ⟨A₁B₀⟩, E11 = ⟨A₁B₁⟩
 
     Returns
     -------
@@ -81,9 +73,7 @@ def chsh_maximum(E00, E01, E10, E11):
     """
     Calculate the maximum CHSH inequality value over all valid sign combinations.
 
-    The CHSH inequality considers different ways to combine the correlation terms.
-    While the standard form uses |E₀₀ + E₀₁ + E₁₀ - E₁₁|, other combinations
-    like |E₀₀ - E₀₁ + E₁₀ + E₁₁| may give higher values depending on the data.
+    The CHSH inequality considers different ways to combine the correlation terms—while the standard form uses |E₀₀ + E₀₁ + E₁₀ - E₁₁|, other combinations like |E₀₀ - E₀₁ + E₁₀ + E₁₁| may give higher values depending on the data. In short, we only need to check all sign permutations satisfying the CHSH constraint.
 
     Parameters
     ----------
@@ -111,17 +101,12 @@ def create_behavior_from_correlations(correlations_dict):
     """
     Construct a Behavior object from CHSH experimental data.
 
-    Uses pre-defined CHSH measurement space and mapping.
+    Uses pre-defined CHSH measurement space and mapping; this is straightforward conversion.
 
     Parameters
     ----------
     correlations_dict : dict
-        Dictionary containing probability distributions for each measurement
-        configuration. Keys '00', '01', '10', '11' correspond to:
-        - '00': Alice measures A₀, Bob measures B₀
-        - '01': Alice measures A₀, Bob measures B₁
-        - '10': Alice measures A₁, Bob measures B₀
-        - '11': Alice measures A₁, Bob measures B₁
+        Dictionary containing probability distributions for each measurement configuration. Keys '00', '01', '10', '11' correspond to Alice/Bob measurement pairs
 
     Returns
     -------
@@ -432,13 +417,7 @@ def check_no_signalling(contexts, tol=1e-9):
 
 create_analysis_header(
     "CHSH Inequality Analysis",
-    description="This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality, "
-               "a mathematical constraint that distinguishes between different types of "
-               "correlations. The CHSH inequality establishes that certain measurement "
-               "correlations cannot exceed a value of 2 when the underlying system follows "
-               "local realistic principles. Quantum mechanics predicts correlations that "
-               "violate this bound, demonstrating contextuality that cannot be explained "
-               "by any single unified classical model.",
+    description="This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality—a mathematical constraint that distinguishes between different types of correlations. Formally, the CHSH inequality establishes that certain measurement correlations cannot exceed a value of 2 when the underlying system follows local realistic principles. Quantum mechanics predicts correlations that violate this bound—demonstrating contextuality that cannot be explained by any single unified classical model; the violation reveals fundamental incompatibility.",
     key_points=[
         "Threshold (S): indicates whether classical realism holds (S ≤ 2)",
         "Quantity (K): measures the degree of perspectival contradiction in the data",
@@ -473,6 +452,7 @@ chsh_config1 = chsh_maximum(correlation_00_config1, correlation_01_config1,
 
 # Facts
 print("Facts:")
+print("We show the empirical results. Consider the correlations.")
 is_no_signalling, max_deviation = check_no_signalling(config1_contexts)
 print(f"  No-signalling: {'PASS' if is_no_signalling else 'FAIL'} (max deviation {max_deviation:.2e})")
 print(f"  E(00), E(01), E(10), E(11): [{correlation_00_config1:+.6f}, {correlation_01_config1:+.6f}, {correlation_10_config1:+.6f}, {correlation_11_config1:+.6f}]")
@@ -494,7 +474,7 @@ print("  FI certificate: projection onto the FI polytope (convex hull of determi
 # Interpretation
 print("Interpretation:")
 if chsh_config1 <= 2 + 1e-12:
-    print("  Within the classical region, a single frame explains all contexts; K ≈ 0.")
+    print("  Within the classical region, a single frame explains all contexts; K ≈ 0. Put differently, nothing is hiding—no information cost is required.")
 
 print()
 
@@ -570,6 +550,7 @@ print("Summary:")
 print("  • When S exceeds 2, frame-independence fails.")
 print("  • K(P) increases smoothly with S, quantifying the minimal bits of contextual information required.")
 print("  • This invariant holds across all examples: below each classical bound, K=0; above it, K>0.")
+print("  • And this smoothness reveals the underlying physics—nothing arbitrary is hiding.")
 print()
 
 # -----------------------------
@@ -577,6 +558,7 @@ print()
 # -----------------------------
 print_section_header("Parametric Analysis: Threshold (S) vs Quantity (K)")
 print("Varying measurement angles to verify the invariant: S ≤ 2 ⇒ K=0; S > 2 ⇒ K>0")
+print("Having established the discrete cases, we now examine the continuous transition; this is to demonstrate the invariant across the boundary.")
 print()
 
 # Parametric analysis: Vary Bob's second measurement angle while keeping others fixed
@@ -585,6 +567,8 @@ chsh_sweep_values = []
 contradiction_sweep_values = []
 
 print("Computing CHSH values and contextuality measures for different angles...")
+print("Formally, we sweep the measurement parameter to verify the invariant holds continuously.")
+print("This is to establish the boundary behavior. What becomes unavoidable: the transition is smooth.")
 
 for measurement_angle in measurement_angles_range:
     # Fixed measurement configuration with one varying parameter
@@ -746,6 +730,7 @@ output_path = save_figure('bell_chsh_analysis.png')
 # Verify the invariant across the sweep
 print_boundary_analysis(chsh_sweep_values, contradiction_sweep_values, 2.0, "S", "K(P)")
 print("Verification: For all sampled angles with S ≤ 2, K(P) < 1e-9; for S > 2, K(P) > 0.")
+print("This confirms the invariant. Nothing is hiding in the boundary behavior.")
 
 
 display_figure()

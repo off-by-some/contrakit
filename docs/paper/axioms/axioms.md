@@ -2,25 +2,20 @@
 
 The six axioms we introduce are not inventions—they arise directly from the structural lessons of the lenticular coin. Each insight about how perspectives behave becomes a constraint on what any reasonable contradiction measure must respect.
 
-Let's recall what the coin revealed:
+Let's recall what the coin revealed: multiple valid perspectives can coexist; each perspective remains locally consistent; full agreement can be structurally impossible; ambiguity is lawful, but never accidental; modeling can fix ambiguity, not fundamental disagreement; perspective is the substance of contradiction; contradictions obey patterns—they aren't noise; and coordinating across views incurs real cost.
 
-1. Multiple valid perspectives can coexist.
-2. Each perspective remains locally consistent.
-3. Full agreement can be structurally impossible.
-4. Ambiguity is lawful, but never accidental.
-5. Modeling can fix ambiguity, not fundamental disagreement
-6. Perspective is the substance of contradiction.
-7. Contradictions obey patterns—they aren't noise.
-8. Coordinating across views incurs real cost.
+Taken together, these insights tell us what contradiction must be—and they narrow the field of admissible measures, ruling out those that ignore ambiguity, neglect context, or fail to track structural strain. An ablation analysis is available within App. B.3 for readers that are interested.
 
-Taken together, these insights tell us what contradiction must be. They narrow the field of admissible measures—ruling out those that ignore ambiguity, neglect context, or fail to track structural strain. An ablation analysis is available within App. B.3 for readers that are interested. We'll now formalize these constraints as six axioms. They are elementary, but together, they uniquely determine the contradiction measure:
+We only need to formalize these constraints as six axioms. They are elementary, but together, they uniquely determine the contradiction measure:
 $$
 K(P) = -\log_2 \alpha^\star(P)
 $$
 
+This is intuitive.
+
 ## Exploring the Axioms with Code
 
-In this exploration, we'll use contrakit's Observatory API to verify that our contradiction measure $K(P) = -\log_2 \alpha^\star(P)$ satisfies each axiom. We'll work with the lenticular coin example, encoding Nancy, Dylan, and Tyler's observations.
+Having established the axioms conceptually, we now turn to verification. Formally, we'll use contrakit's Observatory API to verify that our contradiction measure $K(P) = -\log_2 \alpha^\star(P)$ satisfies each axiom. We'll work with the lenticular coin example, encoding Nancy, Dylan, and Tyler's observations.
 
 ```python
 from contrakit.observatory import Observatory
@@ -82,10 +77,11 @@ print(f"Frame-independent behavior K: {fi_behavior.K:.4f} bits")
 
 > *Contradiction lives in the structure of perspectives—not within perspectives themselves.*
 
-
 $K$ is invariant under outcome and context relabelings (permutations).
 
-**This is what enables multiple perspectives to exist.** No matter whether Nancy said "YES," Dylan "NO," and Tyler "BOTH", they all could be written as $(1,0,\tfrac12)$ without changing anything operational. Only the *pattern of compatibility* matters.
+Put differently—this is what enables multiple perspectives to exist. No matter whether Nancy said "YES," Dylan "NO," and Tyler "BOTH", they all could be written as $(1,0,\tfrac12)$ without changing anything operational. Only the *pattern of compatibility* matters.
+
+We show this to be fundamental.
 
 ```python
 # Test label invariance using the pre-defined lenticular behavior
@@ -119,7 +115,9 @@ print(f"Invariant: {abs(lenticular_behavior.K - relabeled_behavior.K) < 1e-10}")
 # Invariant: True
 ```
 
-**Without A0**, renaming outcomes or contexts could change the contradiction count. We could thus "game" $K$ by relabeling alone—despite identical experiments and decisions (App B.3.2). This would make $K$ about notation, not structure — leading to semantic bias where truth becomes cosmetic; privileging some vocabularies and allowing erasure of other perspectives.
+**Without A0**, renaming outcomes or contexts could change the contradiction count. We could thus "game" $K$ by relabeling alone—despite identical experiments and decisions (App B.3.2). This would make $K$ about notation, not structure—leading to semantic bias where truth becomes cosmetic; privileging some vocabularies and allowing erasure of other perspectives.
+
+The structure must transcend labels.
 
 ------
 
@@ -130,6 +128,8 @@ print(f"Invariant: {abs(lenticular_behavior.K - relabeled_behavior.K) < 1e-10}")
 $$
 K(P) = 0\ \text{iff}\ P \in \mathrm{FI}
 $$
+
+This anchors our scale.
 
 ```python
 # Test reduction axiom using pre-defined behaviors
@@ -160,11 +160,15 @@ print(f"  K>0 iff not FI: {lenticular_behavior.K > 0 and not lenticular_behavior
 #   K>0 iff not FI: True
 ```
 
-**This is what enables local consistency, and tells us that full agreement can be structurally impossible.** Each person's story is valid, therefore each context obeys its own law; the clash appears only when we demand a single story across contexts. If a unified account $Q\in\mathrm{FI}$ already reproduces all contexts, there is no obstruction left to price. Conversely, when $P\not\in\mathrm{FI}$, no $Q\in\mathrm{FI}$ can reproduce all contexts, so $K(P)>0$. The zero of the scale must sit exactly on $\mathrm{FI}$.
+**This is what enables local consistency, and tells us that full agreement can be structurally impossible.** Each person's story is valid—therefore each context obeys its own law; the clash appears only when we demand a single story across contexts. If a unified account $Q\in\mathrm{FI}$ already reproduces all contexts, there is no obstruction left to price. Conversely, when $P\not\in\mathrm{FI}$, no $Q\in\mathrm{FI}$ can reproduce all contexts—so $K(P)>0$.
+
+The zero of the scale must sit exactly on $\mathrm{FI}$.
 
 **Without A1**, even if every individual tells their story clearly, and no contradictions arise between them, the theory could still assign nonzero contradiction. We would lose the ability to distinguish structural conflict from peaceful coexistence. In such a world, $\mathrm{FI}$ would no longer anchor the notion of consistency—it would become unstable or ill-defined.
 
 Multiple perspectives would exist but none could be valid. You'd have *plurality*—but not *legitimacy* (App B.3.3).
+
+This is the foundation.
 
 ------
 
@@ -172,12 +176,13 @@ Multiple perspectives would exist but none could be valid. You'd have *plurality
 
 > *Small disagreements deserve small measures.*
 
-
 $K$ is continuous in the product $L_1$ metric:
 
 $$
 d(P,P') = \max_{c \in \mathcal{C}} \bigl\|p(\cdot|c) - p'(\cdot|c)\bigr\|_1
 $$
+
+In short—gradual changes demand gradual measures.
 ```python
 # Test continuity using perturbed versions of the lenticular behavior
 obs_perturbed = Observatory.create(symbols=["YES", "NO"])
@@ -211,20 +216,19 @@ print("Continuity holds: small perturbation gives small K change")
 # Continuity holds: small perturbation gives small K change
 ```
 
-**This is why ambiguity is lawful, but not accidental.** Tiny shifts in belief shouldn't cause outsized spikes in contradiction. Continuity ensures that small disagreements remain small in cost: if a behavior is nearly frame-independent, its contradiction measure is correspondingly minimal.
+**This is why ambiguity is lawful, but not accidental.** Tiny shifts in belief shouldn't cause outsized spikes in contradiction—continuity ensures that small disagreements remain small in cost: if a behavior is nearly frame-independent, its contradiction measure is correspondingly minimal.
 
 If Tyler moves from Nancy's position toward Dylan's, the coin's appearance shifts gradually from "YES" through ambiguous states to "NO." The contradiction doesn't jump discontinuously—it evolves smoothly with the changing perspective.
 
 **Without A2** there is no continuous path toward resolution—contradiction either suddenly appears, or doesn't exist at all (App B.3.4). It's like saying war either is happening or it isn't—and that there was never any in-between.
+
+We finally now arrive to the core operations.
 
 ------
 
 ### Axiom A3: Free Operations
 
 > *Structure lost may conceal contradiction — but never invent it.*
-
-<aside>
-
 
 For any free operation $\Phi$,
 
@@ -237,7 +241,7 @@ $K$ is monotone under:
 1. stochastic post-processing of outcomes within each context $c$ (via kernels $\Lambda_c$);
 2. splitting/merging contexts through public lotteries $Z$ independent of outcomes and hidden variables;
 3. convex mixtures $\lambda P + (1-\lambda)P'$;
-4. tensoring with frame-independent ancillas $R \in \mathrm{FI}$ (where $\Phi(P) = P \otimes R$) </aside>
+4. tensoring with frame-independent ancillas $R \in \mathrm{FI}$ (where $\Phi(P) = P \otimes R$)
 
 ```python
 # Test free operations using the pre-defined lenticular behavior
@@ -282,13 +286,17 @@ print(f"Monotonicity holds: {tensored2.K <= lenticular_behavior.K}")
 # Monotonicity holds: True
 ```
 
-**This is why modeling can fix ambiguity, not fundamental disagreement.** No amount of averaging Nancy’s and Dylan’s reports, no coarse-graining of their observations, no random mixing of their contexts can eliminate the fact that they see different things from their respective positions.
+**This is why modeling can fix ambiguity, not fundamental disagreement.** No amount of averaging Nancy's and Dylan's reports—no coarse-graining of their observations, no random mixing of their contexts—can eliminate the fact that they see different things from their respective positions.
 
-Within our example, the contradiction wasn’t an artifact of how information is encoded—it was embedded into the geometry of perspective itself.  This axiom guarantees that any blurring, merging, or randomizing of information can mask contradiction, but never invent it. Specifically, if a behavior appears contradictory after transformation, it was already contradictory to begin with.
+Within our example, the contradiction wasn't an artifact of how information is encoded—it was embedded into the geometry of perspective itself. This axiom guarantees that any blurring, merging, or randomizing of information can mask contradiction, but never invent it.
 
-**Without A3**, we could inflate disagreement by simply mixing or simplifying—confusing noise with structure, and destroying the integrity of $K$ as a faithful witness to tension. (App B.3.5). You could take two people who completely agree, blur their positions, and find yourself facing a contradiction that wasn’t there before. Or worse—you could take two people who fundamentally disagree, mix their perspectives randomly, and suddenly create consensus.
+Specifically—if a behavior appears contradictory after transformation, it was already contradictory to begin with.
+
+**Without A3**, we could inflate disagreement by simply mixing or simplifying—confusing noise with structure, and destroying the integrity of $K$ as a faithful witness to tension. (App B.3.5). You could take two people who completely agree, blur their positions, and find yourself facing a contradiction that wasn't there before. Or worse—you could take two people who fundamentally disagree, mix their perspectives randomly, and suddenly create consensus.
 
 The monotonicity conditions mirror what **resolvability** and **synthesis** demand operationally (Han & Verdú, 1993; Cuff, 2013).
+
+Consider the implications.
 
 ------
 
@@ -296,8 +304,9 @@ The monotonicity conditions mirror what **resolvability** and **synthesis** dema
 
 > *Contradiction is a matter of substance, not repetition.*
 
-
 $K$ depends only on refined statistics when contexts are split via public lotteries, independent of outcomes and hidden variables. In particular, duplicating or removing identical rows leaves $K$ unchanged.
+
+Put differently—only unique patterns matter.
 
 ```python
 # Test grouping axiom using a subset of the lenticular behavior
@@ -346,11 +355,15 @@ print(f"Grouping holds: {abs(original_behavior.K - duplicated_behavior.K) < 1e-1
 # Grouping holds: True
 ```
 
-**This is what we saw in the example, perspective as the substance of contradiction.** Axiom A4 formalizes this by making $K$ insensitive to repetition or bookkeeping. Only the unique patterns of contextual incompatibility matter.
+**This is what we saw in the example—perspective as the substance of contradiction.** Axiom A4 formalizes this by making $K$ insensitive to repetition or bookkeeping—only the unique patterns of contextual incompatibility matter.
 
-Whether Nancy states her observation once or ten times, her disagreement with Dylan remains the same. Repeating a context doesn’t generate new evidence, and splitting it through public coin flips doesn’t change what can be jointly satisfied. The contradiction isn’t about how many times a perspective is reported—it’s about the existence of distinct, irreconcilable perspectives.
+Whether Nancy states her observation once or ten times, her disagreement with Dylan remains the same. Repeating a context doesn't generate new evidence—and splitting it through public coin flips doesn't change what can be jointly satisfied.
 
-**Without A4**, frequency—not structure—would drive contradiction (App B.3.6). We’d effectively agree that the loudest voice is the most valid perspective.
+The contradiction isn't about how many times a perspective is reported—it's about the existence of distinct, irreconcilable perspectives.
+
+**Without A4**, frequency—not structure—would drive contradiction (App B.3.6). We'd effectively agree that the loudest voice is the most valid perspective.
+
+And finally, we come to composition.
 
 ------
 
@@ -358,12 +371,13 @@ Whether Nancy states her observation once or ten times, her disagreement with Dy
 
 > *Contradictions compound; they do not cancel.*
 
-
 For operationally independent behaviors on disjoint observable sets:
 
 $$
 K(P \otimes R) = K(P) + K(R)
 $$
+
+This ensures coherent scaling.
 
 ```python
 # Test independent composition using pre-defined FI behaviors
@@ -386,13 +400,15 @@ print(f"Additivity holds: {abs(combined.K - (fi_behavior.K + fi_behavior.K)) < 1
 ```
 This requires that FI be closed under products: for any $Q_A \in \mathrm{FI}_A$ and $Q_B \in \mathrm{FI}*B$, we have $Q_A \otimes Q_B \in \mathrm{FI}*{A \sqcup B}$.
 
+**This is why contradictions obey patterns—they aren't noise.** Independent disagreements compound in a predictable way—if Nancy and Dylan clash about both the coin's political message and its artistic style, the total cost reflects both tensions.
 
+This axiom guarantees that $K$ scales coherently—a disagreement about topic $A$ and a disagreement about topic $B$ together cost more than either alone.
 
-**This is why contradictions obey patterns—they aren’t noise.** Independent disagreements compound in a predictable way: if Nancy and Dylan clash about both the coin’s political message and its artistic style, the total cost reflects both tensions.
+**Without A5**, additivity would fail (App. B.3.7). A clash over pizza toppings might erase a clash over politics, as though disagreement in one domain could dissolve disagreement in another.
 
-This axiom guarantees that $K$ scales coherently. A disagreement about topic $A$ and a disagreement about topic $B$ together cost more than either alone.
+Any operation that allowed such cancellations would reduce contradiction to noise—negotiable bookkeeping rather than a faithful measure of perspectival tension.
 
-**Without A5**, additivity would fail (App. B.3.7). A clash over pizza toppings might erase a clash over politics, as though disagreement in one domain could dissolve disagreement in another. Any operation that allowed such cancellations would reduce contradiction to noise—negotiable bookkeeping rather than a faithful measure of perspectival tension.
+We have now established the complete framework.
 
 ------
 
@@ -416,5 +432,7 @@ Thus, under these constraints, a single form remains:
 $$
 K(P) = -\log_2 \alpha^\star(P)
 $$
-which inherits the conceptual content of the insight and supplies the precision of information theory. The **contradiction bit** is not an invention; it is the natural unit for the empirically observed price of forcing one story across genuinely incompatible perspectives.
+which inherits the conceptual content of the insight and supplies the precision of information theory.
+
+It is fair to ask whether this captures everything. But the **contradiction bit** is not an invention; it is the natural unit for the empirically observed price of forcing one story across genuinely incompatible perspectives.
 

@@ -1,16 +1,20 @@
 # Bounds and Characterizations
 
-The agreement and contradiction measures have important theoretical bounds and characterizations that help us understand their behavior and meaning. These results establish fundamental limits on how much contradiction can exist and when behaviors are truly consistent.
+The agreement and contradiction measures have important theoretical bounds and characterizations that help us understand their behavior and meaning.
+
+These results establish fundamental limits on how much contradiction can exist and when behaviors are truly consistent.
 
 ## Uniform Law Lower Bound
 
 Every behavior has a minimum agreement coefficient that depends on the size of the outcome spaces in each context.
 
-**Theorem**: For any behavior $P$:
+**Theorem**: For any behavior $P$—
 
 $$
 \alpha^\star(P) \geq \min_{c \in \mathcal{C}} \frac{1}{\sqrt{|\mathcal{O}_c|}}
 $$
+
+We show this to be fundamental.
 
 ```python
 from contrakit import Space, Behavior

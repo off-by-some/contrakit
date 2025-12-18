@@ -1,12 +1,12 @@
 # *Theorem 8** *(Compression with Latent Contexts)*
 
-Without access to $C^n$ at encoder or decoder:
+Without access to $C^n$ at encoder or decoder—
 
 $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X) + K(P)
 $$
 
-with a strong converse. (see App. A.9)
+with a strong converse. Put differently—this gives the latent compression bound.
 
 **Proof Strategy:** 
 

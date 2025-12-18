@@ -1,10 +1,6 @@
 # Mermin-Peres Magic Square Analysis: State-Independent Contradiction
 #
-# This analysis explores the Mermin-Peres magic square, a powerful demonstration
-# of state-independent perspectival contradiction. Unlike the CHSH inequality which
-# requires specific quantum states, the magic square reveals contradiction
-# through purely algebraic constraints on measurement outcomes. In quantum
-# systems, this contradiction manifests as contextuality.
+# This analysis explores the Mermin-Peres magic square—a powerful demonstration of state-independent perspectival contradiction. Formally, unlike the CHSH inequality which requires specific quantum states, the magic square reveals contradiction through purely algebraic constraints on measurement outcomes. In quantum systems, this contradiction manifests as contextuality; the independence from state is remarkable.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,13 +26,7 @@ def create_parity_distribution(target_parity: int):
     """
     Create a uniform probability distribution over measurement triples with specified parity.
 
-    For a set of three measurements (A,B,C), this function creates the probability
-    distribution that would result if we randomly choose measurement outcomes
-    such that their product A×B×C equals the target parity value.
-
-    For example, if target_parity = +1, we include all combinations where the
-    number of -1 outcomes is even (0 or 2). If target_parity = -1, we include
-    combinations with an odd number of -1 outcomes (1 or 3).
+    For a set of three measurements (A,B,C), this function creates the probability distribution that would result if we randomly choose measurement outcomes such that their product A×B×C equals the target parity value. Put differently, we only need to sample from the parity-constrained subspace; the uniformity is natural.
 
     Parameters
     ----------
@@ -46,8 +36,7 @@ def create_parity_distribution(target_parity: int):
     Returns
     -------
     dict
-        Probability distribution where each valid outcome triple has equal probability,
-        and invalid triples have zero probability
+        Probability distribution where each valid outcome triple has equal probability, and invalid triples have zero probability
     """
     assert target_parity in (+1, -1)
     pmf = {}
@@ -80,13 +69,7 @@ def verify_no_signalling_constraint(contexts, tolerance=1e-12):
     """
     Verify that all probability distributions satisfy the no-signalling constraint.
 
-    No-signalling means that the marginal probability distribution for any
-    individual measurement should be the same regardless of which other
-    measurements are performed alongside it. This is a fundamental requirement
-    for any physically reasonable theory.
-
-    For example, if we measure observable A in the context (A,B,C), it should
-    have the same probability distribution as when we measure A in the context (A,D,E).
+    No-signalling means that the marginal probability distribution for any individual measurement should be the same regardless of which other measurements are performed alongside it. This is a fundamental requirement for any physically reasonable theory; the constraint is absolute.
 
     Parameters
     ----------
@@ -343,10 +326,7 @@ def create_perturbed_predictions(perturbation_strength=0.1, mode="classical"):
 
 create_analysis_header(
     "MAGIC SQUARE CONTRADICTION ANALYSIS",
-    description="This analysis explores the Mermin-Peres magic square, a fundamental "
-               "demonstration of perspectival contradiction that reveals measurement "
-               "incompatibilities through purely algebraic constraints on outcomes. "
-               "In quantum systems, this contradiction manifests as contextuality.",
+    description="This analysis explores the Mermin-Peres magic square—a fundamental demonstration of perspectival contradiction that reveals measurement incompatibilities through purely algebraic constraints on outcomes. Formally, in quantum systems, this contradiction manifests as contextuality; the algebraic nature makes it particularly compelling.",
     key_points=[
         "State-independent contradiction measure",
         "3×3 grid of observables with parity constraints",
@@ -366,6 +346,7 @@ print("Verifying physical consistency constraints...")
 verify_no_signalling_constraint(q_contexts)
 verify_no_signalling_constraint(c_contexts)
 print("✓ All probability distributions satisfy no-signalling constraints")
+print("Having established the models, we now turn to the contradiction measure; this is to verify the invariant.")
 
 # Calculate contradiction witnesses
 print("Computing contradiction witnesses...")
@@ -378,8 +359,10 @@ expected_classical_witness = 4.0
 assert np.isclose(q_witness, expected_quantum_witness), f"Quantum witness should be {expected_quantum_witness}, got {q_witness}"
 assert np.isclose(c_witness, expected_classical_witness), f"Classical witness should be {expected_classical_witness}, got {c_witness}"
 print("✓ Theoretical predictions verified numerically")
+print("This confirms the algebraic structure. Nothing is hiding in the proof.")
 
 # Analyze behaviors
+print("We now analyze the behaviors. Consider the contradiction measures.")
 q_alpha = q_behavior.alpha_star
 q_contradiction = q_behavior.contradiction_bits
 q_fi = FrameIndependence.check(q_behavior)

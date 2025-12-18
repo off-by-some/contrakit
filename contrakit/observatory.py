@@ -624,28 +624,41 @@ class LensScope:
         return Behavior.from_contexts(self._observatory._lens_space, dict(self._contexts_ll))
 
     def _autocomplete_base(self, ctx_base: Tuple[str, ...], pmf: Dict[Tuple, float]) -> Dict[Tuple, float]:
-        """Auto-complete marginal distributions for single-observable base contexts."""
-        if len(ctx_base) != 1:
-            return pmf
-        observable = ctx_base[0]
+        """Auto-complete and normalize distributions for contexts."""
         space = self._observatory._space
-        possible_symbols = list(space[observable])
 
-        # Current observed symbols
-        current_symbols = set(outcome[0] for outcome in pmf.keys())
-        missing_symbols = [s for s in possible_symbols if s not in current_symbols]
-        if not missing_symbols:
-            return pmf
+        if len(ctx_base) == 1:
+            # Single-observable context: auto-complete missing outcomes
+            observable = ctx_base[0]
+            possible_symbols = list(space[observable])
 
-        remaining = 1.0 - sum(pmf.values())
-        if remaining < -NORMALIZATION_TOL:
-            # Let downstream normalization error surface; do not modify
-            return pmf
-        fill = remaining / len(missing_symbols) if missing_symbols else 0.0
-        completed = dict(pmf)
-        for s in missing_symbols:
-            completed[(s,)] = completed.get((s,), 0.0) + fill
-        return completed
+            # Current observed symbols
+            current_symbols = set(outcome[0] for outcome in pmf.keys())
+            missing_symbols = [s for s in possible_symbols if s not in current_symbols]
+            if not missing_symbols:
+                return pmf
+
+            remaining = 1.0 - sum(pmf.values())
+            if remaining < -NORMALIZATION_TOL:
+                # Let downstream normalization error surface; do not modify
+                return pmf
+            fill = remaining / len(missing_symbols) if missing_symbols else 0.0
+            completed = dict(pmf)
+            for s in missing_symbols:
+                completed[(s,)] = completed.get((s,), 0.0) + fill
+            return completed
+        else:
+            # Multi-observable context: normalize if needed
+            total_prob = sum(pmf.values())
+            if abs(total_prob - 1.0) < NORMALIZATION_TOL:
+                return pmf
+            elif total_prob > 0:
+                # Normalize to sum to 1.0
+                normalized = {outcome: prob / total_prob for outcome, prob in pmf.items()}
+                return normalized
+            else:
+                # All probabilities are zero - let downstream error surface
+                return pmf
 
     def contexts_low_level(self) -> Dict[Tuple[str, ...], Dict[Tuple, float]]:
         """Expose the low-level lens-tagged context map (advanced use)."""

@@ -3,12 +3,16 @@
 
 The axiomatization developed above is not merely a convenient characterization—it reveals the fundamental structure of contradiction as a resource.
 
+Put differently—we show this to be essential.
+
 In this resource theory, frame-independent behaviors $\mathrm{FI}$ constitute the free objects, the free operations consist of 
 
 1. outcome post-processing by arbitrary stochastic kernels $\Lambda_c$ applied within each context $c$,
 2. public lotteries over contexts (independent of outcomes and hidden variables), and the contradiction measure $K$ serves as a faithful, convex, additive monotone: $K(P) \geq 0$ with equality precisely on $\mathrm{FI}$, $K$ is non-increasing under free operations, and $K$ is additive for independent systems (noting that for $|\mathcal{C}|=1$, all axioms collapse correctly and $K \equiv 0$).
 
-To establish the robustness of this framework, we examine both weakenings and violations of each axiom. This analysis serves two purposes: it demonstrates that our axioms capture the minimal necessary structure, and it illuminates how each constraint contributes to the theory's coherence.
+To establish the robustness of this framework, we examine both weakenings and violations of each axiom. This analysis serves two purposes—it demonstrates that our axioms capture the minimal necessary structure, and it illuminates how each constraint contributes to the theory's coherence.
+
+Formally, we proceed as follows.
 
 #### B.3.1 Axiom Weakening
 
@@ -34,7 +38,9 @@ $$
 
 More generally, we obtain subadditivity $K(P\otimes R) \leq K(P) + K(R)$ with equality precisely when the optimal dual weights factorize across $A$ and $B$ (i.e., $\lambda^\star{A\times B} = \lambda^\star_A \otimes \lambda^\star_B$)—a condition that can be verified independently.
 
-We now demonstrate that each axiom is essential by constructing explicit counterexamples that satisfy all remaining axioms while violating the target property. 
+We now demonstrate that each axiom is essential by constructing explicit counterexamples that satisfy all remaining axioms while violating the target property.
+
+It is fair to ask whether these weakenings suffice—but the counterexamples show otherwise. 
 
 #### B.3.2 Label Invariance (A0).
 

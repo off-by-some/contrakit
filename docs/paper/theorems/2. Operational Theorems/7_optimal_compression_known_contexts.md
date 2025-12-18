@@ -1,12 +1,12 @@
 # **Theorem 7** *(Optimal Compression, Known Contexts)*
 
-With $C^n$ available to the decoder:
+With $C^n$ available to the decoder—
 
 $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X|C) + K(P)
 $$
 
-with a strong converse. (see App. A.9)
+with a strong converse. Put differently—this establishes the fundamental compression bound.
 
 **Proof Strategy:** 
 

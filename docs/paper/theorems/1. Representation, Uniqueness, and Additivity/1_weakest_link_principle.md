@@ -2,13 +2,14 @@
 
 The agreement measure $\alpha^\star(P)$ is limited by the worst agreement in any single context. This makes $\alpha^\star$ behave like a minimum aggregator across contexts.
 
+Put differently, this is an intuitive result—if we have multiple measurement contexts and one of them can only achieve 60% agreement with any explanation, then the overall system can't achieve better than 60% agreement either. We only need to consider the weakest link. Nothing is hiding here.
 
-This is an intuitive result. If you have multiple measurement contexts and one of them can only achieve 60% agreement with any explanation, then the overall system can't achieve better than 60% agreement either.
+But we now formalize this principle. We do this systematically—and consider the implications carefully, as we see this clearly. Yet the result is straightforward.
 
 ---
 **Statement.**
 
-Any unanimity-respecting, monotone aggregator on $[0,1]^{\mathcal C}$ that never exceeds any coordinate equals the minimum: if $A$ satisfies $x\leq y\Rightarrow A(x)\leq A(y)$, $A(t,\ldots,t)=t$, and $A(x)\leq x_i$ for all $i$, then $A(x)=\min_i x_i$.
+Any unanimity-respecting, monotone aggregator on $[0,1]^{\mathcal C}$ that never exceeds any coordinate equals the minimum—if $A$ satisfies $x\leq y\Rightarrow A(x)\leq A(y)$, $A(t,\ldots,t)=t$, and $A(x)\leq x_i$ for all $i$, then $A(x)=\min_i x_i$.
 
 Any unanimity-respecting (idempotent), monotone aggregator with a weakest-link cap equals the minimum.
 
@@ -32,11 +33,19 @@ $$
 
 1. Let $m=\min_{i\in\mathcal{C}} x_i$ (exists since $\mathcal{C}$ is finite and nonempty).
 2. (i)+(ii): $(m,\ldots,m)\le x \Rightarrow A(x)\ge A(m,\ldots,m)=m$.
-3. (iii): $A(x)\le x_i$ for all $i \Rightarrow A(x)\le m$. Hence $A(x)=m$. □
+3. (iii): $A(x)\le x_i$ for all $i \Rightarrow A(x)\le m$.
+
+Hence $A(x)=m$. □
+
+And this completes the demonstration.
+
+This completes the proof—and we have established the result. Indeed, the theorem holds. It is fair to ask whether this generalizes.
 
 ## The Weakest Link in Action
 
-Imagine three witnesses testifying about the same person, but each has different probabilistic beliefs about the hair color. One witness is particularly restrictive - they believe there's zero probability of black hair. This creates a demonstration of the weakest link principle where the restrictive constraint limits the overall agreement.
+Imagine three witnesses testifying about the same person, but each has different probabilistic beliefs about the hair color. One witness is particularly restrictive—they believe there's zero probability of black hair.
+
+This creates a demonstration of the weakest link principle—where the restrictive constraint limits the overall agreement. Indeed, consider the implications carefully—and we see this clearly. So the principle holds.
 
 ```python
 from contrakit.observatory import Observatory

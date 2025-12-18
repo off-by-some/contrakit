@@ -1,9 +1,6 @@
 # KCBS Inequality Analysis: Quantum Contextuality in Pentagonal Structure
 #
-# This demonstration explores the Klyachko-Can-Binicioglu-Shumovsky (KCBS) inequality,
-# which tests quantum contextuality using five dichotomic observables arranged in a
-# pentagonal compatibility graph. Unlike CHSH, KCBS reveals state-dependent contextuality
-# and can demonstrate quantum violations even with qutrit systems.
+# This demonstration explores the Klyachko-Can-Binicioglu-Shumovsky (KCBS) inequality—which tests quantum contextuality using five dichotomic observables arranged in a pentagonal compatibility graph. Formally, KCBS reveals state-dependent contextuality and can demonstrate quantum violations even with qutrit systems; the structure is fundamentally different from CHSH.
 
 import numpy as np
 from math import sqrt, cos, sin, pi
@@ -34,9 +31,7 @@ QUANTUM_MAXIMUM = sqrt(5)  # ≈ 2.236
 
 create_analysis_header(
     "KCBS Inequality Analysis: Quantum Contextuality in Pentagonal Structure",
-    description="The KCBS inequality tests quantum contextuality using five yes/no observables "
-               "E₁, E₂, E₃, E₄, E₅ arranged in a pentagonal compatibility structure where each "
-               "adjacent pair can be measured simultaneously (but not all five together).",
+    description="The KCBS inequality tests quantum contextuality using five yes/no observables E₁, E₂, E₃, E₄, E₅ arranged in a pentagonal compatibility structure where each adjacent pair can be measured simultaneously (but not all five together). Put differently, this reveals the geometric constraints of measurement incompatibility.",
     key_points=[
         "Classical (noncontextual) bound: Σᵢ ⟨Eᵢ⟩ ≤ 2",
         f"Quantum maximum: √5 ≈ {QUANTUM_MAXIMUM:.6f}",
@@ -71,16 +66,14 @@ KCBS_CONTEXTS = [
 def create_kcbs_pmf(expectation_value):
     """
     Create probability mass function for a pair of exclusive observables.
-    
-    In the KCBS setup, adjacent observables are exclusive: if one gives
-    outcome 1, the other must give outcome 0. This constraint, combined
-    with the desired expectation values, determines the joint probabilities.
-    
+
+    In the KCBS setup, adjacent observables are exclusive: if one gives outcome 1, the other must give outcome 0. This constraint, combined with the desired expectation values, determines the joint probabilities; exclusivity is the key constraint.
+
     Parameters
     ----------
     expectation_value : float
         The common expectation value ⟨Ei⟩ for both observables in the pair
-    
+
     Returns
     -------
     dict
@@ -105,12 +98,12 @@ def kcbs_sum_from_expectation(expectation_value):
 def create_kcbs_behavior(expectation_value):
     """
     Create a Behavior object for KCBS with given expectation value.
-    
+
     Parameters
     ----------
     expectation_value : float
         Common expectation value for all five observables
-    
+
     Returns
     -------
     Behavior
@@ -164,19 +157,21 @@ def analyze_kcbs_configuration(expectation_value, label):
     return results
 
 print_subsection_header("Configuration 1: Classical Compatible Setup")
-print("Setting all expectation values to maximize classical sum while")
-print("respecting noncontextual constraints.")
+print("Setting all expectation values to maximize classical sum while respecting noncontextual constraints.")
+print("In short, we only need to distribute the maximum possible values across the pentagon; nothing is hiding.")
 
 # Classical optimal: each observable has maximum expectation value of 2/5
 classical_expectation = 2.0 / 5.0  # = 0.4
 classical_results = analyze_kcbs_configuration(classical_expectation, "Classical optimal")
 
 print("Analysis results:")
+print("We examine the classical case. Consider the boundary behavior.")
 print(f"  Expectation value ⟨Ei⟩: {classical_results['expectation_value']:.6f}")
 print(f"  KCBS sum Σᵢ ⟨Eᵢ⟩: {classical_results['kcbs_sum']:.6f}")
 print(f"  Classical bound: {CLASSICAL_BOUND:.6f}")
 print(f"  Violation: {'Yes' if classical_results['violates_classical'] else 'No'} "
       f"({classical_results['kcbs_sum']:.6f} {'>' if classical_results['violates_classical'] else '≤'} {CLASSICAL_BOUND})")
+print("This establishes the baseline. What becomes unavoidable: the pentagonal constraint.")
 print("Verdict:")
 props1 = {
     'witness_value': classical_results['kcbs_sum'],
@@ -194,16 +189,19 @@ else:
 
 print_subsection_header("Configuration 2: Quantum Optimal Setup")
 print("Using quantum optimal expectation value that maximally violates KCBS.")
+print("Formally, this achieves the Tsirelson-like bound for the pentagonal structure; the violation is fundamental.")
 
 # Quantum optimal: expectation value that achieves maximum violation
 quantum_expectation = 1.0 / sqrt(5)  # ≈ 0.447
 quantum_results = analyze_kcbs_configuration(quantum_expectation, "Quantum optimal")
 
 print("Analysis results:")
+print("Now we turn to the quantum case. Formally, this achieves the Tsirelson-like bound.")
 print(f"  Expectation value ⟨Ei⟩: {quantum_results['expectation_value']:.6f}")
 print(f"  KCBS sum Σᵢ ⟨Eᵢ⟩: {quantum_results['kcbs_sum']:.6f}")
 print(f"  Quantum maximum: {QUANTUM_MAXIMUM:.6f}")
 print(f"  Classical bound: {CLASSICAL_BOUND:.6f}")
+print("Consider the violation magnitude. It is fair to ask: why this specific value?")
 print(f"  Violation: {'Yes' if quantum_results['violates_classical'] else 'No'} "
       f"({quantum_results['kcbs_sum']:.6f} {'>' if quantum_results['violates_classical'] else '≤'} {CLASSICAL_BOUND})")
 print("Verdict:")

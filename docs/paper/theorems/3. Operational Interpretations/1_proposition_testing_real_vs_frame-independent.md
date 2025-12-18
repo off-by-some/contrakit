@@ -1,20 +1,32 @@
-**Proposition 7.1** *(Testing Real vs Frame-Independent)* (App. A.3.2, A.9)
+**Proposition 7.1** Testing Real vs Frame-Independent
 
-For testing $\mathcal{H}_0: Q \in \mathrm{FI}$ vs $\mathcal{H}_1: P$ with contexts drawn i.i.d. from $\lambda \in \Delta(\mathcal{C})$:
+It's fair to ask whether we can distinguish a real behavior from its frame-independent surrogates. We establish this result formally.
 
-Define $\alpha_\lambda(P) := \max_{Q \in \mathrm{FI}} \sum_c \lambda_c \mathrm{BC}(p(\cdot|c), q(\cdot|c))$ and $E_{\mathrm{BH}}(\lambda) := -\log_2 \alpha_\lambda(P)$.
+We test $\mathcal{H}_0$ that $Q \in \mathrm{FI}$ versus $\mathcal{H}_1$ that $P$ holds true; contexts are drawn i.i.d. from a distribution $\lambda \in \Delta(\mathcal{C})$. The procedure follows.
 
-Then $E_{\text{opt}}(\lambda) \,\ge\, E_{\mathrm{BH}}(\lambda)$, and in the least-favorable mixture:
+We define an agreement coefficient $\alpha_\lambda(P) := \max_{Q \in \mathrm{FI}} \sum_c \lambda_c \mathrm{BC}(p(\cdot|c), q(\cdot|c))$ and an exponent $E_{\mathrm{BH}}(\lambda) := -\log_2 \alpha_\lambda(P)$.
+
+Then $E_{\text{opt}}(\lambda) \,\ge\, E_{\mathrm{BH}}(\lambda)$.
+
+The least-favorable mixture gives us a bound:
 
 $$
 \inf_\lambda E_{\text{opt}}(\lambda) \,\ge\, \min_\lambda E_{\mathrm{BH}}(\lambda) = K(P)
 $$
 
-If the Chernoff optimizer is balanced ($s = 1/2$) under $\lambda^\star$, then $E_{\text{opt}}(\lambda^\star) = K(P)$.
+Equality holds when the Chernoff optimizer is balanced—at $s = 1/2$ under $\lambda^\star$.
 
-**Proof Strategy:** 
+We finally arrive at $E_{\text{opt}}(\lambda^\star) = K(P)$.
 
-Chernoff bound for composite $\mathcal{H}_0$ yields $E_{\mathrm{BH}}(\lambda)$; minimizing over $\lambda$ gives $K(P)$. Equality at $s=1/2$ is the standard balanced case.
+We only need to recognize that the contradiction measure emerges naturally from the testing framework.
+
+**Proof Strategy**
+
+The Chernoff bound for composite $\mathcal{H}_0$ yields $E_{\mathrm{BH}}(\lambda)$.
+
+Minimizing over $\lambda$ gives $K(P)$.
+
+Equality at $s=1/2$ is the standard balanced case.
 
 ---
 

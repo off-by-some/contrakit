@@ -3,11 +3,13 @@
 
 **Statement.**
 
-Under refinement separability, product multiplicativity, DPI, joint concavity, and basic regularity, the unique per-context agreement kernel is the Bhattacharyya affinity:
+Under refinement separability, product multiplicativity, DPI, joint concavity, and basic regularity, the unique per-context agreement kernel is the Bhattacharyya affinity—
 
 $$
 F(p,q) = \sum_o \sqrt{p(o)\,q(o)}.
 $$
+
+We show this to be the unique form—and we establish it through axioms. Consider this derivation carefully.
 
 **Assumptions.**
 
@@ -25,7 +27,7 @@ $F$ maps pairs of distributions (for each finite alphabet $\mathcal O$) to $[0,1
 
 **Proof.**
 
-We proceed in three steps.
+We proceed in three steps—and establish uniqueness systematically. Consider this carefully.
 
 1. **Step 1 (Refinement separability $\Rightarrow$ coordinatewise sum form).**
     

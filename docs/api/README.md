@@ -1,6 +1,6 @@
 # Contrakit API Reference
 
-**A Python library for mathematical modeling of observational contradictions and multi-perspective analysis.**
+**A Python library for mathematical modeling of observational contradictions and multi-perspective analysis.** Put differently, it's about understanding disagreement.
 
 This API reference provides detailed documentation for each module in the `contrakit` library, including usage patterns, architecture notes, and entry points for both casual users and advanced integrators.
 
@@ -19,7 +19,7 @@ print(f"Agreement: {behavior.agreement.result:.3f}")
 
 **Need help?** [Open an issue](https://github.com/off-by-some/contrakit/issues) or [start a discussion](https://github.com/off-by-some/contrakit/discussions).
 
-## How to Navigate This API
+## How to Use This API
 
 Not sure where to begin? Start with [`observatory.py`](observatory.md)—it wraps core components in a more intuitive interface. Power users can work directly with lower-level modules following the dependency chain below.
 
@@ -64,7 +64,7 @@ Represents collections of probability distributions across contexts. Analyzes co
 High-level convex optimization programs using CVXPY. Computes agreement coefficients and finds optimal global distributions for contradiction analysis.
 
 ## 🔭 `observatory.py` – High-level fluent API
-User-friendly interface for constructing behaviors. Provides fluent methods for defining concepts, assigning distributions, and includes lens system for viewpoint modeling.
+User-friendly interface for constructing behaviors. Provides fluent methods for defining concepts, assigning distributions, and includes lens system for viewpoint modeling. Consider this your main entry point.
 
 
 ## Additional Resources

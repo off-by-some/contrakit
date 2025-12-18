@@ -1,14 +1,18 @@
 # Bhattacharyya Coefficient
 
-The Bhattacharyya coefficient measures agreement between probability distributions. It quantifies how similar two probability distributions are by taking the sum of square roots of their product probabilities. This is like measuring the "overlap" between distributions.
+The Bhattacharyya coefficient measures agreement between probability distributions. It quantifies how similar two probability distributions are by taking the sum of square roots of their product probabilities.
+
+This is like measuring the "overlap" between distributions. Put differently, it's a geometric mean. Consider this carefully.
 
 ## Definition
 
-For probability distributions $p, q \in \Delta(\mathcal{O})$ on a finite alphabet $\mathcal{O}$:
+For probability distributions $p, q \in \Delta(\mathcal{O})$ on a finite alphabet $\mathcal{O}$—and for our purposes here:
 
 $$
 \text{BC}(p, q) := \sum_{o \in \mathcal{O}} \sqrt{p(o) q(o)}
 $$
+
+In short—this captures the geometric mean. And it's not a coincidence. Indeed, we see this connection clearly.
 
 ```python
 from contrakit.agreement import BhattacharyyaCoefficient

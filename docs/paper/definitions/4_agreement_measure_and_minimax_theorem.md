@@ -2,6 +2,8 @@
 
 The agreement measure quantifies how much a behavior can be reconciled with frame-independent explanations. It measures the maximum consistency achievable across all measurement contexts, representing the "best possible agreement" under optimal circumstances.
 
+In short—this captures the reconciliation potential.
+
 ## Agreement and Contradiction Measures
 
 For a behavior $P$, the optimal agreement coefficient is:
@@ -11,6 +13,8 @@ $$
 $$
 
 This finds the frame-independent behavior $Q$ that maximizes the minimum agreement across all contexts.
+
+And we show this to be the key optimization.
 
 ```python
 # Create a behavior with contradictions using Observatory API
@@ -48,6 +52,8 @@ The contradiction measure quantifies disagreement in bits:
 $$
 K(P) := -\log_2 \alpha^\star(P)
 $$
+
+Put differently—this transforms agreement into contradiction.
 
 ```python
 # Compute contradiction in bits

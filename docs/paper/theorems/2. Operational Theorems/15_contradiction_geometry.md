@@ -3,11 +3,13 @@
 
 **(a) Pairwise Hellinger Metric:**
 
-For $J(A,B) := \max_c \arccos(\mathrm{BC}(p^A_c, p^B_c))$:
+For $J(A,B) := \max_c \arccos(\mathrm{BC}(p^A_c, p^B_c))$—
 
 $$
 J(A,C) \le J(A,B) + J(B,C)
 $$
+
+Put differently—this establishes the geometric structure.
 
 **(b) Subadditivity under products:**
 

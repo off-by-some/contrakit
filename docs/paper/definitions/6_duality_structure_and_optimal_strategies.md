@@ -1,14 +1,18 @@
 # Duality Structure and Optimal Strategies
 
-The agreement measure has a deep duality structure that connects optimal strategies for measuring contexts with optimal explanations for behaviors. This minimax duality reveals fundamental relationships between how we choose to weight different measurements and what frame-independent explanations are possible.
+The agreement measure has a deep duality structure that connects optimal strategies for measuring contexts with optimal explanations for behaviors.
+
+This minimax duality reveals fundamental relationships between how we choose to weight different measurements and what frame-independent explanations are possible.
 
 ## Minimax Duality Theorem
 
-Let $(\lambda^\star, Q^\star)$ be optimal strategies for the minimax problem from the agreement theorem. Then:
+Let $(\lambda^\star, Q^\star)$ be optimal strategies for the minimax problem from the agreement theorem. Then—
 
 1. $f(\lambda^\star, Q^\star) = \alpha^\star(P)$
 2. $\text{supp}(\lambda^\star) \subseteq \{c \in \mathcal{C} : \text{BC}(p_c, q_c^\star) = \alpha^\star(P)\}$
 3. If $\lambda^\star_c > 0$, then $\text{BC}(p_c, q_c^\star) = \alpha^\star(P)$
+
+Put differently—this establishes the fundamental connection.
 
 ```python
 from contrakit import Space, Behavior

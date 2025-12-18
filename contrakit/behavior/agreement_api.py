@@ -154,8 +154,12 @@ class Agreement:
             # For minimax (no weights specified), use the dedicated minimax solver
             return float(beh.alpha_star)
         else:
-            # For weighted agreement, use the agreement API with weights
-            return beh.agreement.for_weights(weights).result
+            # For weighted agreement, use ConditionalSolver to avoid recursion
+            from ..convex_models import ConditionalSolver
+            opt_context = beh._to_context()
+            solver = ConditionalSolver(opt_context)
+            solution = solver.solve(weights)
+            return float(solution.objective)
 
     @property
     def context_scores(self) -> Mapping[ContextKey, float]:
@@ -182,8 +186,12 @@ class Agreement:
             keys = [tuple(ctx.observables) for ctx in beh.context]
             return dict(zip(keys, map(float, scores)))
         else:
-            # For weighted agreement, get θ from agreement API
-            theta = beh.agreement.for_weights(weights).explanation
+            # For weighted agreement, use ConditionalSolver to get θ directly
+            from ..convex_models import ConditionalSolver
+            opt_context = beh._to_context()
+            solver = ConditionalSolver(opt_context)
+            solution = solver.solve(weights)
+            theta = solution.weights
             scores = beh.per_context_scores(mu=theta)
             keys = [tuple(ctx.observables) for ctx in beh.context]
             return dict(zip(keys, map(float, scores)))
@@ -209,8 +217,12 @@ class Agreement:
                 # For minimax, get θ from the dedicated solver
                 _, theta, _, _ = beh._solve_alpha_star_with_mu()
             else:
-                # For weighted, get θ from agreement API
-                theta = beh.agreement.for_weights(weights).explanation
+                # For weighted, use ConditionalSolver to get θ directly
+                from ..convex_models import ConditionalSolver
+                opt_context = beh._to_context()
+                solver = ConditionalSolver(opt_context)
+                solution = solver.solve(weights)
+                theta = solution.weights
 
         return np.asarray(theta, float).ravel()
 

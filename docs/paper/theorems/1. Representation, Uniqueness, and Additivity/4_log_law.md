@@ -2,12 +2,14 @@
 
 **Statement.**
 
-Under A0–A5, the contradiction measure is uniquely (up to units)
+Under A0–A5, the contradiction measure is uniquely (up to units)—
 
 $$
 K(P)\;=\;-\log_2 \alpha^\star(P),\qquad 
 \alpha^\star(P)\;=\;\max_{Q\in\mathrm{FI}}\ \min_{c\in\mathcal C}\mathrm{BC}(p_c,q_c).
 $$
+
+Put differently—this establishes the fundamental formula. We derive this from the axioms. And we do this systematically.
 
 **Assumptions.**
 
@@ -15,7 +17,7 @@ Finite alphabets; $\mathrm{FI}$ convex/compact and product-closed (Prop. A.1.6, 
 
 **Proof.**
 
-Let
+Let—
 
 $$
 \alpha^\star(P)\;:=\;\max_{Q\in\mathrm{FI}}\ \min_{c\in\mathcal C}\mathrm{BC}(p_c,q_c)\ \in (0,1].

@@ -1,7 +1,9 @@
 
 # Product Structure
 
-Behaviors from independent systems can be combined through a **tensor product** operation. Think of it like combining separate surveys about different topics - the joint behavior is just the product of the individual probabilities.
+Behaviors from independent systems can be combined through a **tensor product** operation. Think of it like combining separate surveys about different topics—the joint behavior is just the product of the individual probabilities.
+
+Put differently—this captures independence.
 
 ## Definition and Properties
 
@@ -27,6 +29,8 @@ For distributions $p$ and $r$ on disjoint coordinates, their tensor product $p \
 $$
 (p \otimes r)(o_c, o_d) = p(o_c) \cdot r(o_d)
 $$
+
+We show this to be multiplicative.
 
 ```python
 # Define behaviors for each system

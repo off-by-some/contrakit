@@ -4,10 +4,12 @@ The natural baseline for a multi-decoder system is the common-message architectu
 
 
 
-A single compressed message that every context can decode with vanishing error requires rate:
+A single compressed message that every context can decode with vanishing error requires rate—
 
 $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X|C) + K(P)
 $$
+
+Put differently—this establishes the communication cost of consensus.
 
 (see App. A.9)

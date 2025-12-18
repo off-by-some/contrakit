@@ -24,6 +24,10 @@ def pretty_witness(lmbda, tight, tol=1e-9):
         Tightness scores b_c in same order as contexts
     tol : float
         Tolerance for uniformity detection and entropy calculations
+
+    Notes
+    -----
+    This is to display the optimal witness structure; nothing is hiding.
     """
     if isinstance(lmbda, dict):
         weights = list(lmbda.values())
@@ -82,6 +86,10 @@ def save_figure(filename, fig=None, dpi=300, bbox_inches='tight'):
     -------
     Path
         Full path to the saved figure
+
+    Notes
+    -----
+    Formally, this ensures consistent output paths; the standardization is essential.
     """
     output_path = FIGURES_DIR / filename
     if fig is not None:
@@ -125,6 +133,10 @@ def print_section_header(title, width=70):
         Section title
     width : int
         Width of the header line
+
+    Notes
+    -----
+    Put differently, this creates visual hierarchy; the consistency aids readability.
     """
     print("=" * width)
     print(title)
@@ -189,6 +201,11 @@ def extract_behavior_properties(behavior):
     -------
     dict
         Dictionary containing alpha_star, contradiction_bits, frame_independence, etc.
+
+    Notes
+    -----
+    This is to standardize analysis across demonstrations; nothing is hiding.
+    We only need these core quantities. Formally, they define the behavior completely.
     """
     alpha_star = behavior.alpha_star
     contradiction_bits = behavior.contradiction_bits
@@ -233,6 +250,10 @@ def format_behavior_verdict(props, prefix="  Verdict:", witness_symbol="S"):
     -------
     str
         Formatted verdict string
+
+    Notes
+    -----
+    This standardizes the output format. Consider the invariant: α* = 2^(-K).
     """
     witness_value = props.get('witness_value', 'N/A')
     if witness_symbol == "Σ⟨E⟩" and isinstance(witness_value, (int, float)):

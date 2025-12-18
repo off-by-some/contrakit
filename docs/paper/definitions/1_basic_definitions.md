@@ -1,14 +1,18 @@
 # Basic Definitions
 
-In this work, we work with finite sets of possible outcomes for all observables. The frame-independent set (FI) that we'll define later has some nice mathematical properties: it's nonempty, convex, compact, and closed under certain operations. These properties hold naturally in our finite setting.
+In this work, we work with finite sets of possible outcomes for all observables. The frame-independent set (FI) that we'll define later has some nice mathematical properties—it's nonempty, convex, compact, and closed under certain operations.
+
+These properties hold naturally in our finite setting.
 
 ## Observable System
 
 An **observable system** consists of a collection of things we can measure or observe. Think of it like a set of questions we can ask about a system.
 
-Formally: Let $\mathcal{X} = \{X_1, \ldots, X_n\}$ be a finite set of **observables**. Each observable $x \in \mathcal{X}$ has a finite set of possible **outcomes** $\mathcal{O}_x$ (never empty).
+Formally, we define this as follows.
 
-A **context** $c$ is simply a subset of observables that we measure together - like asking multiple questions at once. The possible outcomes for a context $c$ are all combinations of outcomes from its observables: $\mathcal{O}_c := \prod_{x \in c} \mathcal{O}_x$.
+Formally—let $\mathcal{X} = \{X_1, \ldots, X_n\}$ be a finite set of **observables**. Each observable $x \in \mathcal{X}$ has a finite set of possible **outcomes** $\mathcal{O}_x$ (never empty).
+
+A **context** $c$ is simply a subset of observables that we measure together—like asking multiple questions at once. The possible outcomes for a context $c$ are all combinations of outcomes from its observables: $\mathcal{O}_c := \prod_{x \in c} \mathcal{O}_x$.
 
 **Python example:**
 ```python
@@ -31,7 +35,7 @@ print("Total combinations:", survey_space.assignment_count())
 
 A **behavior** describes how a system responds when we measure different contexts. It's the collection of probability distributions that tell us what outcomes we get when measuring each possible context.
 
-Formally: Given a collection $\mathcal{C}$ of contexts (subsets of $\mathcal{X}$), a **behavior** $P$ assigns to each context $c \in \mathcal{C}$ a probability distribution $p_c$ over the possible outcomes $\mathcal{O}_c$:
+Formally—given a collection $\mathcal{C}$ of contexts (subsets of $\mathcal{X}$), a **behavior** $P$ assigns to each context $c \in \mathcal{C}$ a probability distribution $p_c$ over the possible outcomes $\mathcal{O}_c$:
 
 $$
 P = \{p_c \in \Delta(\mathcal{O}_c) : c \in \mathcal{C}\}
@@ -39,7 +43,11 @@ $$
 
 Here $\Delta(\mathcal{O}_c)$ means the set of all probability distributions over $\mathcal{O}_c$.
 
-**Important note**: We don't require that measurements in overlapping contexts are consistent with each other. This means the same observable might give different results when measured in different combinations with others. The frame-independent set (defined below) serves as our baseline regardless of this consistency.
+Put differently—this captures the essence.
+
+**Important note**: We don't require that measurements in overlapping contexts are consistent with each other. This means the same observable might give different results when measured in different combinations with others.
+
+And the frame-independent set (defined below) serves as our baseline regardless of this consistency.
 
 **Python example:**
 ```python
@@ -68,15 +76,18 @@ print("Joint distribution:", dict(behavior[behavior.context[2]].to_dict()))
 
 ## Deterministic Global Assignment
 
-Imagine there's a "true" underlying state of the system that determines all measurement outcomes. A **deterministic global assignment** captures this idea - it's like assuming there's a hidden reality that gives definite answers to all possible measurements.
+Imagine there's a "true" underlying state of the system that determines all measurement outcomes. A **deterministic global assignment** captures this idea—it's like assuming there's a hidden reality that gives definite answers to all possible measurements.
 
-Formally: Let $\mathcal{O}_{\mathcal{X}} := \prod_{x \in \mathcal{X}} \mathcal{O}_x$ be the set of all possible complete assignments of outcomes to observables. A **deterministic global assignment** $s$ is an element of this set.
+Formally—let $\mathcal{O}_{\mathcal{X}} := \prod_{x \in \mathcal{X}} \mathcal{O}_x$ be the set of all possible complete assignments of outcomes to observables. A **deterministic global assignment** $s$ is an element of this set.
+
+Having established the assignments, we now turn to the induced behaviors. Consider this carefully.
 
 Such an assignment $s$ naturally defines a behavior $q_s$ where measurements are perfectly predictable:
 
 $$
 q_s(o \mid c) = \begin{cases} 1 & \text{if } o \text{ matches } s \text{ restricted to context } c \\ 0 & \text{otherwise} \end{cases}
 $$
+
 
 **Python example:**
 ```python
@@ -108,15 +119,17 @@ for ctx in deterministic_behavior.context:
 
 ## Frame-Independent Set
 
-The **frame-independent set** (FI) represents all behaviors that could arise from some deterministic global assignment, possibly mixed together probabilistically. Think of it as the set of all behaviors that could be explained by "hidden variables" - underlying states that determine everything, even if we don't know exactly which state we're dealing with.
+The **frame-independent set** (FI) represents all behaviors that could arise from some deterministic global assignment, possibly mixed together probabilistically. Think of it as the set of all behaviors that could be explained by "hidden variables"—underlying states that determine everything, even if we don't know exactly which state we're dealing with.
 
-Formally:
+Formally—
 
 $$
 \text{FI} := \text{conv}\{q_s : s \in \mathcal{O}_{\mathcal{X}}\} \subseteq \prod_{c \in \mathcal{C}} \Delta(\mathcal{O}_c)
 $$
 
 This is the convex hull (all probabilistic mixtures) of the deterministic behaviors $q_s$.
+
+Put differently, these are the behaviors without contradiction.
 
 **Python example:**
 ```python

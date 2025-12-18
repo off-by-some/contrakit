@@ -1,10 +1,10 @@
 # **Theorem 13** *(Channel Capacity with Common Decoding, under separation)*
-Over a DMC with Shannon capacity $C_{\text{Shannon}}$, a common message decodable under every context has payload rate:
+Over a DMC with Shannon capacity $C_{\text{Shannon}}$, a common message decodable under every context has payload rate—
 $$
 R_{\text{payload}} = C_{\text{Shannon}} - K(P)
 $$
 
-with a strong converse. (see App. A.9, A.10)
+with a strong converse. Put differently—this establishes the capacity cost of consensus.
 
 **Proof Strategy:**
 

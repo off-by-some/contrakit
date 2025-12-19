@@ -2,11 +2,21 @@
 
 A chef trains on specific dishes—pasta, steak, salmon. These dishes she makes perfectly. But customers don't always order from the menu, and when they request off-menu items, protocol forbids her from saying "we don't serve that." Instead she improvises, blending nearby recipes into something plausible but unfounded. That improvisation might mean carbonara techniques applied to taco requests. The result looks reasonable enough that customers can't tell it's fabricated.
 
-We see neural nets operating under this same constraint. They handle trained inputs at $100\%$ accuracy—those are the menu items. Off-menu inputs trigger fabrication $96\%$ of the time (see [Experiment 1](experiment_1/) for details). That contrast is striking: real information systems can say "unknown" when uncertain. These architectures can't—softmax forces a choice on every forward pass. This pressure emerges because models are rewarded for producing outputs rather than admitting uncertainty, leading to plausible but incorrect fabrication.
+We see neural nets operating under this same constraint. They handle trained inputs at $100\%$ accuracy—these are the menu items. But off-menu inputs trigger fabrication $96\%$ of the time (see [Experiment 1](experiment_1/) for details). That contrast is striking: real information systems can say "unknown" when uncertain, but these architectures can't—softmax forces a choice on every forward pass. This pressure emerges because models are rewarded for producing outputs rather than admitting uncertainty, leading to plausible but incorrect fabrication.
 
-We ran controlled experiments on this constraint: same model, same task, two output formats. One forced a specific answer. The other allowed "I don't know." Forcing answers produced $76\%$ hallucination. That $76\%$ dropped to $1\%$ when we allowed abstention—a $75$-percentage-point collapse from architectural change alone ([detailed in Experiment 7](experiment_7/)). The collapse happened without new training data, without a bigger model, just from removing the forced-choice constraint.
+We ran controlled experiments testing this constraint with the same model and task but two different output formats:
+- **Forced choice**: Model must give a specific answer, producing $76\%$ hallucination
+- **With abstention**: Model can say "I don't know," dropping hallucination to $1\%$
 
-We can break that $75$-point swing into three independent pressures driving hallucination rates. The first comes from underspecified queries—they produce $45\%$ baseline errors because questions lack information the model needs. The second comes from structural contradictions, adding $11\%$ points when tasks admit no coherent answer. The third comes from forced commitment itself—it adds $75\%$ points when architectures prevent abstention. This third pressure dominates the total. Our controlled experiments confirm this decomposition: across $2{,}500$ trials, partiality contributes $44.2 \pm 3.1\%$, structural contradiction adds $10.8 \pm 1.2\%$, and architectural commitment contributes $74.5 \pm 4.7\%$ ([see Experiment 7](experiment_7/) for detailed methodology and results; [Bridges, 2025](https://doi.org/10.5281/zenodo.17203336)).
+This $75$-percentage-point collapse occurred from architectural change alone ([detailed in Experiment 7](experiment_7/)), without new training data, bigger models, or any other modifications—just removing the forced-choice constraint.
+
+We can break that $75$-point swing into three independent pressures driving hallucination rates:
+
+- **Partiality pressure** ($45\%$ baseline): Comes from underspecified queries that lack necessary information
+- **Structural contradiction** (adds $11\%$): Occurs when tasks contain incompatible requirements with no coherent answer
+- **Architectural commitment** (adds $75\%$, dominant): Results from architectures that prevent abstention
+
+Our controlled experiments confirm this decomposition: across $2{,}500$ trials, partiality contributes $44.2 \pm 3.1\%$, structural contradiction adds $10.8 \pm 1.2\%$, and architectural commitment contributes $74.5 \pm 4.7\%$ ([see Experiment 7](experiment_7/) for detailed methodology and results; [Bridges, 2025](https://doi.org/10.5281/zenodo.17203336)).
 
 That dominance points to something specific: hallucination appears when architectures force output on uncertain models, not when models fail to understand tasks. The models seem to understand the tasks fine—what we see breaking is their ability to abstain. Scale doesn't fix this pattern because the constraint operates regardless of model capacity. What does change it is architectural support for genuine abstention.
 

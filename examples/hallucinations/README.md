@@ -1,5 +1,7 @@
 # Hallucination as Forced Coherence
 
+> Disclaimer: I am still testing this hypothesis and adding my results to this as time continues. This disclaimer will vanish when this work is completed.
+
 A chef trains on specific dishes—pasta, steak, salmon. These dishes she makes perfectly. But customers don't always order from the menu, and when they request off-menu items, protocol forbids her from saying "we don't serve that." Instead she improvises, blending nearby recipes into something plausible but unfounded. That improvisation might mean carbonara techniques applied to taco requests. The result looks reasonable enough that customers can't tell it's fabricated.
 
 We see neural nets operating under this same constraint. They handle trained inputs at $100\%$ accuracy—these are the menu items. But off-menu inputs trigger fabrication $96\%$ of the time (see [Experiment 1](experiment_1/) for details). That contrast is striking: real information systems can say "unknown" when uncertain, but these architectures can't—softmax forces a choice on every forward pass. This pressure emerges because models are rewarded for producing outputs rather than admitting uncertainty, leading to plausible but incorrect fabrication.

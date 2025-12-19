@@ -77,7 +77,7 @@ We observe the cost of this projection as fabrication. When the true answer is "
 
 ## Three Independent Pressures
 
-We ran experiments across 2,500+ trials and found hallucination breaking down into three distinct mechanisms. Each contributes independently. Think of these as three different reasons models fabricate answers, each operating on its own terms.
+We ran experiments across 2,500+ trials and identified hallucination breaking down into three major mechanisms we've studied. Each contributes independently. Think of these as three different reasons models fabricate answers that we've isolated and quantified, each operating on its own terms.
 
 **Partiality pressure** ($45\%$ baseline): This shows up even when the task has a correct answer, but the query underspecifies it. As shown in [Experiment 1](experiment_1/), we trained on 51 labeled inputs from 128 total. The 77 unlabeled inputs produced $96\%$ fabrication at $59\%$ confidence—not random guessing ($20\%$ baseline for 5 classes), not learned patterns ($99\%$ confidence on training data), just geometric interpolation in feature space (see [Experiment 1](experiment_1/) for full methodology). The model blends nearby training patterns rather than detecting novelty. Production LLMs show the same effect—when we asked "What day comes after today?" without context, the model fabricated $45\%$ of the time. This baseline persists across all task types regardless of whether structural contradiction exists.
 
@@ -155,7 +155,7 @@ Scale doesn't fix this. We tested across $5$ random seeds, $17$ training composi
 
 ## Open Questions
 
-Our experiments showed three pressures—$45\%$ partiality, $\approx 11\%$ points structural contradiction, $\approx 75\%$ points architectural forcing. Those proportions held across the tasks we tested. Do they hold across different task families? Building diagnostics that automatically attribute observed hallucination to each source remains an open challenge.
+Our experiments showed three pressures we've identified and quantified—$45\%$ partiality, $\approx 11\%$ points structural contradiction, $\approx 75\%$ points architectural forcing. Those proportions held across the synthetic tasks we tested. Do they hold across different task families? Could other mechanisms contribute that we haven't isolated yet? Building diagnostics that automatically attribute observed hallucination to each source remains an open challenge.
 
 Uncertainty capacity seems to distribute across system components—retrievers, planners, verifiers. But we don't know how it combines. Does it add linearly across modules? Bottleneck at the weakest link? Interact in more complex ways? Long chain-of-thought degradation suggests insufficient capacity per step compounds, but we need direct multi-module tests to confirm this.
 

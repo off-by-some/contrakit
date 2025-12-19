@@ -171,7 +171,6 @@ Finally, we need to identify optimal architectures. What designs provide enough 
 
 Current scope has limitations too. Our decomposition holds for synthetic weekday tasks. But does it shift for factual QA (high temporal contradiction), causal reasoning (moderate multiple interpretations), or creative generation (low contradiction)? Direct benchmark validation remains needed. The theory predicts production 20-50% rates stem from partial capacity in hybrid systems. But does the 45% partiality + 11% contradiction + 75% architectural breakdown hold on TruthfulQA, MMLU, or other standard evals? Measuring contradiction K on real tasks would confirm whether task structure explains observed benchmark differences.
 
-This work appears as a 2025 Zenodo preprint (DOI: 10.5281/zenodo.17203336) with specific claims documented but not independently verified.
 
 The theory makes falsifiable predictions. It would be in trouble if hallucination reduction didn't correlate with abstention freedom (contradicted: we observe $75$-point reduction in [Experiment 7](experiment_7/)), if the conservation law was violated (not observed: holds across $2,500+$ trials with zero violations), if adding independent abstention channels produced negative returns (untested), or if systems with radically different architectures exhibited identical hallucination-abstention tradeoffs when uncertainty capacity differs (untested). These remain testable predictions.
 

@@ -119,9 +119,9 @@ These three attempts reveal the same pattern. Training can change which inputs h
 
 ## Architecture Changes That Work
 
-Current approaches catch hallucinations after they happen or teach models to hedge their language. But they don't address the core issue—architectures that force output when "I don't know" would be appropriate.
+Some current approaches catch hallucinations after they happen or teach models to hedge their language. But others do address the core issue—architectures that force output when "I don't know" would be appropriate. Our theory explains why these architectural approaches work: they create new uncertainty capacity rather than just redistributing existing probability mass.
 
-The $75$-point gap ($76\%$ to $1\%$) shows us what actually works. Solutions need to do three things: give the system a dedicated way to express uncertainty, make that mechanism work on new cases (not just memorized ones), and provide enough capacity to handle the task's inherent ambiguity.
+The $75$-point gap ($76\%$ to $1\%$) demonstrates this distinction. Solutions that create new uncertainty capacity need to do three things: give the system a dedicated way to express uncertainty, make that mechanism work on new cases (not just memorized ones), and provide enough capacity to handle the task's inherent ambiguity.
 
 **Retrieval with explicit "not found" states.** When a system searches for information, it can return two fundamentally different outcomes: "here's the answer" or "no matching documents found." That second state is architectural—it's not the system fabricating an answer from weak signals. It's the system reporting that retrieval failed. This gives the system a dedicated uncertainty channel. We predict this reduces hallucination by $50\%$--$70\%$ based on the capacity it provides, which matches what we see in production RAG systems.
 

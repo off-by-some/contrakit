@@ -39,6 +39,9 @@ numba = "^0.61.2"
 ollama = "^0.6.1"
 pandas = "^2.3.3"
 torch = "^2.9.1"
+seaborn = "^0.13.2"
+datasets = "^4.4.1"
+matplotlib = "^3.10.8"
 
 [tool.poetry.group.examples.dependencies]
 matplotlib = "^3.10.6"

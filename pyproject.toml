@@ -43,6 +43,9 @@ seaborn = "^0.13.2"
 datasets = "^4.4.1"
 matplotlib = "^3.10.8"
 transformers = "^4.57.3"
+pytorch-ood = "^0.2.2"
+torchvision = "^0.24.1"
+gdown = "^5.2.0"
 
 [tool.poetry.group.examples.dependencies]
 matplotlib = "^3.10.6"

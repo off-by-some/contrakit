@@ -43,6 +43,7 @@ Typical usage:
 """
 
 import sys
+import argparse
 from pathlib import Path
 
 # Add parent directory to path to import utils
@@ -50,6 +51,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import torch
 import numpy as np
+from contrakit import Observatory
+from contrakit.constants import DEFAULT_SEED
 from utils import (
     HallucinationNet, generate_partial_function, create_datasets,
     train_model, OUTPUT_CLASSES, HIDDEN_SIZE,
@@ -58,8 +61,6 @@ from utils import (
 
 # Use larger input size for better statistical stability
 INPUT_SIZE = 256
-from contrakit import Observatory
-from contrakit.constants import DEFAULT_SEED
 
 def create_proper_splits(function_map, input_size, test_fraction=0.3, seed=DEFAULT_SEED):
     """
@@ -722,8 +723,6 @@ def run_comparison_experiment():
 
 
 if __name__ == "__main__":
-    import argparse
-    
     parser = argparse.ArgumentParser()
     parser.add_argument('--witness', action='store_true',
                        help='Run witness-aware comparison experiment')

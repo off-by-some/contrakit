@@ -19,42 +19,42 @@
     {
       "weight": 1.0,
       "description": "Context A only",
-      "worst_case_mean": 0.7000000000000001,
-      "worst_case_std": 0.0026189140043946114,
+      "worst_case_mean": 0.6901234567901234,
+      "worst_case_std": 0.0008729713347982212,
       "error_A_mean": 0.019135802469135803,
-      "error_B_mean": 0.7000000000000001
+      "error_B_mean": 0.6901234567901234
     },
     {
       "weight": 0.75,
       "description": "75% A, 25% B",
-      "worst_case_mean": 0.6456790123456789,
-      "worst_case_std": 0.005724455861417091,
-      "error_A_mean": 0.06358024691358025,
-      "error_B_mean": 0.6456790123456789
+      "worst_case_mean": 0.6641975308641976,
+      "worst_case_std": 0.0053100773253349515,
+      "error_A_mean": 0.04259259259259259,
+      "error_B_mean": 0.6641975308641976
     },
     {
       "weight": 0.5,
       "description": "Balanced (50/50)",
-      "worst_case_mean": 0.39938271604938275,
-      "worst_case_std": 0.03327612832578655,
-      "error_A_mean": 0.3679012345679012,
-      "error_B_mean": 0.33641975308641975
+      "worst_case_mean": 0.3728395061728395,
+      "worst_case_std": 0.020639819132469733,
+      "error_A_mean": 0.3685185185185185,
+      "error_B_mean": 0.3395061728395061
     },
     {
       "weight": 0.25,
       "description": "25% A, 75% B",
-      "worst_case_mean": 0.658641975308642,
-      "worst_case_std": 0.0038051938289932097,
-      "error_A_mean": 0.658641975308642,
-      "error_B_mean": 0.046913580246913576
+      "worst_case_mean": 0.6574074074074074,
+      "worst_case_std": 0.005451704238473981,
+      "error_A_mean": 0.6574074074074074,
+      "error_B_mean": 0.048148148148148155
     },
     {
       "weight": 0.0,
       "description": "Context B only",
-      "worst_case_mean": 0.6808641975308642,
-      "worst_case_std": 0.00486049868766164,
-      "error_A_mean": 0.6808641975308642,
-      "error_B_mean": 0.024691358024691357
+      "worst_case_mean": 0.6845679012345679,
+      "worst_case_std": 0.0053100773253349515,
+      "error_A_mean": 0.6845679012345679,
+      "error_B_mean": 0.022222222222222223
     }
   ]
 }

@@ -301,9 +301,12 @@ def query_llm_structured(
     temperature: float = 0.0,
     max_tokens: int = MAX_RESPONSE_LENGTH,
     allow_abstention: bool = True
-) -> Optional[DayAnswer]:
+) -> DayAnswer:
     """
     Query LLM with structured JSON output using Pydantic schema.
+    
+    Fails explicitly if ollama.chat fails or validation fails.
+    No hidden error handling or fallbacks.
     
     Args:
         prompt: Input prompt
@@ -313,15 +316,15 @@ def query_llm_structured(
         allow_abstention: If True, allows "unknown" option; if False, forces weekday choice
     
     Returns:
-        Parsed DayAnswer or None if validation fails
+        Parsed DayAnswer (fails explicitly on errors)
     """
     schema = DayAnswer.model_json_schema() if allow_abstention else DayAnswerForced.model_json_schema()
     
     response = ollama.chat(
         model=model,
         messages=[{'role': 'user', 'content': prompt}],
-    format=schema,
-    options={'temperature': temperature, 'num_predict': max_tokens}
+        format=schema,
+        options={'temperature': temperature, 'num_predict': max_tokens}
     )
     
     content = response['message']['content']
@@ -375,28 +378,22 @@ def get_answer_distribution(
     temperature: float = TEMPERATURE_SAMPLING,
     normalizer: Optional[Dict[str, Optional[str]]] = None,
     allow_abstention: bool = True
-) -> Tuple[Dict[str, float], int]:
+) -> Dict[str, float]:
     """
     Estimate probability distribution by sampling model n_samples times.
+    
+    Fails explicitly if LLM query or validation fails.
     
     Args:
         allow_abstention: If True, allows "unknown" option; if False, forces weekday choice
     
     Returns:
         distribution: Normalized frequency distribution over possible_answers + ["other"]
-        n_errors: Count of JSON validation failures
     """
     counts = defaultdict(int)
-    n_errors = 0
 
     for _ in range(n_samples):
         response = query_llm_structured(prompt, model, temperature, MAX_RESPONSE_LENGTH, allow_abstention)
-        
-        if response is None:
-            counts["other"] += 1
-            n_errors += 1
-            continue
-        
         answer_day = response.day.strip()
         
         # Handle explicit abstention (only if allowed)
@@ -416,7 +413,7 @@ def get_answer_distribution(
     
     total = sum(counts.values())
     distribution = {ans: counts[ans] / total for ans in possible_answers + ["other"]}
-    return distribution, n_errors
+    return distribution
 
 def get_confidence_distribution(
     prompt: str,
@@ -429,6 +426,8 @@ def get_confidence_distribution(
     """
     Get answer distribution and most frequent answer.
     
+    Fails explicitly if LLM query or validation fails.
+    
     Args:
         allow_abstention: If True, allows "unknown" option; if False, forces weekday choice
     
@@ -438,7 +437,7 @@ def get_confidence_distribution(
         distribution: Full probability distribution
         sample_response: Example raw response
     """
-    dist, _ = get_answer_distribution(prompt, possible_answers, model, n_samples, temperature, allow_abstention=allow_abstention)
+    dist = get_answer_distribution(prompt, possible_answers, model, n_samples, temperature, allow_abstention=allow_abstention)
     most_common = max(dist.items(), key=lambda x: x[1])[0]
     confidence = dist[most_common]
     sample = query_llm_structured(prompt, model, temperature, MAX_RESPONSE_LENGTH, allow_abstention)
@@ -497,9 +496,6 @@ def construct_behavior_from_llm(
     undefined_question = task["undefined_query"]
 
     # Collect all distributions with compact display
-    dist_rows = []
-    total_errors = 0
-
     if verbose:
         display.print_simple_text_dim(f"Querying LLM for {len(contexts)} contexts × {n_samples} samples each...")
 
@@ -508,9 +504,8 @@ def construct_behavior_from_llm(
             pbar.set_description(f"Overall Progress | Measuring contexts ({i+1}/{len(contexts)})")
         prompt = f"{context_text}\n\nQuestion: {undefined_question}\n\nSelect one: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, or 'unknown' if the answer cannot be determined."
 
-        dist, n_errors = get_answer_distribution(prompt, possible_answers, model, n_samples, normalizer=normalizer, allow_abstention=True)
+        dist = get_answer_distribution(prompt, possible_answers, model, n_samples, normalizer=normalizer, allow_abstention=True)
         context_distributions[context_name] = dist
-        total_errors += n_errors
 
         # Find the most common answer for compact display
         most_common = max(dist.items(), key=lambda x: x[1])
@@ -520,19 +515,9 @@ def construct_behavior_from_llm(
         if verbose:
             context_label = context_labels[i] if i < len(context_labels) else context_name
             format_context_measurement(
-                context_label, answer, confidence, n_errors,
+                context_label, answer, confidence, 0,
                 prompt, context_name, dist, Verbosity.NORMAL
             )
-
-        # Format for table (only if there were errors)
-        if n_errors > 0:
-            dist_table_str = ", ".join(f"{k}:{v:.2f}" for k, v in dist.items() if v > 0.01)
-            error_str = f"⚠{n_errors}"
-            dist_rows.append([context_name, dist_table_str, error_str])
-
-    # Show detailed table only if there were errors
-    if dist_rows and verbose and should_show(Verbosity.NORMAL):
-        print_table(["Context", "Model Answers", "JSON Errors"], dist_rows, "Model Responses by Context (showing only contexts with errors)")
     
     if verbose:
         print_subsection_header("Building mathematical model of task constraints")

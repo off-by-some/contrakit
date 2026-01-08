@@ -13,7 +13,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -24,7 +24,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -35,7 +35,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -46,7 +46,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -57,7 +57,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -83,7 +83,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -94,7 +94,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -105,7 +105,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -116,7 +116,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -127,7 +127,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.4999999999990186,
@@ -153,7 +153,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -164,7 +164,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -175,7 +175,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -186,7 +186,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -197,7 +197,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -223,7 +223,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -234,7 +234,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -245,7 +245,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -256,7 +256,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -267,7 +267,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -293,7 +293,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -304,7 +304,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -315,7 +315,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -326,7 +326,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -337,7 +337,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.4999999999990186,
@@ -363,7 +363,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -374,7 +374,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -385,7 +385,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -396,7 +396,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -407,7 +407,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -433,7 +433,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -444,7 +444,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -455,7 +455,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -466,7 +466,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -477,7 +477,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.7924812503596663,
@@ -503,7 +503,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -514,7 +514,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -525,7 +525,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -536,7 +536,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -547,7 +547,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -573,7 +573,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -584,7 +584,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -595,7 +595,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -606,7 +606,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -617,7 +617,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -643,7 +643,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -654,7 +654,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -665,7 +665,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -676,7 +676,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -687,7 +687,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.7924812503596663,
@@ -713,7 +713,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -724,7 +724,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -735,7 +735,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -746,7 +746,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -757,7 +757,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -783,7 +783,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -794,7 +794,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -805,7 +805,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -816,7 +816,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -827,7 +827,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 0.9999999999999907,
@@ -853,7 +853,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -864,7 +864,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -875,7 +875,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -886,7 +886,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -897,7 +897,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -923,7 +923,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -934,7 +934,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -945,7 +945,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -956,7 +956,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -967,7 +967,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -993,7 +993,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -1004,7 +1004,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -1015,7 +1015,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -1026,7 +1026,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -1037,7 +1037,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 0.9999999999999907,
@@ -1063,7 +1063,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1074,7 +1074,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1085,7 +1085,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1096,7 +1096,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1107,7 +1107,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1133,7 +1133,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1144,7 +1144,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1155,7 +1155,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1166,7 +1166,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1177,7 +1177,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 1.0,
         "abstention_rate": 0.0,
         "K_task": 1.1609640474436378,
@@ -1203,7 +1203,7 @@
     "has_sufficient_capacity": false,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1214,7 +1214,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1225,7 +1225,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1236,7 +1236,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1247,7 +1247,7 @@
         "phase": "insufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1273,7 +1273,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1284,7 +1284,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1295,7 +1295,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1306,7 +1306,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1317,7 +1317,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1343,7 +1343,7 @@
     "has_sufficient_capacity": true,
     "seed_results": [
       {
-        "seed": 0,
+        "seed": 416,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1354,7 +1354,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 1,
+        "seed": 417,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1365,7 +1365,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 2,
+        "seed": 418,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1376,7 +1376,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 3,
+        "seed": 419,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,
@@ -1387,7 +1387,7 @@
         "phase": "sufficient"
       },
       {
-        "seed": 4,
+        "seed": 420,
         "E_measured": 0.0,
         "abstention_rate": 1.0,
         "K_task": 1.1609640474436378,

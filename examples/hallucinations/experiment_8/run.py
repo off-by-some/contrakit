@@ -21,6 +21,7 @@ Important limitations:
 """
 
 import sys
+import re
 from pathlib import Path
 import json
 from typing import Dict, List, Tuple, Optional, Literal
@@ -193,7 +194,6 @@ Respond with ONLY a number between 0 and 100."""
     confidence_text = response['message']['content'].strip()
     
     # Extract first number found
-    import re
     numbers = re.findall(r'\d+(?:\.\d+)?', confidence_text)
     if not numbers:
         raise ValueError(f"No confidence value found in response: {confidence_text}")

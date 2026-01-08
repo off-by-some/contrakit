@@ -33,6 +33,7 @@ from typing import Dict, Tuple
 
 import contrakit as ck
 from contrakit.observatory import Observatory
+from contrakit.constants import DEFAULT_SEED
 
 
 # Context-dependent labeling rules
@@ -347,7 +348,7 @@ def run_experiment():
     y = digits_data.target
     
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42, stratify=y
+        X, y, test_size=0.3, random_state=DEFAULT_SEED, stratify=y
     )
     
     print(f"  sklearn digits: 8×8 pixels (64 dimensions)")
@@ -378,7 +379,8 @@ def run_experiment():
         print(f"  {description} (weight={weight:.2f})")
         
         condition_results = []
-        for seed in range(3):
+        for seed_offset in range(3):
+            seed = DEFAULT_SEED + seed_offset
             torch.manual_seed(seed)
             np.random.seed(seed)
             

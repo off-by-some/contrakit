@@ -143,7 +143,7 @@ Training composition affects how far above the floor you land when architectural
 
 Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions. 
 
-The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.
+The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.ny v
 
 Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 
@@ -155,13 +155,13 @@ We created two labeling contexts: "parity" (odd=1, even=0) and "roundness" (0,6,
 
 The optimal frame-independent approximation must choose one label per digit. For contradictory digits, any choice satisfies one context and fails the other. If we satisfy Context A completely, we achieve 0% error in Context A but 70% error in Context B because all 7 contradictory digits have the wrong label there. The worst case across both contexts is max(0%, 70%) = 70%. This 70% error was predicted before any training from the task structure alone.
 
-Training CNNs and evaluating on both contexts confirmed it. Models trained exclusively on Context A labels achieved 1.9% error in Context A and 70.0% ± 0.3% error in Context B—matching the prediction exactly. Models trained exclusively on Context B labels achieved 68.1% ± 0.5% error in Context A and 2.5% error in Context B—close to the same 70% worst-case. Balanced training produced a different strategy: 36.8% error in Context A and 33.6% error in Context B, giving a 39.9% worst-case as the model learned to compromise between both contexts rather than fully satisfying either one.
+Training CNNs and evaluating on both contexts confirmed it. Models trained exclusively on Context A labels achieved 1.9% error in Context A and 69.0% ± 0.1% error in Context B—matching the prediction exactly. Models trained exclusively on Context B labels achieved 68.5% ± 0.5% error in Context A and 2.2% error in Context B—close to the same 70% worst-case. Balanced training produced a different strategy: 36.9% error in Context A and 34.0% error in Context B, giving a 37.3% worst-case as the model learned to compromise between both contexts rather than fully satisfying either one.
 
 ![Worst-Case Error Analysis](experiment_10/results/worst_case_error.png)
 
-The U-shaped curve reveals how training composition determines strategy. At the extremes—training exclusively on Context A or Context B—worst-case error hits the predicted 70% because the model masters one context but fails on all contradictory digits in the other. At the center with balanced training, worst-case drops to 40% as the model compromises, partially satisfying both contexts instead of fully satisfying either. 
+The U-shaped curve reveals how training composition determines strategy. At the extremes—training exclusively on Context A or Context B—worst-case error hits the predicted 70% because the model masters one context but fails on all contradictory digits in the other. At the center with balanced training, worst-case drops to 37% as the model compromises, partially satisfying both contexts instead of fully satisfying either. 
 
-The right panel shows why: single-context training produces near-perfect performance in one direction (~2% error) and systematic failure in the other (~70% error), while balanced training splits the difference (~37% and ~34%). The symmetry confirms that 70% isn't a training artifact—it's the optimal frame-independent approximation predicted from task structure.
+The right panel shows why: single-context training produces near-perfect performance in one direction (~2% error) and systematic failure in the other (~69% error), while balanced training splits the difference (~37% and ~34%). The symmetry confirms that 70% isn't a training artifact—it's the optimal frame-independent approximation predicted from task structure.
 
 Like Experiment 4, this achieves the bound rather than merely exceeding it. The 70% error is the optimal frame-independent approximation, computed analytically before training and matched by models that learned one context consistently. Finding that K determines exact error on 64-dimensional visual data confirms the principle isn't about low dimensionality or synthetic construction. Task structure—not model architecture or training dynamics—sets fundamental limits.
 
@@ -170,6 +170,12 @@ Like Experiment 4, this achieves the bound rather than merely exceeding it. The 
 Standard accuracy metrics miss these failures. A network achieving 100% training accuracy might hallucinate on 96% of undefined test inputs. Aggregate statistics hide the problem because defined and undefined inputs get pooled together.
 
 Confidence thresholds don't reliably filter unreliable predictions. The 59.5% confidence on fabricated answers sits between random guessing (20%) and learned certainty (98.85%), suggesting interpolation rather than abstention. Without explicit training on contradictions, confidence scores reflect geometric position in feature space rather than epistemic uncertainty.
+
+Out-of-distribution detection demonstrates this on a standard benchmark. Standard approaches apply post-hoc calibration—temperature scaling, entropy thresholding—to architectures with $r \approx 0$. These methods retrofit uncertainty after training rather than learning it during training. We tested both approaches on SSB-Hard (Semantic Shift Benchmark - Hard), a near-OOD benchmark where out-of-distribution samples are semantically different but visually similar to in-distribution CIFAR-10. The witness architecture ($r \geq 1$ bit through explicit uncertainty head) achieved AUROC = 0.728. Post-hoc methods on standard architectures reached AUROC = 0.627 at best.
+
+![OOD Detection](experiment_11/results/ood_detection.png)
+
+The left panel shows the witness model's ROC curve outperforming post-hoc methods by ~16%. The right panel shows substantial overlap in uncertainty distributions between in-distribution (green) and out-of-distribution (red) - realistic for near-OOD where visual features overlap. Both models trained on identical data with identical supervision about which inputs were OOD. The difference was when uncertainty entered the training objective. The witness model learned it end-to-end through backpropagation. Post-hoc methods worked with features already optimized purely for classification. Architectural capacity cannot be added after the fact.
 
 The mechanism isn't specific to our toy tasks or synthetic networks. The relationship between training composition and hallucination held across networks ranging from 64-unit feedforward classifiers to llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics. The consistency suggests these are properties of how gradient descent allocates capacity between competing objectives, not accidents of particular architectures.
 
@@ -188,7 +194,8 @@ The training objective is to maximize log probability of correct labels on train
 - **Experiment 7**: [Structural Inevitability vs Architectural Commitment](experiment_7/) — 1% with abstention, 76% forced (75-point gap)
 - **Experiment 8**: [TruthfulQA Benchmark](experiment_8/) — 20% forced vs 10% with abstention
 - **Experiment 9**: [Quantifying Witness Capacity](experiment_9/) — Phase transition at $r=K$ across 100 training runs
-- **Experiment 10**: [Generalization to High-Dimensional Real Data](experiment_10/) — Predicted 70% worst-case error before training, achieved 70.0% ± 0.3%
+- **Experiment 10**: [Generalization to High-Dimensional Real Data](experiment_10/) — Predicted 70% worst-case error before training, achieved 69.0% ± 0.1%
+- **Experiment 11**: [Architectural Sufficiency for OOD Detection](experiment_11/) — Witness architecture (r ≥ 1) achieved AUROC = 0.728 vs 0.627 for post-hoc methods on SSB-Hard benchmark
 
 
 **Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a sharp phase transition in error rate when $r$ crosses $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.

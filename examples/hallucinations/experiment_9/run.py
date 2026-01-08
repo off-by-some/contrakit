@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from pathlib import Path
 import json
 from typing import Dict, List, Tuple, Optional
@@ -11,6 +12,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from contrakit import Observatory
+from contrakit.constants import DEFAULT_SEED
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -60,7 +62,7 @@ class WitnessNetwork(nn.Module):
 
 
 def create_weekday_task(num_contexts: int = 2, ambiguous_ratio: float = 0.5, 
-                        seed: int = 42) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                        seed: int = DEFAULT_SEED) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Create a weekday prediction task with controlled contradiction.
     
@@ -332,7 +334,8 @@ def run_experiment_grid(output_dir: Path, num_seeds: int = 5):
             
             seed_results = []
             
-            for seed in range(num_seeds):
+            for seed_offset in range(num_seeds):
+                seed = DEFAULT_SEED + seed_offset
                 set_seed(seed)
                 
                 # Create task
@@ -521,8 +524,6 @@ def plot_results(results: List[Dict], output_dir: Path):
     plt.close()
     
     # 4. 3D Surface Plot (K × r → E)
-    from mpl_toolkits.mplot3d import Axes3D
-    
     fig = plt.figure(figsize=(12, 9))
     ax = fig.add_subplot(111, projection='3d')
     

@@ -6,6 +6,7 @@ from contrakit.space import Space
 from contrakit.context import Context
 from contrakit.behavior.behavior import Behavior
 from contrakit.distribution import Distribution
+from contrakit.constants import EPS
 import pytest
 import numpy as np
 
@@ -27,7 +28,7 @@ def test_behavior_from_contexts_with_dicts():
     # Verify distributions are properly normalized
     for context, dist in behavior.distributions.items():
         total_prob = sum(dist[outcome] for outcome in dist.outcomes)
-        assert abs(total_prob - 1.0) < 1e-12
+        assert abs(total_prob - 1.0) < EPS
 
 
 def test_behavior_from_contexts_with_distributions():

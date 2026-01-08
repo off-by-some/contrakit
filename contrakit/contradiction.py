@@ -29,6 +29,7 @@ from .context import Context
 from .distribution import Distribution
 from .frame import FrameIndependence
 from .agreement import AgreementMeasure, BhattacharyyaCoefficient
+from .constants import LOG_STABILITY_EPS
 
 
 class ContradictionMeasure(ABC):
@@ -120,7 +121,7 @@ class LogarithmicContradiction(ContradictionMeasure):
     
     def __call__(self, behavior: 'Behavior') -> float:
         alpha_star = behavior.alpha_star
-        return -np.log(max(alpha_star, 1e-300)) / np.log(self.base)
+        return -np.log(max(alpha_star, LOG_STABILITY_EPS)) / np.log(self.base)
     
     @property
     def name(self) -> str:

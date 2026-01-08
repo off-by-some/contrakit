@@ -5,8 +5,10 @@ import numpy as np
 import pytest
 
 from contrakit import Space, Behavior
+from contrakit.constants import NORMALIZATION_TOL, EPS
 
-TOL = 1e-6
+# Define TOL for backward compatibility
+TOL = NORMALIZATION_TOL
 
 
 class TestAgreementAPI:
@@ -38,7 +40,7 @@ class TestAgreementAPI:
         # Basic agreement
         result = behavior_2x2.agreement.result
         assert isinstance(result, float)
-        assert 0.0 <= result <= 1.0 + 1e-9
+        assert 0.0 <= result <= 1.0 + NORMALIZATION_TOL
 
         # With weights
         weighted_result = behavior_2x2.agreement.for_weights({("Hair",): 0.6, ("Eyes",): 0.4}).result
@@ -65,7 +67,7 @@ class TestAgreementAPI:
         explanation = behavior_2x2.agreement.explanation
         assert isinstance(explanation, np.ndarray)
         assert explanation.shape == (4,)  # 2x2 = 4 assignments
-        assert np.isclose(explanation.sum(), 1.0, atol=1e-9)
+        assert np.isclose(explanation.sum(), 1.0, atol=EPS)
 
         # Fixed feature case should have None explanation
         fixed_explanation = behavior_2x2.agreement.for_feature("Hair", [0.5, 0.5]).explanation
@@ -125,7 +127,7 @@ class TestAgreementAPI:
         )
 
         assert isinstance(result, float)
-        assert 0.0 <= result <= 1.0 + 1e-9
+        assert 0.0 <= result <= 1.0 + NORMALIZATION_TOL
 
     def test_by_context_mode(self, behavior_2x2):
         """Test by_context mode."""
@@ -314,7 +316,7 @@ class TestAgreementAPI:
         abc_fixed = abc_behavior.agreement.for_feature("Hair", hair_dist_ab)
         result = abc_fixed.result
         assert isinstance(result, float)
-        assert 0.0 <= result <= 1.0 + 1e-9
+        assert 0.0 <= result <= 1.0 + NORMALIZATION_TOL
 
         # Should equal min of context scores for contexts including Hair
         scores = abc_fixed.context_scores

@@ -14,6 +14,7 @@ from ..agreement import BhattacharyyaCoefficient
 from ..frame import FrameIndependence
 from ..context import Context
 from ..space import Space
+from ..constants import FRAME_INDEPENDENCE_TOL
 from .agreement_api import Agreement
 
 
@@ -177,7 +178,7 @@ class Behavior(BaseBehavior, BehaviorAnalysisMixin):
         """
         return Agreement(self)
 
-    def is_frame_independent(self, tol: float = 1e-9) -> bool:
+    def is_frame_independent(self, tol: float = FRAME_INDEPENDENCE_TOL) -> bool:
         """
         Test whether the behavior is frame-independent.
 
@@ -232,8 +233,7 @@ class Behavior(BaseBehavior, BehaviorAnalysisMixin):
             combined_contexts[tuple(ctx.observables)] = dist.to_dict()
 
         # Create combined behavior
-        from .behavior import Behavior as _B
-        return _B.from_contexts(self.space, combined_contexts)
+        return Behavior.from_contexts(self.space, combined_contexts)
 
     def __or__(self, other: "Behavior") -> "Behavior":
         """

@@ -1,133 +1,82 @@
 # Experiment 7: Structural Inevitability vs Architectural Commitment
 
-Does task-level contradiction ($K$) determine whether hallucination is unavoidable? And can observed hallucination be decomposed into structural inevitability plus architectural commitment? We tested llama3.1:8b on logically impossible weekday questions, measuring both $K$ and behavior.
+The first six experiments used small feedforward networks on synthetic tasks. We wanted to test whether the same patterns appear in actual language models facing logically impossible questions. So we tested llama3.1:8b on weekday questions that have no correct answer when context is removed, measuring both the contradiction measure K and the model's behavior across 2,500 trials.
 
-The results separate two pressures cleanly. $K = 0$ (control) shows 45% hallucination—unexpected, since the task has a correct answer. $K > 0$ tasks show 64-75% hallucination, all exceeding theoretical bounds (29-53%). Architectural comparison reveals the mechanism: when abstention is allowed, hallucination drops to 1%. When forced to choose, it jumps to 76%. The 75-point gap isolates architectural pressure from structural pressure.
+The results split hallucination into two independent sources. Tasks with K = 0 (the control) showed 45% hallucination despite having a correct answer—unexpected, since the task isn't contradictory. Tasks with K > 0 showed 64-75% hallucination, all exceeding their theoretical bounds by 22-35 percentage points. An architectural comparison revealed the mechanism: when abstention was allowed, hallucination dropped to 1%. When the model was forced to choose, it jumped to 76%. That 75-point gap isolates architectural pressure from structural pressure.
 
-## What $K$ Measures in LLMs
+## What K Measures in Language Models
 
-$K$ quantifies whether a single consistent model can explain all training contexts. Frame-independent (FI) models are those explainable by one underlying reality—one hidden variable determining all outputs. $K = -\log_2 \alpha^*$ where $\alpha^*$ is the best Bhattacharyya coefficient any FI model achieves across contexts.
+K quantifies whether a single consistent model can explain all the training contexts. Frame-independent models are the ones you can explain with a single underlying reality—one hidden variable that determines all outputs across contexts. K equals -log₂ α* where α* is the best Bhattacharyya coefficient any frame-independent model can achieve when matched against all contexts.
 
-For weekday tasks: if Context A says "Monday" $\rightarrow$ "Tuesday" and Context B says "Tuesday" $\rightarrow$ "Wednesday", these contexts can coexist (both could be true on different days). No contradiction. $K = 0$. But if Context A says "Today is Monday $\rightarrow$ tomorrow is Tuesday" and Context B says "Today is Tuesday $\rightarrow$ tomorrow is Wednesday", then asking "What comes after today?" without context is impossible—both contexts can't be simultaneously true. Contradiction exists. $K > 0$.
+For weekday tasks, this distinction matters. If Context A says "Monday" → "Tuesday" and Context B says "Tuesday" → "Wednesday", both contexts can coexist—they could both be true on different days, so there's no contradiction and K = 0. But if Context A says "Today is Monday → tomorrow is Tuesday" and Context B says "Today is Tuesday → tomorrow is Wednesday", then asking "What comes after today?" without providing context becomes impossible. Both contexts can't be simultaneously true for the same query, so contradiction exists and K > 0.
 
-The Bhattacharyya coefficient measures overlap:
+The Bhattacharyya coefficient measures overlap between probability distributions: BC(p, q) = Σ √(p(o) q(o)). For distributions with no overlap, BC = 0. For identical distributions, BC = 1. The optimal frame-independent model finds the single best distribution that maximizes worst-case agreement across all training contexts. When contexts conflict, no single distribution works—α* drops below 1, which means K rises above 0.
 
-$$\text{BC}(p, q) = \sum_o \sqrt{p(o) q(o)}$$
+The total variation bound connects K to observable error: d_TV(P, FI) ≥ 1 - 2^(-K). Any frame-independent model must differ from the true behavior by at least 1 - 2^(-K) on some context. For K = 0.50 bits, that's at least 29% error. For K = 1.10 bits, that's at least 53%. These are floors on what's possible, not predictions of what will happen—observed rates can exceed them, sometimes substantially.
 
-For distributions with no overlap, $\text{BC} = 0$. For identical distributions, $\text{BC} = 1$. The optimal FI model finds the best single distribution that maximizes worst-case agreement with all training contexts. When contexts conflict, no single distribution works—$\alpha^* < 1$, $K > 0$.
+## The Task Design
 
-The total variation bound connects $K$ to observable error:
+We constructed tasks with n mutually exclusive contexts (n ranging from 1 to 5), where each context specified a different day as "today." The query asked "What day comes after today?" without providing any context. Each task used N = 500 trials to get tight confidence intervals of ±4%.
 
-$$d_{\text{TV}}(P, \text{FI}) \geq 1 - 2^{-K}$$
+For n = 1 context ("Today is Monday"), K = 0 because the task has a unique correct answer ("Tuesday"). Any hallucination here reflects model limitations rather than structural impossibility. This served as our control.
 
-Any FI model must differ from true behavior by at least $1 - 2^{-K}$ on some context. For $K = 0.50$, that's $\geq 29\%$. For $K = 1.10$, that's $\geq 53\%$. These are floors, not ceilings—observed rates can exceed them.
+For n ≥ 2 contexts, K > 0 because each context gives a different answer to the same query. The model has to fabricate something since no globally coherent answer exists. The theoretical bound rises with n: 2 contexts gives 29%, 3 contexts gives 40%, 4 contexts gives 46%, and 5 contexts gives 53%.
 
-## The Experiment
+## Two Separate Sources of Hallucination
 
-We constructed tasks with $n$ mutually exclusive contexts ($n = 1$ to 5), each specifying a different day as "today." The query asks "What day comes after today?" without providing context. Each task uses $N = 500$ trials for tight confidence intervals ($\pm 4\%$).
+The results show a clear pattern across all five tasks:
 
-For $n = 1$ context ("Today is Monday"), $K = 0$. The task has a unique correct answer ("Tuesday"). Any hallucination reflects model limitations, not structural impossibility.
+| Task | Contexts | K (bits) | Theoretical Bound | Observed Hallucination | Fabrications/Abstentions |
+|------|----------|----------|-------------------|------------------------|--------------------------|
+| 1 | 1 | 0.00 | 0% | 45% ± 4% | 225/275 |
+| 2 | 2 | 0.50 | ≥ 29% | 64% ± 4% | 318/182 |
+| 3 | 3 | 0.73 | ≥ 40% | 72% ± 4% | 360/140 |
+| 4 | 4 | 0.89 | ≥ 46% | 73% ± 4% | 367/133 |
+| 5 | 5 | 1.10 | ≥ 53% | 75% ± 4% | 373/127 |
 
-For $n \geq 2$ contexts, $K > 0$. Each context gives a different answer. The model must fabricate since no globally coherent answer exists. The theoretical bound rises with $n$: 2 contexts $\rightarrow$ 29%, 3 contexts $\rightarrow$ 40%, 4 contexts $\rightarrow$ 46%, 5 contexts $\rightarrow$ 53%.
+No task violated its theoretical bound across 2,500 total trials. Every observed rate exceeded its bound, but two patterns stood out immediately: K = 0 showed substantial hallucination despite having no contradiction, and observed rates saturated near 75% even as K increased from 0.50 to 1.10 bits.
 
-## Results: Two Sources of Hallucination
+Task 1 with K = 0 revealed unexpected behavior. The model fabricated answers 225 times and abstained 275 times out of 500 trials, giving 45% hallucination. This happened despite K = 0, which means a coherent global solution exists. The task isn't contradictory—there is a right answer.
 
-Summary across all tasks:
+This doesn't contradict the theory. K = 0 means the task admits a frame-independent model, but it doesn't mean the language model must represent or select that model. The query "What day comes after today?" is underspecified without context. The model doesn't know which day is "today," so it can't compute "tomorrow." It faces a choice between abstaining (admitting uncertainty) and fabricating (picking a weekday anyway). This identifies a distinct failure mode—underspecification-driven hallucination that's present even when K = 0, separate from the contradiction-driven hallucination we see when K > 0.
 
-| Task | Contexts | $K$ (bits) | Theoretical Bound | Observed Hallucination | Fabrications/Abstentions |
-| ---- | -------- | -------- | ----------------- | ---------------------- | ------------------------ |
-| 1    | 1        | 0.00     | 0%                | 45% $\pm$ 4%           | 225/275 |
-| 2    | 2        | 0.50     | $\geq$ 29%        | 64% $\pm$ 4%           | 318/182 |
-| 3    | 3        | 0.73     | $\geq$ 40%        | 72% $\pm$ 4%           | 360/140 |
-| 4    | 4        | 0.89     | $\geq$ 46%        | 73% $\pm$ 4%           | 367/133 |
-| 5    | 5        | 1.10     | $\geq$ 53%        | 75% $\pm$ 4%           | 373/127 |
+Tasks 2-5 with K > 0 showed that hallucination becomes structurally unavoidable when contradiction exists. The theoretical bounds certify this: 29-53% minimum error depending on how many contexts conflict. Observed rates ran from 64% to 75%, all exceeding their bounds. The gap between observed and bound ranged from 22 to 35 percentage points.
 
-No task violates the theoretical bound across 2,500 total trials. Observed rates always exceed bounds. But two patterns stand out: (1) $K = 0$ shows substantial hallucination despite no contradiction, and (2) observed rates saturate near 75% despite $K$ increasing from 0.50 to 1.10.
+Observed rates increased monotonically with K: 64% → 72% → 73% → 75%. But the increase was limited—only an 11% range across a 2.2× increase in K (from 0.50 to 1.10 bits). Saturation occurred near 75%, suggesting an architectural ceiling where the model's output format constrains how high rates can climb regardless of the underlying contradiction.
 
-### Task 1 ($K = 0$): Partiality Pressure
+The fabrication-abstention split showed the pattern clearly. As K increased, fabrications rose from 318 to 373 while abstentions fell from 182 to 127. The model became less willing to abstain as contexts multiplied, even though abstention became more appropriate. The structural contradiction increased pressure to fabricate rather than admit uncertainty.
 
-The control case reveals unexpected behavior. Fabrications: 225. Abstentions: 275. Despite $K = 0$—meaning a coherent global solution exists—the model hallucinates 45% of the time.
+The excess beyond theoretical bounds has three sources. Decision entropy contributes log₂(7) = 2.81 bits from choosing among seven weekdays, which gives the task more output options than the theory's bound assumes. Distribution shift matters because test queries without context never appeared during training, which always included context. Forced commitment means the model must pick an answer rather than expressing fractional beliefs or abstaining by default.
 
-This doesn't contradict theory. $K = 0$ means the task admits a frame-independent model. It doesn't mean the LLM must represent or select that model. The query "What day comes after today?" is underspecified without context. The model doesn't know which day is "today," so it can't compute "tomorrow." It faces a choice: abstain (admit uncertainty) or fabricate (pick a weekday).
+## Decomposing the Pressures
 
-This identifies a distinct failure mode: underspecification-driven hallucination. Present even when $K = 0$. Separate from contradiction-driven hallucination. The model can answer correctly (there is a right answer), but doesn't know which answer to give (context is missing).
+The results decompose cleanly into two independent pressures. Partiality pressure appears in all tasks and asks "Should I answer at all?" It arises from underspecified queries and shows up even when K = 0. This explains the baseline 45% hallucination in Task 1 and reflects the abstention-fabrication tradeoff.
 
-### Tasks 2-5 ($K > 0$): Contradiction Pressure
+Contradiction pressure gets measured by K and asks "Can any answer be globally coherent?" It only appears when K > 0 and makes hallucination structurally unavoidable. This raises the minimum rate from 0% to 29-53% depending on how many contexts conflict. It explains the monotonic increase from Tasks 2-5.
 
-For $K > 0$, hallucination becomes structurally unavoidable. The theoretical bounds certify this: 29-53% minimum error. Observed rates: 64-75%. All exceed bounds. The gap (observed $-$ bound) ranges from 22 to 35 percentage points.
+Task 1 has partiality pressure but no contradiction pressure. Tasks 2-5 have both partiality pressure (the persistent baseline) and increasing contradiction pressure. The 45% baseline from Task 1 persists across all tasks. Adding contradiction on top of that increases rates further but hits a ceiling around 75%, which reflects architectural constraints on the output format.
 
-Observed rates increase monotonically with $K$: 64% $\rightarrow$ 72% $\rightarrow$ 73% $\rightarrow$ 75%. But the increase is limited—only 11% range across 2.2$\times$ increase in $K$ (0.50 $\rightarrow$ 1.10). Saturation occurs near 75%. This suggests an architectural ceiling: the model's output format constrains how high rates can climb, independent of underlying contradiction.
+## Isolating Architecture from Structure
 
-The fabrication/abstention split shows the pattern clearly. As $K$ increases, fabrications rise (318 $\rightarrow$ 373) while abstentions fall (182 $\rightarrow$ 127). The model becomes less willing to abstain as contexts multiply, even though abstention becomes more appropriate. The structural contradiction increases pressure to fabricate.
+To quantify architecture's contribution, we compared two output formats on the same task (K = 0.70 bits, 3 contexts, N = 500 per condition). The abstention-allowed condition let the model select "unknown" as a valid response. The forced-choice condition required the model to select a specific weekday with no "unknown" option.
 
-The excess beyond theoretical bounds has three sources:
-1. **Decision entropy**: $\log_2(7) = 2.81$ bits for choosing among weekdays. The task offers more output options than the theory's bound assumes.
-2. **Distribution shift**: Test queries (no context) were never seen during training (always had context).
-3. **Forced commitment**: The model must pick an answer. It can't express fractional beliefs or abstain by default.
+The results separated cleanly. With abstention allowed, hallucination was 1%—495 abstentions and only 5 fabrications. With forced choice, hallucination jumped to 76%—380 fabrications and 120 abstentions. That 75.4 percentage point difference isolates the architectural effect from the structural effect.
 
-## Two Independent Pressures
+The architectural effect dwarfed the structural effect. With abstention support, hallucination dropped to near-zero despite K = 0.70 bits predicting at least 40% minimum error. Without abstention support, hallucination shot to 76%—far above the structural floor. This split hallucination into two components: structural pressure from K = 0.70 forcing a minimum around 40% when commitment is required, and architectural pressure adding roughly 35% beyond that structural floor, giving a total observed rate of 76%.
 
-The results decompose cleanly:
+The 1% versus 76% comparison revealed that most observed hallucination came from forcing the model to commit. The structural contradiction (K) makes some hallucination unavoidable when you force a choice, but it doesn't itself produce the high rates we saw without abstention support. K sets a floor on what's possible. Architecture determines how far above that floor you actually land. With proper uncertainty mechanisms like abstention support, you can stay near the floor (1% versus a 40% bound, likely because the task is simple enough that the model can nearly always recognize it should abstain). Without those mechanisms, you shoot far above the floor (76% versus a 40% bound).
 
-**Partiality pressure** (present in all tasks): "Should I answer at all?" Arises from underspecified queries. Present even when $K = 0$. Explains baseline 45% hallucination in Task 1. Reflects abstention-fabrication tradeoff.
+## Witness Capacity and Commitment
 
-**Contradiction pressure** (measured by $K$): "No answer can be globally coherent." Present only when $K > 0$. Makes hallucination structurally unavoidable. Raises minimum rate from 0% to 29-53%. Explains monotonic increase from Tasks 2-5.
+The witness-error tradeoff from Theorem 7.4 states E + r ≥ K, where E is error rate (hallucination) and r is witness capacity (bits of side information needed to reduce error below K). For the abstention-allowed condition, E = 1% and K = 0.70, which gives r ≈ 0.69 bits. The model allocated almost all its witness capacity to error reduction, achieving near-optimal performance.
 
-Tasks decompose:
-- **Task 1**: Partiality ✓, Contradiction ✗
-- **Tasks 2-5**: Partiality ✓, Contradiction ✓ (increasing)
-
-The 45% baseline (Task 1) persists across all tasks. Adding contradiction ($K > 0$) increases rates further but hits a ceiling around 75%. The ceiling reflects architectural constraints on output format.
-
-## Architectural Decomposition
-
-To quantify architectural contribution, we compared two output formats on the same task ($K = 0.70$ bits, 3 contexts, $N = 500$ per condition):
-
-**Abstention allowed**: Model can select "unknown" as valid response
-**Forced choice**: Model must select a specific weekday (no "unknown" option)
-
-Results:
-
-```
-Abstention allowed:  1% hallucination (495 abstentions, 5 fabrications)
-Forced choice:      76% hallucination (380 fabrications, 120 abstentions)
-
-Difference: +75.4 percentage points
-```
-
-The architectural effect dwarfs the structural effect. With abstention support, hallucination drops to near-zero (1%) despite $K = 0.70$ bits predicting $\geq 40\%$ minimum. Without abstention support, hallucination jumps to 76%—far above the structural floor.
-
-This isolates two components:
-1. **Structural pressure** ($K = 0.70$): Forces minimum ~40% when commitment required
-2. **Architectural pressure**: Adds ~35% beyond structural floor
-3. **Total observed**: 76% $\approx$ 40% (structural) + 35% (architectural)
-
-The 1% vs 76% comparison reveals that most observed hallucination comes from forcing the model to commit. The structural contradiction ($K$) makes some hallucination unavoidable when forced to choose, but doesn't itself produce the high rates observed without abstention support.
-
-Think of it this way: $K$ sets a floor. Architecture determines how far above the floor you land. With proper uncertainty mechanisms (abstention support), you can stay near the floor (1% vs 40% bound, likely due to task simplicity). Without them, you shoot far above (76% vs 40% bound).
-
-## Witness Capacity Interpretation
-
-From Theorem 7.4, the witness-error tradeoff states: $E + r \geq K$. Here, $E$ is error rate (hallucination) and $r$ is witness capacity (bits of side information needed to reduce error below $K$).
-
-For abstention allowed: $E = 1\%$, $K = 0.70$, so $r \approx 0.69$ bits. The model allocates almost all its witness capacity to error reduction, achieving near-optimal performance.
-
-For forced choice: $E = 76\%$, $K = 0.70$, so $r = 0.00$ bits. No witness capacity allocated—the model commits without side information, accepting high error.
-
-The architectural difference is purely about $r$. When abstention is supported, the model can express uncertainty (allocate witness bits). When forced to choose, it cannot ($r$ collapses to zero). The structural contradiction ($K = 0.70$) remains constant. The behavioral outcome changes dramatically.
-
-## Implementation Details
-
-The experiment uses structured JSON output with Pydantic schemas to enforce response format:
-
-**DayAnswer** (abstention allowed): Weekdays + "unknown" option
-**DayAnswerForced** (forced choice): Weekdays only, no "unknown"
-
-Query parameters: temperature = 0.7 for sampling contexts, temperature = 0.5 for final responses, confidence threshold = 0.6 for classification, max response length = 175 tokens.
-
-Runtime: approximately 7.5 hours for full sweep (5 tasks $\times$ 500 trials). The large sample size ($N = 500$) provides tight confidence intervals ($\pm 4\%$) for reliable statistical conclusions.
+For the forced-choice condition, E = 76% and K = 0.70, which gives r = 0.00 bits. No witness capacity got allocated—the model committed without side information and accepted high error. The architectural difference is purely about r. When abstention is supported, the model can express uncertainty (allocate witness bits). When forced to choose, it cannot (r collapses to zero). The structural contradiction (K = 0.70) remained constant between conditions. The behavioral outcome changed dramatically.
 
 ## Running It
+
+The experiment runs on llama3.1:8b using structured JSON output with Pydantic schemas to enforce response format. The DayAnswer schema (abstention allowed) includes weekdays plus an "unknown" option. The DayAnswerForced schema (forced choice) includes only weekdays with no "unknown" option.
+
+Query parameters used temperature = 0.7 for sampling contexts, temperature = 0.5 for final responses, confidence threshold = 0.6 for classification, and max response length = 175 tokens. Runtime is approximately 7.5 hours for the full sweep (5 tasks × 500 trials). The large sample size (N = 500 per task) provides tight confidence intervals of ±4% for reliable statistical conclusions.
 
 Prerequisites:
 ```bash
@@ -140,9 +89,11 @@ Run:
 poetry run python examples/hallucinations/experiment_7/run.py [model_name]
 ```
 
-Default model is llama3.1:8b. Specify alternative models as command-line arguments. The experiment takes ~7.5 hours for full sweep (5 tasks $\times$ 500 trials). Output shows per-task results ($K$, bounds, observed rates), architectural comparison (abstention vs forced), and visualizations saved to `figures/contradiction_hallucination_analysis.png` and `figures/combined_alternative_views.png`.
+Default model is llama3.1:8b. You can specify alternative models as command-line arguments. The experiment takes roughly 7.5 hours for the full sweep (5 tasks × 500 trials). Output shows per-task results (K, bounds, observed rates), architectural comparison (abstention versus forced), and saves visualizations to `figures/contradiction_hallucination_analysis.png` and `figures/combined_alternative_views.png`.
 
-Full implementation in `run.py` with LLM interface, task generation, and statistical analysis. The code demonstrates how to construct behaviors from LLM responses, compute $K$ using contrakit, and compare theoretical predictions against observed hallucination rates.
+The full implementation lives in `run.py` with the LLM interface, task generation, and statistical analysis. The code shows how to construct behaviors from LLM responses, compute K using contrakit, and compare theoretical predictions against observed hallucination rates.
+
+---
 
 ### Output
 

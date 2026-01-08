@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Dict, Iterable, Tuple, Optional, Union, List, Any, Mapping
 import numpy as np
+from ..convex_models import ConditionalSolver
 
 ContextKey = Tuple[str, ...]  # e.g. ("Hair",) or ("Hair","Witness")
 
@@ -155,7 +156,6 @@ class Agreement:
             return float(beh.alpha_star)
         else:
             # For weighted agreement, use ConditionalSolver to avoid recursion
-            from ..convex_models import ConditionalSolver
             opt_context = beh._to_context()
             solver = ConditionalSolver(opt_context)
             solution = solver.solve(weights)
@@ -187,7 +187,6 @@ class Agreement:
             return dict(zip(keys, map(float, scores)))
         else:
             # For weighted agreement, use ConditionalSolver to get θ directly
-            from ..convex_models import ConditionalSolver
             opt_context = beh._to_context()
             solver = ConditionalSolver(opt_context)
             solution = solver.solve(weights)
@@ -218,7 +217,6 @@ class Agreement:
                 _, theta, _, _ = beh._solve_alpha_star_with_mu()
             else:
                 # For weighted, use ConditionalSolver to get θ directly
-                from ..convex_models import ConditionalSolver
                 opt_context = beh._to_context()
                 solver = ConditionalSolver(opt_context)
                 solution = solver.solve(weights)
@@ -357,6 +355,6 @@ class Agreement:
         if not dists:
             raise ValueError("No contexts remain after filtering")
 
-        # Lazy import to avoid cycles
-        from .behavior import Behavior as _B
-        return _B.from_contexts(self._behavior.space, dists)
+        # Local import to avoid circular dependency
+        from .behavior import Behavior
+        return Behavior.from_contexts(self._behavior.space, dists)

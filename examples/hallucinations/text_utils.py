@@ -28,6 +28,7 @@ Typical usage:
 """
 
 import math
+from math import comb
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Union, TYPE_CHECKING
 from collections import Counter
@@ -861,7 +862,6 @@ def calculate_binomial_ci(n_successes: int, n_trials: int, confidence: float = 0
 
 def binomial_pmf(k: int, n: int, p: float) -> float:
     """Calculate binomial probability mass function."""
-    from math import comb
     return comb(n, k) * (p ** k) * ((1 - p) ** (n - k))
 
 

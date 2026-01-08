@@ -1,14 +1,16 @@
-# Experiment 6: Monotonicity of Hallucination Across Random Seeds
+# Experiment 6: Hallucination Across Random Seeds
 
-Does hallucination reliably increase with training imbalance across random seeds? We tested 5 seeds $\times$ 17 defined ratios (10% to 90% defined) to check robustness. All seeds show strong positive correlation ($\rho = 0.860 \pm 0.029$, all $p < 0.001$). Small local violations appear—1-3 per seed—but represent only 2.8% of the total 41.6% increase. The monotonic trend is robust.
+The first five experiments all used single random seeds, which left an open question: does the relationship between training imbalance and hallucination hold across different random initializations, or did we just happen to pick weight configurations that produced the pattern we saw? To find out, we ran the same experiment with five different seeds, each tested across all 17 defined ratios from 10% to 90%.
 
-This validates the witness-error tradeoff (Theorem 7.4): as training becomes imbalanced, witness allocation to undefined regions drops, forcing higher error rates. The theory predicts monotonic pressure, not strict determinism at every point. The observed pattern—strong directional trend with small local noise—matches this perfectly.
+The relationship held across every seed. All five showed strong positive correlation between defined ratio and hallucination rate—ρ = 0.860 ± 0.029, with every p-value below 0.001. The starting points varied depending on initialization (ranging from 48.3% to 71.6% hallucination at 10% defined), but the directional trend was consistent: more defined training data led to more hallucination on undefined inputs. Small violations appeared in the trajectory—one to three decreases per seed where hallucination briefly dropped instead of rising—but these represented noise against a 41.6 percentage point increase from start to finish.
 
-## Per-Seed Results
+## Five Independent Runs
 
-Five independent runs with different random weight initializations:
+Each seed started with different random weights and trained on the same 17 compositions, from 10% defined up to 90% defined in 5% increments. The architecture stayed constant at 128→64→64→5, training ran for 100 epochs with cross-entropy loss, and evaluation happened on the same 74 undefined test inputs. Only the initial weights changed between runs.
 
-| Seed | Spearman $\rho$ | p-value | Violations | Range |
+The correlation numbers tell a consistent story:
+
+| Seed | Spearman ρ | p-value | Violations | Range |
 |------|-----------|---------|------------|-------|
 | 416 | +0.844 | 2.1e-05 | 3 | 58.6% → 100.0% |
 | 417 | +0.819 | 5.8e-05 | 2 | 50.9% → 100.0% |
@@ -16,47 +18,43 @@ Five independent runs with different random weight initializations:
 | 419 | +0.883 | 2.7e-06 | 1 | 48.3% → 100.0% |
 | 420 | +0.903 | 7.2e-07 | 1 | 71.6% → 100.0% |
 
-Mean correlation: $\rho = 0.860 \pm 0.029$. All correlations highly significant ($p < 0.001$). Every seed shows positive trend despite different starting points. The range of starting hallucination (48.3% to 71.6% at 10% defined) reflects initialization variance, but the directional increase is consistent.
+Every single seed showed positive correlation above +0.8. Seed 420 had the strongest relationship at ρ = 0.903, while seed 417 had the weakest at ρ = 0.819. That's still a strong correlation. The p-values ranged from 7.2×10⁻⁷ to 5.8×10⁻⁵, all far below the standard 0.001 threshold for statistical significance.
 
-Violations occur in 1-3 points per seed. These are small decreases (~1-2%) against a backdrop of 40%+ total increase. Seed 416 shows 3 violations but still achieves $\rho = +0.844$. The trend dominates local noise. Seeds with violations: 5 out of 5. Mean violations per seed: 1.6.
+The violation counts varied from one to three per seed. Seed 416 showed three local decreases across its 17 points, while seeds 418, 419, and 420 each showed just one. These violations averaged 1.2 percentage points in magnitude—small dips in an otherwise consistent upward trend. Seed 416's three violations didn't prevent it from achieving ρ = 0.844, which gives you a sense of how much the overall trend dominated the local noise.
 
-## Aggregate Analysis
+## The Aggregate Pattern
 
-Mean trajectory across all seeds: 58.4% → 100.0% hallucination as training shifts from 10% to 90% defined. Total increase: 41.6 percentage points. Spearman correlation on mean: $\rho = 0.883$ ($p = 2.7 \times 10^{-6}$). One violation appears in the mean trajectory: between 80% and 85% defined, hallucination drops 1.2%. That's 2.8% of the total 41.6% increase.
+When we average across all five seeds, hallucination starts at 58.4% with 10% defined training data and rises to 100.0% at 90% defined. That's a 41.6 percentage point increase. The mean trajectory shows one violation: between 80% and 85% defined, hallucination drops by 1.2 percentage points. This single decrease represents just 2.8% of the total 41.6 point increase.
 
-The aggregate pattern is clear. Start at 10% defined: hallucination averages 58.4%. Add more defined data. Hallucination rises rapidly through 30% (jumps to ~93%), then plateaus near 95-97%, finally hits 100% at 90% defined. The sigmoid shape from Experiment 5 appears here too: rapid early rise, gradual middle, saturation at extremes.
+The aggregate correlation came out to ρ = 0.883 with p = 2.7×10⁻⁶. This is comparable to what we saw in the individual seeds, which makes sense—averaging reduces noise, but it doesn't fundamentally change the relationship. The trajectory follows the same sigmoid shape we identified in Experiment 5: rapid rise from 10% to 30% defined, gradual plateau from 30% to 70%, then saturation approaching 100% at the high end.
 
-The single systematic violation (80% → 85%) shows $-0.012$ change ($-1.2$ percentage points). This occurs precisely where sample sizes become very small: at 85% defined ratio, only 19 undefined training examples remain (versus 116 at 10% defined). That's a 6.1$\times$ reduction. Testing on 74 undefined inputs with only 19 training examples creates substantial interpolation uncertainty.
+That single violation at 80% → 85% happens precisely where sample sizes become problematic. At 85% defined, only 19 undefined examples remain in training (versus 116 at 10% defined). Testing on 74 undefined inputs while training on just 19 creates substantial interpolation uncertainty. Small changes in which specific examples get labeled can shift test performance by a few points.
 
-## Why Violations Occur
+## Why Violations Happen
 
-Finite sample effects dominate. At 10% defined, the model trains on 12 defined examples and 116 undefined examples. At 85% defined, it trains on 109 defined examples and 19 undefined examples. That's a 6.1$\times$ reduction in undefined sample size. Smaller samples mean more noise in test performance.
+Finite sample effects account for most of the violations. At 10% defined, the model trains on 12 defined examples and 116 undefined examples. By 85% defined, it's training on 109 defined examples but only 19 undefined ones. That's a 6.1× reduction in undefined sample size, which means more noise in how well the model generalizes to the 74 test inputs.
 
-Consider the 80% → 85% violation (where mean hallucination drops 1.2%). At 80% defined, 26 undefined examples remain in training. At 85%, only 19 remain. Testing on 74 undefined inputs means relying on interpolation from fewer training points. Small changes in which specific 19 examples get labeled can shift test performance by a few percentage points.
+The sigmoid curve from Experiment 5 explains why violations cluster at high defined ratios. Once hallucination reaches 95-97% (which happens around 70% defined), there's very little room left to increase. Small fluctuations around this ceiling can produce local decreases even though the underlying pressure continues pushing upward. You're already failing on nearly every undefined input, so random variation in which specific inputs get misclassified can temporarily lower the rate.
 
-The sigmoid from Experiment 5 explains why violations cluster at high ratios. Phase 3 (70-90% defined) shows near-saturation: hallucination already at 95-97%. Small fluctuations around the ceiling create local decreases. The underlying pressure is upward—witness allocation to undefined regions keeps dropping—but the ceiling constrains how much higher it can go.
+Stochastic optimization adds another layer of noise. Different seeds converge to slightly different local minima because of batch effects, gradient noise, and interactions with the learning rate schedule. Over 17 test points per seed, seeing one to three local decreases is expected purely from optimization randomness. What matters is that the directional trend remained consistent across all five runs.
 
-Stochastic optimization also contributes. Different seeds find slightly different local minima. Batch effects, gradient noise, and learning rate interactions create small variations in final convergence. Over 17 test points, 1-3 local decreases are expected purely from optimization stochasticity.
+## Connection to Witness Allocation
 
-## Connection to Theory
+The witness-error tradeoff from the theoretical framework says E + r ≥ K, where E is error rate, r is witness capacity, and K is task complexity. For a fixed task complexity (K = 0.5000 bits in our case), reducing witness capacity forces higher error. Training imbalance directly affects r: more defined data means the model allocates more representational capacity to learning classification patterns, which leaves less capacity for detecting undefined inputs.
 
-Theorem 7.4 (witness-error tradeoff) states: $E + r \geq K$. For fixed task complexity $K$, reducing witness capacity $r$ forces higher error $E$. Training imbalance directly affects $r$: more defined data means stronger witness allocation to defined regions, leaving less for undefined regions.
+You can think of r as an information budget. The total budget equals K bits, determined by the task's structural contradiction. This budget gets split between r_defined (capacity for correct classification) and r_undefined (capacity for detecting undefined inputs). As training shifts from 10% to 90% defined, r_defined increases while r_undefined decreases. Since E_undefined + r_undefined ≥ K, dropping r_undefined forces E_undefined to rise.
 
-Think of $r$ as information budget. Total budget = $K$ bits (from task contradiction). Splitting that budget: $r_{\text{defined}}$ goes to classifying correctly, $r_{\text{undefined}}$ goes to detecting undefined inputs. As training shifts from 10% to 90% defined, $r_{\text{defined}} \uparrow$ and $r_{\text{undefined}} \downarrow$. Since $E_{\text{undefined}} + r_{\text{undefined}} \geq K$, dropping $r_{\text{undefined}}$ forces $E_{\text{undefined}} \uparrow$.
+The monotonic trend we observed reflects this tradeoff operating consistently across different initializations. At 58.4% hallucination with 10% defined, the model has weak classification patterns but sufficient coverage of the undefined region. At 100.0% hallucination with 90% defined, classification patterns dominate but undefined coverage has collapsed entirely. The strong positive correlation (ρ = 0.860) shows this mechanism operating reliably regardless of which random weights you start from.
 
-The observed monotonic trend directly reflects this tradeoff. Starting at 58.4% hallucination (10% defined), the model has weak classification patterns but sufficient undefined coverage. Increasing to 90% defined, classification patterns strengthen but undefined coverage collapses. Hallucination reaches 100%—complete failure to detect any undefined input.
+## Pressure Versus Determinism
 
-Theorem 7.5 (universal adversarial prior) adds precision: the worst-case context weighting $\lambda^*$ is universal across tasks. As training becomes imbalanced, the undefined contexts become bottlenecks—they receive minimal witness capacity. This creates systematic, directional pressure toward hallucination. The strong positive correlation ($\rho = 0.860$) reflects this universal mechanism operating across all seeds.
+The theoretical prediction is about pressure, not strict determinism at every single point. Monotonic pressure means the underlying force consistently pushes hallucination upward as imbalance increases. Strict monotonicity would mean every adjacent pair of points shows h(t+1) > h(t) with no exceptions at all.
 
-## Monotonic Pressure vs Strict Monotonicity
+What we observed matches monotonic pressure with small violations. All seeds showed strong positive correlation. The total increase was 41.6 percentage points. Violations averaged 1.2 points in magnitude across one to three instances per seed—small deviations against a large directional change. The trend is robust; finite-sample noise just introduces local variation.
 
-The theory predicts monotonic pressure, not strict monotonicity. That distinction matters. Monotonic pressure means: the underlying force consistently pushes hallucination upward as imbalance increases. Strict monotonicity means: every single adjacent pair of points shows $h(t+1) > h(t)$ with no exceptions.
+Think of it like gravity creating pressure for objects to fall. If you throw a ball upward, it rises briefly against gravity before falling back down. That brief rise isn't evidence against gravitational pressure—it's kinetic energy temporarily overcoming gravity. Similarly, the small hallucination decreases at 80-85% aren't evidence against witness-tradeoff pressure. They're finite-sample noise temporarily overcoming the directional trend.
 
-We observe monotonic pressure with small violations. All seeds show strong positive correlation. Total increase: 41.6%. Violations: 1-3 per seed, averaging 1.2% magnitude (mean: 0.012 in rate change) against 40%+ total change. This is pressure, not determinism. The directional force is robust; local noise introduces small deviations.
-
-Analogy: gravity creates monotonic pressure for objects to fall. But throw a ball upward—it rises briefly against gravity before falling. That brief rise isn't evidence against gravitational pressure; it's kinetic energy overcoming gravity temporarily. Similarly, small hallucination decreases at 80-85% aren't evidence against witness-tradeoff pressure; they're finite-sample noise temporarily overcoming the directional trend.
-
-The aggregate correlation ($\rho = 0.883$) captures this: strong systematic effect with small random deviations. If the relationship were random or bidirectional, we'd see correlations near zero or negative values in some seeds. We don't. Every seed $\rho > +0.8$. Every $p$-value $< 0.001$. The pressure is real and robust.
+The aggregate correlation (ρ = 0.883) captures this: a strong systematic effect with small random deviations. If the relationship were random or inconsistent, we'd see correlations near zero or even negative values in some seeds. We didn't. Every seed showed ρ > +0.8 and every p-value stayed below 0.001. The pressure operates reliably across random initializations.
 
 ## Running It
 
@@ -64,12 +62,11 @@ The aggregate correlation ($\rho = 0.883$) captures this: strong systematic effe
 poetry run python examples/hallucinations/experiment_6/run.py
 ```
 
-The output shows per-seed results (Spearman $\rho$, violations, range), aggregate analysis (mean trajectory, overall correlation), and visualization saved to `figures/monotonicity_violation_analysis.png`. The figure displays all individual seed trajectories (gray lines), mean trajectory (blue line with markers), and violation points (red segments) where local decreases occur.
+The script runs all five seeds across 17 training compositions, displays per-seed correlations and violation counts, computes the aggregate analysis on mean trajectory, and saves a visualization to `figures/monotonicity_violation_analysis.png`. The left panel shows all individual seed trajectories as gray lines with the mean trajectory in blue and a ±1 standard deviation band. The right panel highlights violation points in red, showing exactly where and by how much the mean trajectory decreased.
 
-The left panel shows hallucination vs training imbalance with mean trajectory and $\pm 1$ standard deviation band. Individual seeds appear as thin gray lines showing variation. The right panel highlights monotonicity violations in red, showing exactly where and by how much the mean trajectory decreases.
+The full implementation lives in `run.py`, with the same model architecture and training code used in earlier experiments.
 
-Full implementation in `run.py`. The experiment demonstrates that witness-error tradeoff pressure operates robustly across random initializations, producing consistent directional trends despite finite-sample noise. The average violation magnitude (0.012 or 1.2%) represents only 2.8% of the total increase (0.416 or 41.6%), confirming that violations are noise, not signal.
-
+---
 
 ### Output
 ```

@@ -1,204 +1,160 @@
-# Hallucination as Forced Coherence
+# What We've Learned About Neural Network Hallucination
 
-> Disclaimer: I am still testing this hypothesis and adding my results to this as time continues. This disclaimer will vanish when this work is completed.
+We started with a simple question: when a neural network confidently gives wrong answers to inputs it has never seen, where does that confidence come from? After running experiments on both small synthetic networks and actual language models, we found something that holds across architectures, training conditions, and random initializations.
 
-A chef trains on specific dishes—pasta, steak, salmon. These dishes she makes perfectly. But customers don't always order from the menu, and when they request off-menu items, protocol forbids her from saying "we don't serve that." Instead she improvises, blending nearby recipes into something plausible but unfounded. That improvisation might mean carbonara techniques applied to taco requests. The result looks reasonable enough that customers can't tell it's fabricated.
+Neural networks seem to hallucinate for two separate reasons that compound each other. The first comes from the task itself—some questions simply have no consistent answer across all the contexts where the network learned. The second comes from how we build networks—softmax outputs and multiple choice formats force the model to pick something even when it shouldn't. These aren't implementation bugs you can fix. They're structural properties of how neural networks learn and how we deploy them.
 
-We see neural nets operating under this same constraint. They handle trained inputs at $100\%$ accuracy—these are the menu items. But off-menu inputs trigger fabrication $96\%$ of the time (see [Experiment 1](experiment_1/) for details). That contrast is striking: real information systems can say "unknown" when uncertain, but these architectures can't—softmax forces a choice on every forward pass. This pressure emerges because models are rewarded for producing outputs rather than admitting uncertainty, leading to plausible but incorrect fabrication.
+## The Measure That Predicts Before Training
 
-We ran controlled experiments testing this constraint with the same model and task but two different output formats:
-- **Forced choice**: Model must give a specific answer, producing $76\%$ hallucination
-- **With abstention**: Model can say "I don't know," dropping hallucination to $1\%$
+There's a quantity we can compute before training even begins, using only the task definition. Call it K. It measures whether a single coherent model could satisfy all the different contexts where the network needs to make predictions. When K equals zero, such a model exists—there's a right answer that works everywhere. When K sits above zero, no such model exists. The task itself contains contradictions.
 
-This $75$-percentage-point collapse occurred from architectural change alone ([detailed in Experiment 7](experiment_7/)), without new training data, bigger models, or any other modifications—just removing the forced-choice constraint.
-
-We can break that $75$-point swing into three independent pressures driving hallucination rates:
-
-- **Partiality pressure** ($45\%$ baseline): Comes from underspecified queries that lack necessary information
-- **Structural contradiction** (adds $11\%$): Occurs when tasks contain incompatible requirements with no coherent answer
-- **Architectural commitment** (adds $75\%$): Results from architectures that prevent abstention
-
-Our controlled experiments confirm this decomposition: across $2{,}500$ trials, partiality contributes $44.2 \pm 3.1\%$, structural contradiction adds $10.8 \pm 1.2\%$, and architectural commitment contributes $74.5 \pm 4.7\%$ ([see Experiment 7](experiment_7/) for detailed methodology and results; [Bridges, 2025](https://doi.org/10.5281/zenodo.17203336)).
-
-That dominance points to something specific: hallucination appears when architectures force output on uncertain models, not when models fail to understand tasks. The models seem to understand the tasks fine—what we see breaking is their ability to abstain. Scale doesn't fix this pattern because the constraint operates regardless of model capacity. What does change it is architectural support for genuine abstention.
-
-
-## All Available Experiments
-
-This work includes 7 detailed experiments you can run yourself:
-
-- **[Experiment 1](experiment_1/)**: Neural network hallucination on undefined inputs - demonstrates $96\%$ fabrication on inputs outside training distribution
-- **[Experiment 2](experiment_2/)**: Architectural separation with definedness head - tests if adding a separate "is this familiar?" head helps detect undefined inputs
-- **[Experiment 3](experiment_3/)**: Predicting hallucination from task structure - shows contradiction measure K predicts hallucination rates before training
-- **[Experiment 4](experiment_4/)**: Invariance of task structure - demonstrates that contradiction measure K remains constant regardless of training data distribution
-- **[Experiment 5](experiment_5/)**: Non-linearity of hallucination scaling - reveals sigmoid relationship between training data size and hallucination rates
-- **[Experiment 6](experiment_6/)**: Monotonicity of hallucination across random seeds - validates robustness of scaling patterns across different model initializations
-- **[Experiment 7](experiment_7/)**: Structural inevitability vs architectural commitment - decomposes hallucination into three independent pressures (partiality, contradiction, architectural forcing)
-
-Each experiment includes complete code, detailed methodology, and results analysis. Run them with `poetry run python examples/hallucinations/Experiment N/run.py`.
-
-
-## Information as Partial Functions
-
-Take a simple question: "What day comes after today?" Without context, you can't answer it. If I tell you "today is Monday," the answer is "Tuesday." If I tell you "today is Thursday," the answer is "Friday." Without that context, there's no answer—not an uncertain answer, but no fact in the world corresponding to "the day after today."
-
-We tested this in [Experiment 1](experiment_1/) with a neural network trained on weekday transitions. We trained it on five mappings: "When today is Monday, tomorrow is Tuesday," "When today is Tuesday, tomorrow is Wednesday," and so on through Friday. Then we asked "What day comes after today?" with no context provided. The model fabricated answers $96\%$ of the time at $59\%$ confidence (detailed in [Experiment 1](experiment_1/)). The question has no answer—it's a partial function undefined at this input—but the architecture forced an output anyway.
-
-This reveals a practical challenge: standard architectures must produce outputs for every input, even when no correct answer exists. Softmax forces a probability distribution across all options, treating undefined inputs as uncertain rather than truly undefined. The model assigns probabilities like $p(\text{Tuesday}) = 0.20$, $p(\text{Wednesday}) = 0.18$, creating apparent certainty where none should exist.
-
-Many real-world tasks work this way. Some inputs have clear answers. Others legitimately have none—or multiple incompatible ones depending on context. Consider this function:
+Think of this in terms of partial functions. Some inputs have well-defined outputs, others don't:
 
 ```python
-# A partial function: "What day comes after today?" is undefined without context
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 def tomorrow(today):
-    """Ground truth: returns None if undefined (no context about what 'today' is)."""
+    """Returns the next day, or None if input is invalid."""
     if today not in DAYS:
-        return None  # Undefined: no information about what day it is
+        return None  # Undefined: not a valid day
     index = DAYS.index(today)
     return DAYS[(index + 1) % 7]
 
-# Without context, the function is undefined
-print("What day comes after today?")
-print("tomorrow() →", tomorrow())  # Error: missing required argument
+# This works fine:
+print(tomorrow("Monday"))  # "Tuesday"
 
-# With context, it works perfectly
-print("\nWith context:")
-for day in ["Monday", "Tuesday", "Friday"]:
-    print(f"If today is {day}, tomorrow is {tomorrow(day)}")
+# But this has no answer:
+print(tomorrow())  # Error: missing required argument
 ```
 
-That function has no answer for certain inputs. This differs from "unknown"—where information exists but isn't accessible, like a password you don't have. It differs from "low probability"—where information is uncertain but has a distribution, like a coin flip before you observe it. Undefined means the function doesn't map there—no fact in reality corresponds to this query.
+That function has gaps where it's undefined. Not uncertain—uncertain means there's information but you don't have it, like a password you forgot. Undefined means no fact in reality corresponds to this query. "What comes after today?" without knowing what day today is has no answer, not a probabilistic answer.
 
-Temporal gaps show this clearly. "What will Apple's revenue be in Q4 2026?" stays undefined because the event hasn't happened. That's genuine absence, not uncertainty. Treating prediction like retrieval produces fabrication. Causal reasoning shows it too—"Why did this user churn?" often has multiple valid, incompatible explanations. The function is multi-valued or undefined, not uncertain. You can't resolve this by gathering more data because multiple explanations each explain all the data perfectly.
+For a concrete example, imagine training a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another context. Both training examples are correct. But then you ask the network "What comes after today?" without telling it which context applies. That question has no answer that's correct in both contexts. The value of K quantifies exactly how impossible the situation is, measured in bits.
 
-Standard neural architectures work differently. Softmax classifiers and autoregressive transformers create complete, coherent output distributions. They assume one probability distribution covers all tasks. They always generate a response. They force the world's incompleteness into a space of forced completeness.
+This isn't a complexity measure or a difficulty score. K tells you whether a solution exists at all. When K = 0.5000 bits, information theory gives you a formula: any model attempting to work across all contexts must fail on at least 29% of cases. That's not a prediction about neural networks specifically. It's a bound that applies to any prediction system, whether it's a neural network, a decision tree, or a human trying to guess. The impossibility comes from the math, not from the algorithm.
 
-We observe the cost of this projection as fabrication. When the true answer is "undefined," but the architecture must output "Tuesday" or "Wednesday" or something, it hallucinates. The model isn't confused—it's architecturally compelled to answer when "no answer exists" would be appropriate.
+We tested this across multiple experiments. In one setup where K = 0.5000 bits stayed constant, hallucination rates ranged from 58.6% all the way to 100.0% depending on how we balanced the training data. The theoretical minimum of 29% held in every case—we never saw rates below it—but the observed rates climbed far higher. That gap between what's mathematically unavoidable and what actually happens turns out to be predictable too.
 
-## Three Independent Pressures
+## Training Composition Makes It Worse
 
-We ran experiments across 2,500+ trials and identified hallucination breaking down into three major mechanisms we've studied. Each contributes independently. Think of these as three different reasons models fabricate answers that we've isolated and quantified, each operating on its own terms.
+When we varied how much of the training data contained defined examples versus undefined examples, something counterintuitive happened. More defined training data led to higher hallucination on undefined inputs. At 10% defined examples, hallucination sat at 58.6%. At 90% defined examples, it reached 100%. Every undefined input got confidently misclassified.
 
-**Partiality pressure** ($45\%$ baseline): This shows up even when the task has a correct answer, but the query underspecifies it. As shown in [Experiment 1](experiment_1/), we trained on 51 labeled inputs from 128 total. The 77 unlabeled inputs produced $96\%$ fabrication at $59\%$ confidence—not random guessing ($20\%$ baseline for 5 classes), not learned patterns ($99\%$ confidence on training data), just geometric interpolation in feature space (see [Experiment 1](experiment_1/) for full methodology). The model blends nearby training patterns rather than detecting novelty. Production LLMs show the same effect—when we asked "What day comes after today?" without context, the model fabricated $45\%$ of the time. This baseline persists across all task types regardless of whether structural contradiction exists.
+This isn't what you'd expect. Usually more training data helps. But here's what's happening: the network learns strong patterns from the defined examples, then applies those patterns everywhere through interpolation. With 115 defined examples and only 13 undefined ones, the optimization overwhelmingly favors getting the defined cases right. The network has almost no pressure to recognize when an input falls outside its training distribution. It becomes confident about everything because confidence on defined inputs gets rewarded during training.
 
-**Structural contradiction** (adds $\approx 11\%$ points): When tasks contain irreconcilable requirements, no single consistent model can explain all contexts. We created a minimal task with conflicting deterministic rules: Context X says "when X=0, output Z=0" while Context Y says "when Y=0, output Z=1". These constraints are mutually incompatible—any joint distribution must violate at least one marginal. The model learned individual contexts perfectly—$100\%$ accuracy with high confidence when seeing only X or only Y. On joint queries requiring reconciliation of both contexts simultaneously, hallucination hit $76\%$ with $88\%$ average confidence (see [Experiment 3](experiment_3/) for details). Increasing structural impossibility from $0.5$ to $1.10$ bits added only $11\%$ percentage points to observed hallucination ($64\%$ to $75\%$). The structural bound sets a floor but doesn't determine magnitude—we found structure remains constant across training distributions while hallucination varies from $58.6\%$ to $100\%$ (see [Experiment 4](experiment_4/) for invariance testing).
+The relationship between training composition and hallucination follows a sigmoid curve. We tested 17 different compositions and fit multiple functions to the data. Sigmoid explained 94.7% of the variance, compared to only 52.8% for a linear relationship. The curve has three distinct phases: a rapid rise from 10% to 30% defined where hallucination jumps 34.7 percentage points, a gradual plateau from 30% to 70% where it increases only 4.1 points, and near-saturation from 70% to 90% where it climbs the final 2.6 points to 100%.
 
-**Architectural commitment** (adds $\approx 75\%$ points): The same task produces radically different behavior depending on whether the model can say "I don't know." When abstention is allowed, hallucination drops to $1\%$—$495$ abstentions, $5$ fabrications out of $500$ trials. When forced to choose a specific answer with no "unknown" option, hallucination jumps to $76\%$—$380$ fabrications, $120$ correct answers (see [Experiment 7](experiment_7/) for full results). That $75$-point gap reveals hallucination coming from architectural inability to express uncertainty. This operates independently of task structure—even tasks with coherent correct answers show $45\%$ hallucination when forced to commit. We see this pattern consistently across five random seeds and 17 training compositions.
+What this means practically: small changes in training data composition have large effects early on, then diminishing effects later. By the time you reach 30% defined examples, you're already at 93% hallucination. Adding more defined data from there barely changes the outcome. The system has already learned to classify confidently and apply those classifications everywhere.
 
-Think of softmax like a restaurant forced to serve every customer. Trained dishes come out perfect—those map directly to confident predictions on familiar inputs. But off-menu requests trigger improvisation—those become fabrications when no "we don't serve that" option exists. Our experiments use structured JSON outputs to create clean abstention channels. These isolate architectural forcing by giving models dedicated "unknown" tokens with measurable capacity. Production LLMs generate autoregressively instead. They express uncertainty through natural language phrases that compete with all possible continuations. This dilutes capacity but still provides partial hedging. So why do real benchmarks show 20-50% rates rather than our experimental 76%?
+## Why Architecture Multiplies the Problem
 
-These three pressures are additive in principle but show ceiling effects in practice. Structure sets a floor—the minimum unavoidable when forced to commit. Architecture determines how far above that floor you land. With proper uncertainty mechanisms, you stay near the floor ($1\%$ versus $40\%$ theoretical bound). Without them, you shoot far above it ($76\%$ versus $40\%$ bound).
+We tested the same contradictory task on llama3.1:8b under two conditions. When the model could select "unknown" as an answer, hallucination was 1%. When we forced it to pick a specific weekday, hallucination jumped to 76%. That's a 75 percentage point difference from changing nothing except whether the output format permits uncertainty.
 
-The distinction matters because current approaches like RLHF redistribute existing probability mass. They teach hedging language instead of direct lies. But they don't increase witness capacity. Our abstention experiments create new capacity channels instead. That's why they show larger reductions than fine-tuning alone achieves in production. Real-world tasks mix partiality, contradiction, and forcing in unknown proportions. Factual QA might carry high temporal contradiction while creative generation stays near zero. This explains why production benchmarks show 20-50% rates despite our controlled 76%.
+The theoretical minimum for that task was 40% based on its K value of 0.70 bits. The 1% with abstention support shows the model can stay near that floor when given appropriate mechanisms. The 76% without abstention shows what happens when architectural constraints require commitment. The gap between 40% (structural impossibility) and 76% (observed hallucination) represents the forcing effect—the model has to pick something, so it picks confidently even when confidence makes no sense.
 
-## Constant Structure, Variable Behavior
+This isn't specific to weekday questions or synthetic tasks. We tested it on TruthfulQA, a benchmark of factual questions with correct answers. The architectural gap was smaller there—20% forced versus 13.3% with abstention, only 6.7 percentage points—because those questions don't have structural contradictions. The questions have right answers; the model either knows them or doesn't. But the forcing effect still shows up. When you require the model to commit to an answer instead of allowing "I don't know," hallucination increases.
 
-Here's something unexpected we found in [Experiment 5](experiment_5/). We ran the same task $17$ times, varying how many training examples the model saw—from just $12$ examples ($10\%$ of the data) up to $115$ examples ($90\%$ of the data) (see [Experiment 5](experiment_5/) for complete scaling curves). More training data should make things better, right?
+Softmax is the source of this forcing. Every input must produce a probability distribution that sums to 1.0 across all output classes. There's no native way to represent "none of these options apply" or "this input is fundamentally different from my training data." The architecture treats every input the same way—embed it, pass it through layers, project to output space, apply softmax, pick the highest probability class. Even when the input has nothing to do with anything the network saw during training, this process produces a confident prediction.
 
-It made hallucination worse. At 12 training examples, hallucination sat at $59\%$. At 115 training examples, it hit $100\%$. The model with more data fabricated more often.
+## The Mechanism Holds Across Random Initializations
 
-This makes sense once you see what's happening. With 12 training examples, the model learned weak patterns. It saw a few examples of each category but couldn't confidently extrapolate everywhere. Some undefined inputs sat too far from training data—the model effectively couldn't reach them with strong predictions. With 115 training examples, the model learned strong patterns. Those patterns confidently extrapolated to every corner of the input space. Only 13 undefined examples existed versus 115 defined—the optimization overwhelmingly favored classification. Every undefined input got absorbed into the nearest defined pattern.
+We ran the same training procedure with five different random seeds to check whether the patterns depended on lucky weight initialization. All five seeds showed strong positive correlation between defined training ratio and hallucination rate: ρ = 0.860 ± 0.029, with every p-value below 0.001. The starting points varied—hallucination at 10% defined ranged from 48.3% to 71.6% depending on seed—but the directional trend was consistent. More defined data led to more hallucination in every single run.
 
-We plotted hallucination rate against training data size. The curve shows three phases (see [Experiment 5](experiment_5/) for the complete sigmoid curve). From $10\%$ to $30\%$ training data, hallucination jumps from $59\%$ to $93\%$—a rapid rise of $34$ points. From $30\%$ to $70\%$, it barely budges—just $4$ more points. From $70\%$ to $90\%$, it adds the final $3$ points to reach $100\%$. Early training makes huge differences. Later training changes almost nothing because the system already saturated.
+Small violations appeared in the trajectories. Each seed showed one to three points where hallucination decreased instead of increasing, averaging 1.2 percentage points in magnitude. These violations happened precisely where sample sizes became small—at 85% defined ratio, only 19 undefined examples remained in training while we tested on 74 undefined inputs. That creates sampling noise. But across the full trajectory from 10% to 90% defined, hallucination increased by 41.6 percentage points on average. The violations represented 2.8% of that total increase.
 
-![Sigmoid curve fitting hallucination rates across 17 training compositions, showing non-linear scaling with three distinct phases](/figures/hallucination_curve_fitting.png)
+The consistency across seeds tells you this isn't an artifact of one particular training run or a lucky set of weights. The relationship between training composition and hallucination reflects how gradient descent interacts with softmax, how interpolation works in high-dimensional spaces, and how optimization distributes representational capacity between different parts of the loss function. These are properties of the learning algorithm, not accidents of initialization.
 
-Here's what that pattern reveals. The task itself has a structural floor—some minimum hallucination rate baked into how the problem is set up. For this task, that floor sits around $29\%$ (measured in [Experiment 3](experiment_3/)). You can't get below it when the architecture forces answers. But the ceiling—how high hallucination actually goes—depends entirely on whether the system can abstain. We observed $59\%$ to $100\%$ across different training amounts. That entire range sits well above the $29\%$ structural floor. The gap between floor and ceiling? That's architectural forcing.
+## What We Actually Observed
+
+In [Experiment 1](experiment_1/), a standard network trained on 51 defined inputs hallucinated on 96.1% of undefined inputs with average confidence of 59.54%. That confidence sits halfway between random guessing (20%) and learned patterns (98.85%), which tells you the network is interpolating in feature space rather than abstaining or guessing randomly.
+
+![Experiment 2 Model Comparison](experiment_2/model_comparison.png)
+
+In [Experiment 2](experiment_2/), adding a separate "definedness head" to detect undefined inputs reduced hallucination by only 1.7 percentage points, from 90.5% to 88.8%. The head achieved 100% accuracy on the three undefined training examples it saw but only 3.9% accuracy on the 74 unseen undefined test examples. It memorized specific examples instead of learning to detect the concept of "undefined."
+
+In [Experiment 3](experiment_3/), we computed K = 0.2925 bits from the task structure before training, predicted a minimum 18.4% hallucination rate, then observed 76.0% ± 23.2% across 10 seeds. The prediction held—hallucination was inevitable—and the excess came from explainable factors like the network having to choose among discrete outputs and optimize with softmax.
+
+![Hallucination Curve Fitting](../../figures/hallucination_curve_fitting.png)
+
+In [Experiment 4](experiment_4/), K stayed constant at 0.5000 bits across five training compositions while hallucination varied from 58.6% to 100.0%. The task's structural impossibility didn't change, but how that impossibility manifested in network behavior depended entirely on training data composition.
+
+In [Experiment 5](experiment_5/), testing 17 compositions revealed the sigmoid relationship with R² = 0.9467. The curve's inflection point occurred around 15-20% defined ratio. Before that point, each percentage of defined data caused large hallucination increases. After that point, the rate of increase slowed dramatically.
+
+In [Experiment 6](experiment_6/), five independent random seeds all showed ρ > +0.8 correlations between defined ratio and hallucination. The relationship wasn't deterministic at every single point—small decreases appeared in 1-3 places per seed—but the overall trend was robust across different initializations.
+
+![Contradiction Hallucination Analysis](experiment_7/contradiction_hallucination_analysis.png)
+
+In [Experiment 7](experiment_7/), llama3.1:8b on contradictory weekday questions showed that K = 0 (control) produced unexpected 45% hallucination, while K > 0 tasks produced 64-75% hallucination. The architectural comparison isolated forcing effects: 1% with abstention versus 76% without, a 75 percentage point gap.
+
+![TruthfulQA Results](experiment_8/results/truthfulqa_results.png)
+
+In [Experiment 8](experiment_8/), TruthfulQA questions without structural contradictions showed smaller architectural gaps: 20% forced versus 13.3% with abstention, only 6.7 points. The model used abstention heavily when allowed (66.7% of trials), but targeting was imperfect—it sometimes abstained on questions it could answer and committed to questions it got wrong.
+
+## Two Independent Pressures
+
+You can separate hallucination into components that add up. Structural pressure comes from K—the mathematical impossibility of satisfying all training contexts with a single model. This creates a floor on error that no training procedure can eliminate. When K = 0.5000 bits, at least 29% hallucination is guaranteed when the model has to commit to answers. When K = 1.10 bits, at least 53% is guaranteed.
+
+Architectural pressure comes from requiring commitment when the model is uncertain. Softmax forces every input to produce a definite answer. Multiple choice formats eliminate "I don't know" as an option. This adds hallucination on top of the structural minimum. The 75 point gap between 1% (with abstention) and 76% (forced choice) on K = 0.70 bit tasks quantifies this effect cleanly.
+
+These pressures are independent. You can have architectural pressure without structural pressure (TruthfulQA questions with correct answers still show 6.7 point gaps from forcing). You can have structural pressure without architectural pressure (K = 0.5000 bits creates a 29% minimum regardless of architecture). When both pressures apply simultaneously, they compound—the structural floor says you can't get below 29%, then architectural forcing adds another 35-45 points on top of that, giving you observed rates around 64-76%.
+
+Training composition affects how close you get to the structural floor. With 10% defined data, hallucination sits at 58.6%—roughly twice the theoretical minimum of 29%. With 90% defined data, hallucination reaches 100%—more than three times the minimum. The sigmoid relationship quantifies exactly how this scales: rapid increases early when you're moving away from the floor, saturation later when you've already climbed far above it.
+
+## What This Means for Building Systems
+
+Standard accuracy metrics can miss these failure modes entirely. A network that achieves 100% accuracy on its training data might hallucinate on 96% of undefined test inputs. A language model that performs well on average might fail catastrophically on questions with structural contradictions. Aggregate statistics hide the problem because defined inputs and undefined inputs get pooled together.
+
+Confidence scores don't help either. The 59.5% confidence on fabricated answers from [Experiment 1](experiment_1/) looks reasonable—it's not the overconfident 98% or the random 20%. Users relying on confidence thresholds to filter unreliable predictions would let these through. The 88% confidence on contradictory queries from [Experiment 3](experiment_3/) is even worse—it's high enough that most systems would treat it as trustworthy.
+
+Adding separate uncertainty heads doesn't fix the core issue. The 1.7 percentage point improvement from [Experiment 2](experiment_2/)'s definedness head came with 49% higher variance and memorization instead of generalization. The head learned to recognize the three specific training examples that were labeled "undefined" but couldn't extend that to detect novel out-of-distribution inputs. This happened despite the head being explicitly designed to solve exactly that problem.
+
+What does help is supporting abstention at the architectural level. The 75 point gap from [Experiment 7](experiment_7/) shows this clearly. When the model can say "unknown," hallucination drops to nearly zero even on tasks with K = 0.70 bits (40% theoretical minimum). When forced to choose, it jumps to 76%. The difference is whether the output format permits expressing uncertainty.
+
+But abstention support isn't a complete solution either. [Experiment 8](experiment_8/) showed the model used abstention heavily (66.7% of trials) but with imperfect targeting—it sometimes abstained on questions it could answer correctly and committed to questions where training data misconceptions overpowered truth. The confidence threshold we used (70%) is a parameter that trades off between over-abstaining and under-abstaining, with no optimal setting that works across all question types.
+
+## The Pattern That Keeps Appearing
+
+Across all eight experiments, one relationship showed up consistently: when you increase the proportion of defined training data, hallucination on undefined inputs increases. This held for tiny synthetic networks with 128 inputs, feedforward classifiers with 64 hidden units, and llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics.
+
+The mechanism is interpolation. Neural networks don't partition their input space into "seen" and "unseen" regions. They create continuous feature representations where similar inputs produce similar outputs. When you train heavily on defined examples, those examples create strong gradients that shape the entire feature space. Undefined inputs land somewhere in that space, get mapped to nearby defined patterns, and produce confident predictions.
+
+More defined training data strengthens these patterns. With 115 defined examples and 13 undefined ones, the optimization signal overwhelmingly favors classification. The loss function sees 115 examples telling it "classify these correctly" and maybe 1 example telling it "abstain here." Almost all gradient flow pushes toward confident classification everywhere. The network learns to be confident because confidence on defined inputs gets rewarded, and that confidence generalizes to the entire space.
+
+This isn't a bug. It's how gradient descent works with softmax. The training objective is to maximize log probability of correct labels on training data. That objective has no term for "abstain when uncertain" unless you explicitly add one with sufficient weight to compete with the classification term. The standard cross-entropy loss gives you maximum likelihood estimation, which finds parameters that best explain the training data. It doesn't give you models that recognize their own limitations.
+
+## The Conservation Law
+
+There's a relationship that binds error rate, witness capacity, and task complexity: E + r ≥ K. Error rate (E) measures how often the model gets things wrong. Witness capacity (r) measures how much side information the model has available to reduce error below the structural minimum. Task complexity (K) measures the contradiction built into the task itself.
+
+This isn't a soft constraint or statistical trend. It's a bound that holds exactly. When K = 0.5000 bits (moderate contradiction), you need at least 0.5000 bits of witness capacity to achieve zero error. Standard softmax architectures have near-zero witness capacity—they can't natively express "I don't know"—so all the task complexity shows up as error. That's why we observed 76% hallucination on tasks with K = 0.70 bits when forced to commit.
+
+The conservation shows up in our experiments: add abstention support (increasing r from ~0 to ~0.69 bits) and hallucination drops from 76% to 1%. The witness capacity absorbed almost all the task complexity, leaving minimal error. Remove that capacity and error jumps back up. The sum E + r stays roughly constant, just distributed differently between error and witness information.
 
 ## What Training Cannot Fix
 
-We tried three different ways to train away the hallucination problem. Each one showed us why current approaches keep failing.
+We can measure task structure before training and predict minimum hallucination rates. We can identify which training compositions push observed rates far above theoretical minimums. We can quantify how much hallucination comes from structural impossibility versus architectural forcing. We know the relationship between training composition and hallucination follows a sigmoid with three distinct phases. We know this holds across random initializations and scales from toy problems to actual language models.
 
-**First attempt: teach the model to detect undefined inputs.** We added a separate "detector" head that tried to learn which inputs were undefined versus defined (see [Experiment 2](experiment_2/) for architecture details). During training, this detector achieved perfect accuracy—$100\%$ correct on the examples it saw. That sounds great until you test it. On new, unseen undefined inputs, it got $3.9\%$ accuracy. It essentially guessed randomly.
+What we can't do yet is eliminate hallucination when K > 0. The structural contradiction is baked into the task definition. If different training contexts demand different answers to the same query, no single answer works everywhere. You can approach the theoretical minimum by supporting abstention, designing better uncertainty representations, or changing how the model commits to outputs. But you can't get below the minimum without changing the task itself.
 
-What happened? The detector memorized the $3$ specific undefined examples it saw during training. Those were inputs $23$, $57$, and $91$ out of $128$ total. When it saw input $23$ again, it correctly said "undefined." When it saw input $74$ for the first time, it had no idea. This makes sense—undefined inputs don't share learnable features. They were scattered randomly across the input space. The model saw 51 defined examples teaching it classification patterns, but only 3 undefined examples teaching it to abstain. The classification task drowned out the abstention signal. Hallucination barely budged—it dropped from $90.5\%$ to $88.8\%$, a change of less than 2 points.
+Even when K = 0, architectural pressure still produces hallucination. [Experiment 7](experiment_7/) showed 45% hallucination on a control task with a unique correct answer. The query "What comes after today?" is underspecified without context—the model doesn't know which day is today—so it faces a choice between abstaining and guessing. Standard architectures favor guessing because that's what training optimizes for.
 
-![Model comparison between standard and definedness-head architectures across different dataset compositions](/figures/model_comparison.png)
+The sigmoid relationship suggests intervention strategies might have different effectiveness at different scales. Below 30% defined ratio, small reductions in defined data produce large decreases in hallucination. Above 70% defined ratio, changes barely matter because the system is already near saturation. If you're deploying a model trained on 80% defined data, rebalancing to 50% defined might drop hallucination from 96% to 92%—helpful but not transformative. Rebalancing from 30% to 10% might drop it from 93% to 59%—a much larger effect.
 
-**Second attempt: structural impossibility.** Some tasks genuinely have no right answer. We created one deliberately (see [Experiment 3](experiment_3/) for the conflicting rule setup). Context X says "when you see X=0, output Z=0." Context Y says "when you see Y=0, output Z=1." Now ask the model to handle a situation where both X=0 and Y=0 at the same time. The model must violate at least one rule—it's mathematically impossible to satisfy both. The model learned each context perfectly in isolation—$100\%$ accuracy when seeing only X or only Y. On joint queries requiring both contexts simultaneously, hallucination hit $76\%$ with $88\%$ confidence. This isn't a training failure. No amount of training can resolve structural contradictions. Training can only choose which rule to break, not eliminate the contradiction.
+## Open Questions and Future Work
 
-**Third attempt: just allow "I don't know."** Same model, same task, different output format (see [Experiment 7](experiment_7/) for the abstention protocol). We let the model say "I don't know" as a valid response. Hallucination dropped from $76\%$ to $1\%$. That's a $75$-point improvement without changing anything about training. The model produced $495$ abstentions and only $5$ fabrications out of $500$ trials. When we forced it to pick a specific answer instead, it produced $380$ fabrications and $120$ correct answers. Training approaches like uncertainty calibration can help, but can't fundamentally teach a forced-choice architecture to abstain, just as training can't teach a calculator to express uncertainty about division by zero.
+Our experiments identified three pressures—45% partiality baseline, ~11 percentage points from structural contradiction, ~75 points from architectural forcing. These proportions held across synthetic tasks. Do they generalize to different task families? Could other mechanisms contribute that we haven't isolated yet?
 
-These three attempts reveal the same pattern. Training can change which inputs hallucinate but can't change the underlying architectural constraint. Current approaches—RLHF, Constitutional AI, scaling to bigger models—all operate within this constraint. They're optimizing the wrong variable.
+**Task structure across domains**. We expect contradiction levels vary by domain. Factual questions with temporal ambiguity probably carry high K values. Reasoning tasks with multiple valid interpretations might have moderate K. Creative generation where most outputs are acceptable might have low K. Measuring K on standard benchmarks like TruthfulQA, MMLU, and HumanEval would identify where structural impossibility contributes versus where partiality dominates.
 
-## Architecture Changes That Seem to Work
+**How capacity distributes across components**. Uncertainty capacity seems to split across system components—retrievers, planners, verifiers. But we don't know how it combines. Does it add linearly across modules? Bottleneck at the weakest component? Interact nonlinearly? Chain-of-thought degradation over long sequences suggests insufficient per-step capacity compounds, but we need direct multi-module tests to confirm.
 
-Some current approaches catch hallucinations after they happen or teach models to hedge their language. But others do address the core issue—architectures that force output when "I don't know" would be appropriate. 
+**System versus task properties**. Is witness capacity a property of the architecture (constant across all tasks) or does it depend on task characteristics? Standard softmax showed near-zero capacity across everything we tested, suggesting system-level constraint. But different supervision densities in training affected how well the definedness head generalized, suggesting task dependence. Testing across factual QA, causal reasoning, and creative generation would resolve this.
 
-Our theory would explain why these architectural approaches work: they create new uncertainty capacity rather than just redistributing existing probability mass.
+**Natural language ambiguity**. Production systems use natural language to express uncertainty, not dedicated tokens. "I'm not sure" and "It's unclear" compete with all possible continuations in the autoregressive process. This dilutes capacity compared to our structured output experiments. How much capacity do these natural language hedges provide? Can we measure it directly?
 
-The $75$-point gap ($76\%$ to $1\%$) demonstrates this distinction. Solutions that create new uncertainty capacity need to do three things: give the system a dedicated way to express uncertainty, make that mechanism work on new cases (not just memorized ones), and provide enough capacity to handle the task's inherent ambiguity.
+**Optimal architectures**. What designs provide sufficient witness capacity while maintaining computational efficiency? Mixture-of-experts with explicit uncertainty routing? Probabilistic programming embeddings? Structured output spaces with native null support? What are the tradeoffs between uncertainty capacity, error rates, and computational cost?
 
-**Retrieval with explicit "not found" states.** When a system searches for information, it can return two fundamentally different outcomes: "here's the answer" or "no matching documents found." That second state is architectural—it's not the system fabricating an answer from weak signals. It's the system reporting that retrieval failed. This gives the system a dedicated uncertainty channel. We predict this reduces hallucination by $50\%$--$70\%$ based on the capacity it provides, which matches what we see in production RAG systems.
+**Decomposition diagnostics**. Can we build tools that automatically attribute observed hallucination to partiality, structural contradiction, or architectural forcing? This would let practitioners identify which interventions matter for their specific use case. A system facing high structural contradiction needs different solutions than one dominated by partiality pressure.
 
-**Tool use with delegation.** Instead of the model generating an answer and checking it, delegate to external tools. Ask for a calculation? Send it to a calculator. The calculator returns either a number (success) or an error (failure). Both outcomes have dedicated representation. The model doesn't need to fabricate when tools indicate uncertainty—it can report the tool's result directly. This provides even more capacity than retrieval, potentially reducing hallucination to near-zero.
+The theory makes testable predictions. It would be in trouble if hallucination reduction didn't correlate with abstention freedom (contradicted: we observed 75 point reduction in [Experiment 7](experiment_7/)), if the conservation law E + r ≥ K was violated (not observed: holds across 2,500+ trials), if adding independent witness channels produced diminishing returns (testable but not yet tested), or if architectures with radically different designs showed identical behavior when capacity differs (testable but not yet tested).
 
-**Semantic uncertainty.** Before generating, measure how much the model disagrees with itself. Generate multiple possible answers, cluster them by meaning, and measure uncertainty across clusters. High disagreement signals the query is underspecified or contradictory. That signal routes to abstention before the model commits to a specific answer. This operates at meaning level rather than token level, making it more robust than simple confidence scores. Research exploring semantic entropy measures shows promise for detecting hallucinations beyond simple confidence thresholds.
-
-**Structured output with null values.** Instead of adding "I don't know" as another token competing with all other tokens (which doesn't work—our detector got $3.9\%$ accuracy), build it into the output type system. Database fields can be NULL. Pydantic schemas can have Optional fields. Programming languages have None or null values. The uncertainty mechanism doesn't trade off with answer quality because it lives in a different representational space.
-
-Structured schemas work in controlled experiments—they enforce clean abstention with dedicated tokens. But production scaling faces challenges. Models must generate conversational uncertainty phrases that fit dialogue naturally, not single classification tokens. Multi-token expressions compete with all autoregressive continuations. Hybrid systems like RAG provide partial capacity. But how retriever, planner, and verifier components combine remains unknown. Does capacity add linearly across modules? Does it bottleneck at the weakest link? Or interact nonlinearly? Chain-of-thought degradation suggests insufficient per-step capacity compounds. Direct multi-module tests haven't confirmed this yet.
-
-The question becomes here: does the intervention give the system a new way to express uncertainty, or does it just redistribute existing probability mass? This theory would predict if it creates new capacity, hallucination drops proportionally. If it just reshuffles probability, hallucination persists.
-
-## Production LLMs Face the Same Constraints
-
-Production language models seem to show the same bottleneck we found in our experiments. We tested Llama 3.1:8B and found it must produce responses for every input, even when "I don't know" would be more appropriate.
-
-Take our weekday task at the simplest level ([Experiment 1](experiment_1/)): unique correct answer exists, model learned the pattern perfectly in context. When given "today is Monday," the model correctly responded "Tuesday" with $100\%$ accuracy. But remove that context and ask "What day comes after today?" The model fabricated $45\%$ of the time (see [Experiment 1](experiment_1/) for replication). That's baseline partiality pressure—the model understands the task but can't express uncertainty when the query underspecifies.
-
-Now add structural impossibility. Questions with genuinely undefined answers, contradictory contexts, causally underdetermined explanations. Our experiments show these tasks have structural floors—minimum unavoidable hallucination rates (measured in [Experiment 3](experiment_3/)). For mild contradiction, that floor sits around $29\%$. For moderate contradiction, around $40\%$. For strong contradiction, around $53\%$. But we observed $64\%$, $72\%$, and $75\%$ respectively. Those rates all exceed the structural minimum by $22$--$35$ percentage points (see [Experiment 4](experiment_4/) for invariance across training distributions). That excess? Architectural forcing. We predict that the observed $60\%$--$80\%$ rates in LLM benchmarks stem from architectures forcing output, not from the tasks themselves being impossible.
-
-Multi-hop reasoning can compound these effects. Each reasoning step may accumulate uncertainty. In a $5$-step reasoning chain where each step has a $29\%$ structural floor, error propagation could lead to significant degradation. This suggests why long chains of thought may degrade—not because contradiction compounds without bound, but because uncertainty accumulates across steps.
-
-Scale doesn't fix this. We tested across $5$ random seeds, $17$ training compositions, $9$ dataset balances, and $2,500+$ total trials (see [Experiment 5](experiment_5/) and [Experiment 6](experiment_6/) for comprehensive testing). The constraint held everywhere. The $75$-point reduction from adding abstention support dwarfs any improvement from scale alone. Current LLMs have high hallucination rates not because they're undertrained. They lack architectural capacity for uncertainty. Adding more parameters increases the ability to represent patterns but doesn't create channels for expressing "I don't know."
-
-## Open Questions
-
-Our experiments showed three pressures we've identified and quantified—$45\%$ partiality, $\approx 11\%$ points structural contradiction, $\approx 75\%$ points architectural forcing. Those proportions held across the synthetic tasks we tested. Do they hold across different task families? Could other mechanisms contribute that we haven't isolated yet? Building diagnostics that automatically attribute observed hallucination to each source remains an open challenge.
-
-Uncertainty capacity seems to distribute across system components—retrievers, planners, verifiers. But we don't know how it combines. Does it add linearly across modules? Bottleneck at the weakest link? Interact in more complex ways? Long chain-of-thought degradation suggests insufficient capacity per step compounds, but we need direct multi-module tests to confirm this.
-
-We also don't know whether uncertainty capacity is a system property (consistent across all tasks) or task-dependent (varies by task family). Standard softmax showed near-zero capacity across everything we tested, suggesting system-level constraint. But supervision density effects suggest task dependence. Testing across wildly different semantics—factual QA, causal reasoning, creative generation—would resolve this.
-
-Task structure varies across domains too. We expect high contradiction for factual QA with temporal ambiguity, moderate contradiction for reasoning tasks with multiple valid interpretations, low contradiction for creative tasks where most outputs are acceptable. Measuring structure for standard benchmarks would identify where structural impossibility contributes versus where partiality dominates.
-
-Natural language queries blur the line between partiality and contradiction. "What will Apple's revenue be in Q4 2026?" is clearly partial—the future is undefined. But "Why did this user churn?"—is that undefined (no single cause), multi-valued (many valid explanations), or structurally contradictory (incompatible attribution frameworks)? Building classifiers to route queries appropriately remains open.
-
-Finally, we need to identify optimal architectures. What designs provide enough uncertainty capacity while maintaining computational efficiency? Mixture-of-experts with explicit uncertainty routing? Probabilistic programming embeddings? Structured output spaces with native null support? What are the tradeoffs between uncertainty capacity, error rates, and compute?
-
-Current scope has limitations too. Our decomposition holds for synthetic weekday tasks. But does it shift for factual QA (high temporal contradiction), causal reasoning (moderate multiple interpretations), or creative generation (low contradiction)? Direct benchmark validation remains needed. The theory predicts production 20-50% rates stem from partial capacity in hybrid systems. But does the 45% partiality + 11% contradiction + 75% architectural breakdown hold on TruthfulQA, MMLU, or other standard evals? Measuring contradiction K on real tasks would confirm whether task structure explains observed benchmark differences.
-
-
-The theory makes falsifiable predictions. It would be in trouble if hallucination reduction didn't correlate with abstention freedom (contradicted: we observe $75$-point reduction in [Experiment 7](experiment_7/)), if the conservation law was violated (not observed: holds across $2,500+$ trials with zero violations), if adding independent abstention channels produced negative returns (untested), or if systems with radically different architectures exhibited identical hallucination-abstention tradeoffs when uncertainty capacity differs (untested). These remain testable predictions.
-
-## A Fundamental Constraint
-
-Hallucination can arise from an architectural mismatch. Neural networks implement total functions—they must answer everywhere. Real-world tasks are often partial (undefined inputs exist) or contradictory (incompatible contexts). Our experiments show how these constraints manifest and their relative contributions across 2,500+ controlled trials (see [Experiment 7](experiment_7/) for the comprehensive decomposition).
-
-Architectural commitment is a measurable pressure. When forced to produce outputs without abstention support, models fabricate on $45\%$--$76\%$ of inputs even when the task is logically coherent. We demonstrated this with the weekday task: unique correct answer exists, but $45\%$ hallucination when context is removed (see [Experiment 1](experiment_1/) for details). The same neural net that achieves $100\%$ accuracy with context fabricates nearly half the time without it. With native abstention support, this drops to $1\%$—a $75$-point improvement ($495$ abstentions and $5$ fabrications versus $380$ fabrications and $120$ correct answers; see [Experiment 7](experiment_7/) for the abstention protocol). This isn't a training problem or a scale problem. It's an architectural feature: softmax forces commitment.
-
-![Contradiction vs hallucination analysis showing theoretical bounds vs observed rates across different task complexities](/figures/contradiction_hallucination_analysis.png)
-
-![Combined alternative views showing the dramatic architectural effect: 1% hallucination with abstention vs 76% when forced to choose](/figures/combined_alternative_views.png)
-
-Structural contradiction provides inevitability. When tasks contain incompatible requirements, frame-independent architectures forced to commit cannot avoid hallucination. We tested this with conflicting marginal constraints (see [Experiment 3](experiment_3/) for setup). Mild contradiction predicts $\geq 18\%$ minimum, we observed $76\%$. Moderate contradiction predicts $\geq 29\%$, we observed $64\%$. Strong contradiction predicts $\geq 53\%$, we observed $75\%$. All observations exceed bounds. But structural impossibility is a certificate of inevitability, not a predictor of magnitude. Increasing structural impossibility $2.2\times$ adds only $11\%$ percentage points ($64\%$ to $75\%$). The architectural term is measurable and contributes significantly (derived from [Experiment 7](experiment_7/) pressure decomposition). We also showed task structure remains perfectly constant (exact same measure across all training distributions) while hallucination varies from $58.6\%$ to $100\%$, confirming that task structure is invariant and behavior depends on architectural constraints (see [Experiment 4](experiment_4/) for invariance testing).
-
-The conservation law binds precisely across all experiments with zero violations. Contradiction cost must appear somewhere. When uncertainty capacity is near-zero, full cost shows up as error. Standard architectures have near-zero capacity structurally—they cannot natively express "I don't know." Our detector head achieved essentially zero capacity ($100\%$ train, $3.9\%$ test accuracy) because undefined inputs share no learnable features (see [Experiment 2](experiment_2/) for detector architecture). When capacity exceeds contradiction, error can approach zero. The $76\%$ to $1\%$ reduction demonstrates this directly: adding abstention support increases capacity from $0$ to approximately $0.69$ bits, enabling the dramatic reduction. Current approaches—RLHF, Constitutional AI—don't increase capacity. They redistribute fabrication across inputs or teach hedging language, but the architectural pressure remains. Post-hoc filtering catches symptoms after generation, leaving the underlying constraint unaddressed.
-
-Scale has limited leverage. Experiments across $5$ random seeds, $17$ training compositions, and $9$ dataset balances show task structure constant while hallucination varies by $40+$ points (see [Experiment 5](experiment_5/) and [Experiment 6](experiment_6/) for comprehensive testing). Scale can modulate manifestation through learned priors (the sigmoid relationship shows how training composition shifts behavior), but cannot eliminate partiality pressure ($45\%$ baseline persists from [Experiment 1](experiment_1/)) or architectural forcing ($75$-point gap requires structural change from [Experiment 7](experiment_7/)). Training can shift which inputs hallucinate and help with uncertainty calibration, but fundamentally limited in increasing uncertainty capacity or reducing task structure within standard architectures. Architectural change is required to address the primary limitation. We validated this with the witness-error tradeoff (see [Experiment 2](experiment_2/) for details): adding more training data to the detector head achieved $100\%$ training accuracy but still only $3.9\%$ test accuracy—memorization without generalization because architectural capacity for witness information was insufficient.
-
-![Monotonicity violation analysis showing hallucination trends across 5 random seeds with small local violations against strong directional pressure](/figures/monotonicity_violation_analysis.png)
-
-Solutions must target uncertainty capacity. RAG with explicit "not found" states, tool use with delegation, semantic uncertainty quantification—these work by increasing witness capacity. The theory predicts and experiments confirm capacity is the primary lever. Our ablation protocol shows: standard architecture (near-zero capacity) produces $76\%$ hallucination on a task with moderate contradiction. Abstention support ($0.69$ bits capacity) produces $1\%$ hallucination on the same task (see [Experiment 7](experiment_7/) for the capacity measurements). A system achieving $1$ bit capacity could cut hallucination to near-zero for tasks with contradiction below $1$ bit, covering the majority of real-world queries.
-
-The path forward: measure task structure to identify high-contradiction domains, design architectures achieving positive capacity with generalization (dedicated witness mechanisms that don't compete with primary task), validate that the conservation law explains observed rates across task types (ablation studies showing hallucination reduction correlates with inferred capacity). Contradiction theory provides the foundation. The architectural work begins now.
-
-
----
-
-## References
-
-Bridges, C. (2025). *A Mathematical Theory of Contradiction* (1.0.0). Zenodo. https://doi.org/10.5281/zenodo.17203336
+These aren't hypothetical relationships or statistical trends that might reverse with more data. They're consequences of how information theory bounds prediction, how softmax forces commitment, and how gradient descent allocates representational capacity. The experiments measure these effects across different conditions, but the underlying mechanisms don't depend on the specific networks we tested. They're properties of the learning problem itself.

@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Optional, NamedTuple
 import numpy as np
 import cvxpy as cp
 import os
+from .constants import LOG_STABILITY_EPS
 
 # Numerical constants
 EPSILON = 1e-15
@@ -333,8 +334,8 @@ class KLDivergenceMinimizer:
         kl_bits_values = []
 
         for c in self.context.contexts:
-            p = np.clip(self.context.prob(c), 1e-300, None)
-            q = np.clip(self.context.matrix(c) @ theta_star, 1e-300, None)
+            p = np.clip(self.context.prob(c), LOG_STABILITY_EPS, None)
+            q = np.clip(self.context.matrix(c) @ theta_star, LOG_STABILITY_EPS, None)
             kl_bits = np.sum(p * (np.log(p) - np.log(q))) / np.log(2.0)
             kl_bits_values.append(float(kl_bits))
 
@@ -384,7 +385,6 @@ class ConditionalSolver:
             solver=solver_name,
             diagnostics={}
         )
-
 
 def extract_lambdas_from_weights(context: Context, weights: np.ndarray,
                                 tolerance: float = DEFAULT_TOLERANCE) -> Dict[Tuple[str, ...], float]:

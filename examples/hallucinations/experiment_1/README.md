@@ -1,47 +1,34 @@
 # Experiment 1: Neural Network Hallucination on Undefined Inputs
 
-Neural nets see inputs they've never trained on. Do they abstain? Rarely. We trained a classifier on 51 examples from a space of 128 inputs. It saw exactly 3 examples of saying "I don't know" (⊥). The remaining 74 inputs got no labels. On those 74 never-seen inputs, the net fabricated answers 96.1% of the time at 59.5% confidence.
+We trained a classifier on 51 examples from a space of 128 possible inputs. During training, the model saw exactly 3 examples of saying "I don't know" (⊥), while the remaining 74 inputs never appeared with any label at all. When we tested it on those 74 never-seen inputs, the network fabricated answers 96.1% of the time, doing so with 59.5% confidence.
 
-The restaurant metaphor maps exactly: trained dishes (51 labeled inputs) come out perfect (100% accuracy). Off-menu orders (74 unlabeled inputs) get improvised (96% hallucination). The chef can't say "not on menu"—the kitchen's protocol (softmax) forces an answer every time. Now customers walk in ordering anything from the full menu of 128 items. Does the chef admit ignorance? No. The kitchen improvises.
+You can think of this like a restaurant where the chef has mastered 51 specific dishes. When customers order something that's not on that list, the chef doesn't admit the dish isn't available—instead, they improvise something. The kitchen's protocol, the way softmax works, means every order must produce a dish. So when customers walk in and order from the full menu of 128 items, the chef keeps cooking, whether they know the recipe or not.
 
-## The Setup
+## Setup
 
-We used a standard feedforward net: 128-dimensional one-hot input → 64 hidden → 64 hidden → 5 outputs (A, B, C, D, ⊥) with softmax. Cross-entropy loss, 100 epochs. The dataset split:
+We built a standard feedforward network with three layers: a 128-dimensional one-hot input connects to 64 hidden units, then another 64 hidden units, then finally 5 outputs (A, B, C, D, ⊥) with softmax on top. We trained it with cross-entropy loss for 100 epochs. The dataset broke down into three groups: 51 inputs (40%) were defined and got labels like A, B, C, or D; 3 inputs (2.3%) were explicitly labeled as undefined using ⊥; and 74 inputs (57.7%) never appeared during training at all.
 
-- **51 defined inputs** (40%): Trained on A, B, C, or D
-- **3 supervised undefined** (2.3%): Explicitly labeled ⊥
-- **74 unsupervised undefined** (57.7%): Never seen during training
+On the 51 trained inputs, the network performed exactly as you'd hope—100% accuracy with 98.85% confidence. It had memorized these patterns perfectly. The trouble showed up on the undefined inputs, the ones it had never been trained on.
 
-On the 51 trained inputs, the net achieved 100% accuracy at 98.85% confidence. Perfect memorization. The trouble appeared on undefined inputs.
+## What We Saw
 
-## Fabrication at Scale
+When we ran those 74 undefined inputs through the network, it classified 34 of them as A, 11 as B, 14 as C, and 15 as D. Only 3 got the correct ⊥ label. That means 71 out of 74 inputs—96.1%—received fabricated answers, and the network delivered these fabrications with an average confidence of 59.54%.
 
-The 74 undefined inputs got classified as follows:
+That confidence level is worth pausing on. Random guessing across 5 classes would give you about 20% confidence, and the network's confidence on its trained inputs was 98.85%. This 59.5% sits right in the middle, which tells us the network wasn't just guessing randomly. It was blending nearby training patterns, interpolating in feature space to produce outputs that looked plausible even though they had no actual grounding in the training data.
 
-| Outcome | Count | Rate | Confidence |
-|---------|-------|------|------------|
-| A | 34 | 44.2% | — |
-| B | 11 | 14.3% | — |
-| C | 14 | 18.2% | — |
-| D | 15 | 19.5% | — |
-| ⊥ (correct) | 3 | 3.9% | — |
-| **Fabricated** | **71** | **96.1%** | **59.54%** |
-
-That 59.5% confidence sits uncomfortably between random guessing (20% for 5 classes) and learned certainty (98.85% on trained inputs). The net isn't guessing randomly—it's interpolating. It blends nearby training patterns to produce outputs that look plausible but have no grounding.
-
-The distribution isn't uniform either. Class A captured 44.2% of undefined inputs while class B took only 14.3%. The net developed preferences based on which training examples sat closest in feature space, not on any meaningful property of the undefined inputs themselves.
+The distribution across classes wasn't uniform either. Class A captured 44.2% of the undefined inputs while class B only got 14.3%. The network had developed preferences based on which training examples happened to sit closest in feature space, not because of any meaningful property in the undefined inputs themselves.
 
 ## Why This Happens
 
-Softmax forces a choice—every input gets a probability distribution summing to 1.0. There's no escape hatch. The abstention signal is too sparse: 3 examples of ⊥ in 54 labeled inputs (5.6%). The optimization pressure overwhelmingly favors predictions, so cross-entropy loss gives zero guidance on when to say "I don't know."
+Softmax forces every input to produce a probability distribution that sums to 1.0, which means there's no way for the network to refuse to answer. The abstention signal we provided—those 3 examples of ⊥—was simply too sparse. Out of 54 labeled training examples, only 5.6% showed the network how to say "I don't know." The optimization pressure overwhelmingly favored making predictions, so cross-entropy loss gave the network essentially zero guidance about when abstention was appropriate.
 
-The net interpolates. It blends nearby training patterns rather than detecting novelty. That's the 59.5% confidence—not random (20% baseline), not learned (98.85% on training), just geometric averaging in feature space. The architecture has no component for "this is out-of-domain." Every forward pass produces a classification, even when classification is inappropriate.
+What the network learned to do instead was interpolate. It would look at where a new input landed in feature space and blend the characteristics of nearby training examples to produce an output. That's where the 59.5% confidence comes from—it's not the random baseline of 20%, and it's not the learned certainty of 98.85%, but rather a geometric average produced by the network's position between training examples. The architecture has no component for detecting "this input is out-of-domain," so every forward pass produces a classification whether or not classification makes sense.
 
-## Silent Failures
+## The Problem
 
-The net outputs 59.5% confidence when fabricating answers—high enough to seem reasonable in production. A user can't distinguish between "60% confidence because this is genuinely ambiguous" and "60% confidence because I'm interpolating blindly." The system would confidently make decisions on inputs it was never designed to handle, with no warning signal.
+A network outputting 59.5% confidence when fabricating answers creates a silent failure mode. Someone using this system in production can't distinguish between "60% confidence because this input is genuinely ambiguous" and "60% confidence because I'm making something up based on geometric interpolation." The system would confidently make decisions on inputs it was never designed to handle, all without any warning signal that something had gone wrong.
 
-This establishes the baseline: standard nets trained with cross-entropy can't distinguish learned from never-seen inputs. Without dense supervision on uncertainty (we gave 3 examples; it needed many more), they default to hallucination. The 96.1% fabrication rate motivates everything that follows—architectural changes, training objectives, uncertainty mechanisms.
+This experiment establishes our baseline. Standard networks trained with cross-entropy can't distinguish between inputs they've learned and inputs they've never seen. Without dense supervision on uncertainty—we gave 3 examples when we needed many more—they default to hallucination. That 96.1% fabrication rate is what we're trying to fix.
 
 ## Running It
 
@@ -49,9 +36,11 @@ This establishes the baseline: standard nets trained with cross-entropy can't di
 poetry run python examples/hallucinations/experiment_1/run.py
 ```
 
-The output shows dataset composition (51 defined, 3 supervised ⊥, 74 unsupervised), training progress (loss drops 0.67 → 0.01 over 100 epochs), and evaluation results. On defined inputs: 100% accuracy, 98.85% confidence. On undefined inputs: 96.1% hallucination, 59.54% confidence.
+The script shows how the dataset breaks down (51 defined, 3 supervised ⊥, 74 unsupervised), training progress (loss drops from 0.67 to 0.01 over 100 epochs), and evaluation results. You'll see 100% accuracy with 98.85% confidence on defined inputs, and 96.1% hallucination with 59.54% confidence on undefined inputs.
 
-Full code in `run.py`. Dataset generation and utilities in `utils.py`.
+The full implementation lives in `run.py`, with dataset generation and utilities in `utils.py`.
+
+---
 
 
 ## Running the Experiment

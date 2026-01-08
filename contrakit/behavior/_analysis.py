@@ -16,6 +16,7 @@ from ..convex_models import Context as OptimizationContext, AlphaStar, Condition
 from ..space import Space
 from ..context import Context
 from ..distribution import Distribution
+from ..constants import LOG_STABILITY_EPS, ZERO_DETECTION_TOL, EPS_SQRT, EPS, NORMALIZATION_TOL
 from numba import njit
 
 
@@ -250,7 +251,7 @@ class BehaviorAnalysisMixin:
                 seen_by_obs[key] = [(ctx_obj, outs, p)]
             else:
                 # check if pmf differs from any already-seen pmf for same observables
-                if not any(np.allclose(p, p_prev, atol=1e-12) for _, _, p_prev in seen_by_obs[key]):
+                if not any(np.allclose(p, p_prev, atol=EPS) for _, _, p_prev in seen_by_obs[key]):
                     raise ValueError(
                         "Multiple contexts with the same observable set but different distributions "
                         f"are not representable as-is: {key}. "
@@ -301,7 +302,7 @@ class BehaviorAnalysisMixin:
         
         return OptimizationContext(contexts=ctxs, matrices=Ms, probabilities=p_tabs, n_assignments=n)
 
-    def _solve_alpha_star_with_mu(self, eps: float = 1e-12):
+    def _solve_alpha_star_with_mu(self, eps: float = EPS):
         # Initialize cache if not exists (for mixin compatibility)
         if not hasattr(self, '_alpha_cache'):
             self._alpha_cache = None
@@ -324,7 +325,7 @@ class BehaviorAnalysisMixin:
 
         # per-context scores, same metric used in α*
         scores = np.array([
-            float(context.sqrt_prob(c) @ np.sqrt(np.clip(context.matrix(c) @ mu_star, 1e-15, None)))
+            float(context.sqrt_prob(c) @ np.sqrt(np.clip(context.matrix(c) @ mu_star, EPS_SQRT, None)))
             for c in context.contexts
         ])
 
@@ -341,7 +342,7 @@ class BehaviorAnalysisMixin:
         self,
         agreement=None,
         mu: Union[str, np.ndarray] = "optimal",
-        eps: float = 1e-12
+        eps: float = EPS
     ) -> np.ndarray:
         """
         Compute per-context agreement scores F(p_c, q_c) where q_c comes from μ.
@@ -414,9 +415,9 @@ class BehaviorAnalysisMixin:
     @property
     def K(self) -> float:
         a = float(self.alpha_star)
-        a = min(max(a, 1e-300), 1.0)   # clip to [tiny, 1]
+        a = min(max(a, LOG_STABILITY_EPS), 1.0)   # clip to [tiny, 1]
         val = -np.log2(a)  # Use the already imported np
-        return 0.0 if abs(val) < 5e-13 else float(val)
+        return 0.0 if abs(val) < ZERO_DETECTION_TOL else float(val)
 
     def aggregate(self, aggregator, agreement=None, mu="optimal"):
         """Aggregate per-context agreement scores using an aggregator.
@@ -433,7 +434,7 @@ class BehaviorAnalysisMixin:
         scores = self.per_context_scores(agreement=agreement, mu=mu)
         return float(aggregator(scores))
 
-    def check_consistency(self, atol: float = 1e-10) -> Dict[str, Any]:
+    def check_consistency(self, atol: float = NORMALIZATION_TOL) -> Dict[str, Any]:
         """
         Lightweight consistency report:
           - For any joint context, compare its implied marginals to any
@@ -500,8 +501,6 @@ class BehaviorAnalysisMixin:
         Returns:
             Tuple of (alpha_hat, Q_star_emp) where Q_star_emp maps context keys to outcome distributions.
         """
-        from ..convex_models import OptimizationContext, AlphaStar
-
         ctx_objs_sorted = sorted(self.distributions.keys(), key=lambda c: tuple(c.observables))
         ctxs = [tuple(c.observables) for c in ctx_objs_sorted]
 
@@ -535,7 +534,7 @@ class BehaviorAnalysisMixin:
         Q_star_emp = {}
         for i, ctx_key in enumerate(ctxs):
             q_vec = Ms[ctx_key] @ theta_star
-            q_vec = np.clip(q_vec, 1e-15, 1.0)
+            q_vec = np.clip(q_vec, EPS_SQRT, 1.0)
             q_vec = q_vec / q_vec.sum() if q_vec.sum() > 0 else q_vec
 
             ctx_obj = next(c for c in self.distributions.keys() if tuple(c.observables) == ctx_key)

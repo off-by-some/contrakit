@@ -22,6 +22,7 @@ from functools import lru_cache
 import numpy as np
 import cvxpy as cp
 from .agreement import BhattacharyyaCoefficient
+from .constants import FRAME_INDEPENDENCE_TOL
 from .convex_models import Solver
 
 if TYPE_CHECKING:
@@ -119,7 +120,7 @@ class FrameIndependence:
         return A_eq, b_eq, assignments
     
     @classmethod
-    def check(cls, behavior: Behavior, tol: float = 1e-9) -> FIResult:
+    def check(cls, behavior: Behavior, tol: float = FRAME_INDEPENDENCE_TOL) -> FIResult:
         A_eq, b_eq, assignments = cls.build_constraints(behavior)
         n = A_eq.shape[1]
 

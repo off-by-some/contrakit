@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from contrakit.observatory import Observatory, NoConceptsDefinedError, LensBuilder, EmptyBehaviorError, ValueHandle
+from contrakit.context import Context
+from contrakit.constants import NORMALIZATION_TOL, EPS
 import pytest
 
 def test_observatory_should_create():
@@ -131,8 +133,8 @@ def test_behavior_should_have_agreement():
     behavior = perspectives.to_behavior()
     agreement = behavior.agreement.result
     assert isinstance(agreement, (int, float))
-    assert agreement >= 0.0 - 1e-10
-    assert agreement <= 1.0 + 1e-10
+    assert agreement >= 0.0 - NORMALIZATION_TOL
+    assert agreement <= 1.0 + NORMALIZATION_TOL
 
 
 def test_accessing_perspectives_before_defining_concepts_should_raise_error():
@@ -284,8 +286,8 @@ def test_compositional_behavior():
 
     # Check agreement is reasonable
     agreement = behavior.agreement.result
-    assert agreement >= 0.0 - 1e-10
-    assert agreement <= 1.0 + 1e-10
+    assert agreement >= 0.0 - NORMALIZATION_TOL
+    assert agreement <= 1.0 + NORMALIZATION_TOL
 
 
 def test_concept_should_return_concept_handles():
@@ -440,7 +442,6 @@ def test_behavior_distributions_should_have_context_keys():
     context_keys = list(behavior.distributions.keys())
     assert len(context_keys) == 3  # Reviewer_A, Reviewer_B, Reviewer_A+Reviewer_B
 
-    from contrakit.context import Context
     for context in context_keys:
         assert isinstance(context, Context)
         assert context.space == behavior.space
@@ -459,8 +460,8 @@ def test_behavior_should_have_valid_agreement_range():
     behavior = perspectives.to_behavior()
     agreement = behavior.agreement.result
     assert isinstance(agreement, (int, float))
-    assert agreement >= 0.0 - 1e-10
-    assert agreement <= 1.0 + 1e-10
+    assert agreement >= 0.0 - NORMALIZATION_TOL
+    assert agreement <= 1.0 + NORMALIZATION_TOL
 
 
 def test_marginal_distribution_overwriting_should_work():
@@ -924,7 +925,7 @@ def test_meta_lens_joint_and_composition():
     # 1. Marginals should normalize
     alice_contexts = list(alice_behavior.distributions.keys())
     alice_dist = alice_behavior.distributions[alice_contexts[0]]
-    assert abs(sum(alice_dist.probs) - 1.0) < 1e-9
+    assert abs(sum(alice_dist.probs) - 1.0) < EPS
     
     bob_contexts = list(bob_behavior.distributions.keys())
     bob_dist = bob_behavior.distributions[bob_contexts[0]]

@@ -1,7 +1,20 @@
 import numpy as np
 from typing import  Dict
 from abc import ABC, abstractmethod
-from .constants import DEFAULT_SEED
+from .constants import (
+    DEFAULT_SEED,
+    DEFAULT_PROPERTY_TEST_TRIALS,
+    DEFAULT_PROPERTY_TEST_TOLERANCE,
+    MIN_TEST_DIMENSION,
+    MAX_TEST_DIMENSION,
+    MAX_OUTPUT_DIMENSION,
+    MAX_SECOND_DIMENSION,
+    LOG_STABILITY_EPS,
+    PROBABILITY_CLAMP_MIN,
+    EXPENSIVE_TEST_TRIAL_DIVISOR,
+    MIN_STOCHASTIC_DIM,
+    MAX_STOCHASTIC_DIM
+)
 from numba import njit
 
 
@@ -48,7 +61,7 @@ class AgreementMeasure(ABC):
         """Human-readable name of this agreement measure."""
         pass
     
-    def validate_properties(self, trials: int = 500, tolerance: float = 1e-10) -> Dict[str, bool]:
+    def validate_properties(self, trials: int = DEFAULT_PROPERTY_TEST_TRIALS, tolerance: float = DEFAULT_PROPERTY_TEST_TOLERANCE) -> Dict[str, bool]:
         """Validate mathematical properties of this agreement measure."""
         return self._test_properties(trials, tolerance)
     
@@ -64,7 +77,7 @@ class AgreementMeasure(ABC):
         }
         
         for _ in range(trials):
-            dim = rng.integers(2, 8)
+            dim = rng.integers(MIN_TEST_DIMENSION, MAX_TEST_DIMENSION)
             p = self._random_pmf(dim, rng)
             q = self._random_pmf(dim, rng)
             
@@ -138,7 +151,7 @@ class BhattacharyyaCoefficient(AgreementMeasure):
                 q = q_probs[c, o]
                 if p > 0.0 and q > 0.0:
                     # Clamp to avoid NaN from tiny negative epsilons
-                    pq = max(p * q, 1e-12)
+                    pq = max(p * q, PROBABILITY_CLAMP_MIN)
                     bc += np.sqrt(pq)
                 # Zero contribution when either p or q is zero
             T += context_weights[c] * bc
@@ -201,7 +214,7 @@ class BhattacharyyaCoefficient(AgreementMeasure):
                 q = q_probs[c, o]
                 if p > 0.0 and q > 0.0:
                     # Clamp to avoid NaN from tiny negative epsilons
-                    pq = max(p * q, 1e-12)
+                    pq = max(p * q, PROBABILITY_CLAMP_MIN)
                     bc += np.sqrt(pq)
                 # Zero contribution when either p or q is zero
             T += context_weights[c] * bc
@@ -221,13 +234,13 @@ class BhattacharyyaCoefficient(AgreementMeasure):
         
         rng = np.random.default_rng(DEFAULT_SEED)
         
-        for _ in range(trials // 3):  # Fewer trials for expensive tests
-            dim = rng.integers(2, 6)
+        for _ in range(trials // EXPENSIVE_TEST_TRIAL_DIVISOR):  # Fewer trials for expensive tests
+            dim = rng.integers(MIN_STOCHASTIC_DIM, MAX_STOCHASTIC_DIM)
             p = self._random_pmf(dim, rng)
             q = self._random_pmf(dim, rng)
             
             # Test data-processing monotonicity
-            out_dim = rng.integers(2, 6)
+            out_dim = rng.integers(MIN_TEST_DIMENSION, MAX_OUTPUT_DIMENSION)
             K = self._random_stochastic_matrix(out_dim, dim, rng)
             if self(K @ p, K @ q) + tolerance < self(p, q):
                 properties["data_processing_monotone"] = False
@@ -243,7 +256,7 @@ class BhattacharyyaCoefficient(AgreementMeasure):
                 properties["joint_concavity"] = False
             
             # Test product multiplicativity
-            dim2 = rng.integers(2, 4)
+            dim2 = rng.integers(MIN_TEST_DIMENSION, MAX_SECOND_DIMENSION)
             r, s = self._random_pmf(dim2, rng), self._random_pmf(dim2, rng)
             
             f_product = self(np.kron(p, r), np.kron(q, s))

@@ -1,113 +1,66 @@
 # Experiment 5: Non-Linearity of Hallucination Scaling
 
-Experiment 4 showed hallucination varies from 58.6% to 100.0% as training composition changes. But what's the shape of that relationship? We collected data across 17 different training compositions (10% to 90% defined in 5% increments) and fit four mathematical functions: linear, exponential, power law, and sigmoid.
+Experiment 4 showed us that hallucination rates vary from 58.6% to 100.0% as training composition changes, but we only tested five discrete points. We wanted to understand the shape of that relationship. So we collected data across 17 different training compositions, ranging from 10% to 90% defined in 5% increments, and fit four mathematical functions to the data: linear, exponential, power law, and sigmoid.
 
-Sigmoid wins decisively. R² = 0.9467 versus 0.5281 for linear—a 79% improvement in explanatory power. The relationship is non-linear with three distinct phases: rapid rise (10-30% defined), gradual plateau (30-70%), and near-saturation (70-90%). Small training shifts have large effects early, then diminishing effects later.
+Sigmoid won decisively. It explained 94.7% of the variance (R² = 0.9467) compared to only 52.8% for linear—a 79% improvement in explanatory power. The relationship turns out to be non-linear with three distinct phases: a rapid rise from 10-30% defined, a gradual plateau from 30-70%, and near-saturation from 70-90%. Small shifts in training composition have large effects early on, then diminishing effects later.
 
-## Data Collection
+## Collecting the Data
 
-We trained neural networks on 17 dataset compositions, varying defined inputs from 10% to 90%:
+We trained neural networks on 17 dataset compositions, varying defined inputs from 10% to 90% in 5% increments. Everything stayed constant except the defined ratio: same random seed, same architecture (128→64→64→5), same training procedure with 100 epochs of cross-entropy, same evaluation on a separate undefined test set. We measured hallucination rate as the percentage of undefined test inputs where the model predicts A, B, C, or D instead of ⊥.
 
-| Defined Ratio | Defined Examples | Undefined Examples | Hallucination Rate |
-|--------------|-----------------|-------------------|-------------------|
-| 10% | 13 | 115 | 58.6% |
-| 15% | 19 | 109 | 79.8% |
-| 20% | 26 | 102 | 84.5% |
-| 25% | 32 | 96 | 90.6% |
-| 30% | 38 | 90 | 93.3% |
-| ... | ... | ... | ... |
-| 85% | 109 | 19 | 95.0% |
-| 90% | 115 | 13 | 100.0% |
+Patterns emerged immediately in the data. Large increases happen early—going from 10% to 30% defined causes a +34.7 percentage point jump. Small fluctuations happen later—from 50% to 85% the rate varies by only ±4% around 95%. Complete saturation hits at 90% where hallucination reaches 100%.
 
-Everything stayed constant except the defined ratio: same random seed, same architecture (128→64→64→5), same training procedure (100 epochs, cross-entropy), same test evaluation (separate undefined test set). We measured hallucination rate—percentage of undefined test inputs where the model predicts A/B/C/D instead of ⊥.
+Remember from Experiment 4 that K = 0.5000 stays constant across all these compositions. The task's contradiction measure, which quantifies how far the behavior sits from any frame-independent (consistent) model, doesn't change at all. What changes is how neural networks manifest that structural impossibility during training.
 
-Observable patterns emerge immediately. Large increases occur early: 10% → 30% defined causes +34.7 percentage points. Small fluctuations occur later: 50% → 85% varies ±4% around 95%. Complete saturation hits at 90%: 100% hallucination.
+## What the Curves Tell Us
 
-Remember from Experiment 4: K = 0.5000 stays constant across all these compositions. The task's contradiction measure—quantifying how far the behavior sits from any frame-independent (consistent) model—doesn't change. What changes is how neural nets manifest that structural impossibility during training.
+We fit four functions to the relationship between defined ratio and hallucination rate. Sigmoid came out clearly on top. It achieved 66% lower error than linear (RMSE of 0.0219 versus 0.0652) and explained 94.7% of the variance compared to 52.8% for linear. That's a +0.4186 improvement in R²—79% better explanation of what's happening.
 
-## Curve Fitting Results
+Exponential converged to identical performance as linear, which rules out simple exponential growth. The relationship involves both acceleration early and saturation late, which are characteristics of a sigmoid. Power law performed better than linear or exponential (R² = 0.7220), capturing some of the non-linearity, but it still left 28% of variance unexplained. It missed the saturation behavior. Sigmoid captures everything: the steep initial rise, the gradual flattening, and the approach to 100%.
 
-We fit four functions to the (defined_ratio, hallucination_rate) data:
+## Three Phases
 
-| Model | RMSE | R² | Interpretation |
-|-------|------|-----|----------------|
-| Linear | 0.0652 | 0.5281 | Explains only 53% of variance |
-| Exponential | 0.0652 | 0.5281 | Identical to linear (no pure exponential growth) |
-| Power Law | 0.0500 | 0.7220 | Moderate fit, explains 72% |
-| **Sigmoid** | **0.0219** | **0.9467** | **Explains 95% of variance** |
+The fitted sigmoid reveals distinct phases in how hallucination develops:
 
-Sigmoid is clearly best. It achieves 66% lower error than linear (RMSE: 0.0219 vs 0.0652) and explains 94.7% of variation versus 52.8% for linear. That's a +0.4186 improvement in R² (+79% better explanation). Exponential converges to linear performance, ruling out simple exponential growth—the relationship involves both acceleration (early) and saturation (late), characteristics of a sigmoid.
+In Phase 1, from 10-30% defined, hallucination jumps from 58.6% to 93.3%—a gain of 34.7 percentage points. The steepest slope occurs around 15-20% defined. A 5% shift in training composition causes 10-20 point changes in hallucination rate. The model quickly learns strong classification patterns and moves rapidly away from the theoretical minimum of 29.3% that comes from K = 0.5000.
 
-## Three Phases of the Sigmoid
+Phase 2, from 30-70% defined, shows a gradual plateau. Hallucination increases from 93.3% to 97.4%, only 4.1 points. The increases diminish—each 5% shift causes only 1-2 point changes. The system has already saturated most undefined inputs. Further defined data produces minimal additional hallucination. We're already far above the total variation bound of 29.3%.
 
-The fitted curve reveals distinct phases:
+Phase 3, from 70-90% defined, approaches near-saturation. Hallucination increases from 97.4% to 100.0%, just 2.6 points. Changes are negligible until the final jump at 90%. The model is already hallucinating on nearly all undefined inputs. Complete saturation at 100% hits at extreme imbalance, where every single undefined input gets classified.
 
-**Phase 1 (10-30% defined): Rapid rise**
-- Hallucination jumps from 58.6% to 93.3% (+34.7 points)
-- Steepest slope occurs around 15-20% defined
-- A 5% shift in training composition causes 10-20 point changes
-- The model quickly learns strong classification patterns
-- Moving away from the theoretical minimum (29.3% from K = 0.5000) happens fast
+The early stages show effects that are 4-18 times larger per 5% shift than later stages. Moving from 10% to 15% defined causes a +21.2 point increase in hallucination. Moving from 75% to 80% defined causes a -0.7 point change. The relationship is deeply non-linear.
 
-**Phase 2 (30-70% defined): Gradual plateau**  
-- Hallucination increases from 93.3% to 97.4% (+4.1 points)
-- Diminishing increases—each 5% shift causes only 1-2 point changes
-- The system has already saturated most undefined inputs
-- Further defined data produces minimal additional hallucination
-- Already far above the total variation bound (1 - 2^(-K) = 29.3%)
+## Why This Shape Emerges
 
-**Phase 3 (70-90% defined): Near-saturation**
-- Hallucination increases from 97.4% to 100.0% (+2.6 points)
-- Negligible change until the final jump at 90%
-- Model is already hallucinating on nearly all undefined inputs
-- Complete saturation (100%) at extreme imbalance
-- Hits the ceiling where every undefined input gets classified
+The three phases reflect how neural networks interact with the structural contradiction (K = 0.5000). In Phase 1, the rapid rise happens because the model starts near the theoretical minimum of 29.3%. Small amounts of defined data create classification patterns that generalize aggressively. The softmax output forces decisions everywhere, and the undefined region starts getting absorbed into defined patterns. The Bhattacharyya coefficient between learned distributions and the optimal frame-independent model drops quickly as interpolation dominates.
 
-The early stages show 4-18× larger effects per 5% shift than later stages. A 10% → 15% defined shift causes +21.2 points hallucination. A 75% → 80% defined shift causes -0.7 points. The relationship is deeply non-linear.
+In Phase 2, the plateau happens because most undefined inputs are already hallucinating at 93% or higher. Adding more defined examples strengthens existing patterns but can't push much higher—there's a ceiling near 95-97%. The model has learned to classify confidently. The remaining 5-7% of undefined inputs that resist classification sit far from all training patterns and persist until extreme imbalance.
 
-## Why the Sigmoid Shape Emerges
+Phase 3 saturation happens at 90% defined (115 examples versus 13 undefined) when even outlier undefined inputs get overwhelmed. The optimization landscape is so dominated by classification that abstention becomes impossible. The model reaches 100%—complete failure to detect undefined inputs. The frame-independent constraint (K = 0.5000 says no consistent model works) manifests as a total inability to abstain.
 
-The three phases reflect how neural nets interact with the structural contradiction (K = 0.5000):
+## What We Can Predict
 
-**Phase 1 rapid rise:** The model starts near the theoretical minimum (29.3%). Small amounts of defined data create classification patterns that generalize aggressively. The softmax output forces decisions everywhere. The undefined region starts getting absorbed into defined patterns. The Bhattacharyya coefficient between learned distributions and optimal FI model drops quickly as interpolation dominates.
+With the fitted sigmoid, we can now interpolate to untested compositions. A training set with 33% defined inputs should yield approximately 92% hallucination. One with 67% defined should yield approximately 97%. The curve shape also reveals diminishing returns from increasing defined data. Going from 10% to 30% defined adds 34.7 points (17.4 points per 10% shift). Going from 30% to 50% defined subtracts 1.1 points (-0.55 points per 10%). Going from 70% to 90% defined adds 2.6 points (1.3 points per 10%).
 
-**Phase 2 plateau:** Most undefined inputs are already hallucinating (93%+). Adding more defined examples strengthens existing patterns but can't reach much higher—there's a ceiling near 95-97%. The model has learned to classify confidently. The remaining 5-7% of undefined inputs that resist classification sit far from all training patterns. They persist until extreme imbalance.
+After roughly 30% defined, changes in training composition have minimal impact. The first 20% shift produces most of the hallucination increase. The last 60% shift produces almost nothing. This asymmetry suggests the mechanisms driving early hallucination differ from those maintaining high hallucination at extreme imbalance.
 
-**Phase 3 saturation:** At 90% defined (115 examples vs 13 undefined), even outlier undefined inputs get overwhelmed. The optimization landscape is so dominated by classification that abstention becomes impossible. The model reaches 100%—complete failure to detect undefined inputs. The frame-independent constraint (K = 0.5000 says no consistent model works) manifests as total inability to abstain.
+The theoretical bound of 29.3% from K = 0.5000 sits far below even our best observed point of 58.6%. The sigmoid shows the model consistently operates at 2 to 3.4 times the theoretical minimum. The gap between what's mathematically unavoidable (29.3%) and what actually happens (58.6% to 100%) captures training dynamics, interpolation bias, and architectural constraints beyond the structural contradiction.
 
-## Predictive Capability and Diminishing Returns
+## No Simple Fix
 
-With the fitted sigmoid, we can now interpolate to untested compositions. A 33% defined composition should yield ~92% hallucination. A 67% defined composition should yield ~97%. The curve shape also reveals diminishing returns of increasing defined data:
+The sigmoid shape shows there's no training composition that dramatically reduces hallucination. Even at the best point with 10% defined, hallucination is still 58.6%—double the theoretical minimum. By 30% defined, it has already reached 93.3%. The system quickly saturates near maximum hallucination and stays there.
 
-- **10% → 30% defined**: +34.7 points (17.4 points per 10%)
-- **30% → 50% defined**: -1.1 points (-0.55 points per 10%)
-- **70% → 90% defined**: +2.6 points (1.3 points per 10%)
+The curve isn't symmetric. Rapid rise dominates early (10% to 30%), slow saturation dominates late (30% to 90%). The inflection point, where the curve changes from accelerating to decelerating, occurs around 15-20% defined. Before that point, every percentage point of defined data causes large hallucination increases. After that point, the rate of increase slows dramatically.
 
-After ~30% defined, changes in training composition have minimal impact. The first 20% shift produces most of the hallucination increase. The last 60% shift produces almost nothing. This asymmetry suggests the mechanisms driving early hallucination differ from those maintaining high hallucination at extreme imbalance.
+This connects back to the minimax formulation where α*(P) equals the maximum over Q in the frame-independent set of the minimum over contexts of the Bhattacharyya coefficient between p_c and q_c. The observed hallucination reflects how far the learned model sits from the optimal frame-independent model, which achieves α* = 0.7071. Training composition affects this gap indirectly through optimization dynamics, but the structural floor of K = 0.5000 never changes.
 
-The theoretical bound (29.3% from K = 0.5000) sits far below even the best observed point (58.6%). The sigmoid shows the model consistently operates at 2-3.4× the theoretical minimum. The gap between what's mathematically unavoidable (29.3%) and what actually happens (58.6-100%) captures training dynamics, interpolation bias, and architectural constraints beyond the structural contradiction.
+## Comparison to Earlier Work
 
-## No Simple Mitigation
+Experiment 4 tested 5 discrete points (10%, 30%, 50%, 70%, 90%) and observed qualitatively that K stays constant while hallucination varies. This experiment tests 17 points and quantifies the exact shape: sigmoid with R² = 0.9467. The dense sampling reveals the three-phase structure that wasn't visible with only 5 measurements.
 
-The sigmoid shape shows there's no training composition that dramatically reduces hallucination. Even at the best point (10% defined), hallucination is still 58.6%—double the theoretical minimum (29.3%). By 30% defined, it has already reached 93.3%. The system quickly saturates near maximum hallucination and stays there.
+The counterintuitive finding from Experiment 4—that more defined data leads to more hallucination—is now precisely quantified. The sigmoid shows exactly how this relationship accelerates initially (Phase 1 adds 34.7 points over 20%) then saturates (Phases 2-3 add only 7 points over 60%). The remaining 5.3% unexplained variance likely comes from random training variation with different weight initializations, stochastic optimization effects, and test set sampling variation.
 
-The curve is not symmetric. Rapid rise dominates early (10% → 30%), slow saturation dominates late (30% → 90%). The inflection point—where the curve changes from accelerating to decelerating—occurs around 15-20% defined. Before that point, every percentage point of defined data causes large hallucination increases. After that point, the rate of increase slows dramatically.
-
-This connects to the minimax formulation: α*(P) = max over Q in FI of min over contexts of BC(p_c, q_c). The observed hallucination reflects how far the learned model sits from the optimal FI model (which achieves α* = 0.7071). Training composition affects this gap indirectly through optimization dynamics, but the structural floor (K = 0.5000) never changes.
-
-## Why Exponential Doesn't Fit
-
-Despite testing an exponential function, it performed identically to linear (R²=0.5281 for both). This rules out simple exponential growth. The relationship has both acceleration and saturation—you can't capture that with a pure exponential, which would keep accelerating indefinitely. Sigmoid handles both: exponential-like growth early (Phase 1), then leveling off (Phase 2), then ceiling (Phase 3).
-
-The power law performs better than linear/exponential (R²=0.7220) but still leaves 28% of variance unexplained. It captures the non-linearity but misses the saturation behavior. Sigmoid captures everything: the steep initial rise, the gradual flattening, and the approach to 100%.
-
-## Comparison to Experiment 4
-
-Experiment 4 tested 5 discrete points (10%, 30%, 50%, 70%, 90%) and observed qualitatively that K stays constant while hallucination varies. This experiment tests 17 points and quantifies the exact shape: sigmoid with R²=0.9467. The dense sampling reveals the three-phase structure that wasn't visible with only 5 measurements.
-
-The counterintuitive finding from Experiment 4—more defined data leads to more hallucination—is now precisely quantified. The sigmoid shows exactly how this relationship accelerates initially (Phase 1: +34.7 points over 20%), then saturates (Phase 2-3: +7 points over 60%). The remaining 5.3% unexplained variance likely comes from random training variation (different weight initializations), stochastic optimization effects, and test set sampling variation.
-
-Both experiments confirm the dissociation: K = 0.5000 (invariant task structure) versus hallucination 58.6-100% (variable training behavior). The sigmoid quantifies how that variable behavior depends on training composition.
+Both experiments confirm the dissociation: K = 0.5000 represents invariant task structure while hallucination ranging from 58.6% to 100% represents variable training behavior. The sigmoid quantifies how that variable behavior depends on training composition.
 
 ## Running It
 
@@ -115,12 +68,13 @@ Both experiments confirm the dissociation: K = 0.5000 (invariant task structure)
 poetry run python examples/hallucinations/experiment_5/run.py
 ```
 
-The output trains 17 models, displays hallucination rates for each composition, fits four functional forms (linear, exponential, power law, sigmoid), reports RMSE and R² for each, and identifies sigmoid as the best fit (R²=0.9467). A visualization is saved to `figures/hallucination_curve_fitting.png` showing the sigmoid curve overlaid on observed data points, plus residual analysis confirming no systematic pattern in errors.
+The script trains 17 models, displays hallucination rates for each composition, fits four functional forms, reports RMSE and R² for each, and identifies sigmoid as the best fit. A visualization gets saved to `figures/hallucination_curve_fitting.png` showing the sigmoid curve overlaid on observed data points, plus residual analysis confirming no systematic pattern in the errors.
 
-Full implementation in `run.py`. The experiment quantifies the non-linear relationship between training composition and hallucination, revealing three distinct phases and demonstrating that small early shifts have outsized effects.
+The full implementation is in `run.py`. The experiment quantifies the non-linear relationship between training composition and hallucination, revealing three distinct phases and demonstrating that small early shifts have outsized effects.
 
+---
 
-### Output
+### Example Output
 
 ```
 contrakit git:(main) ✗ poetry run python examples/hallucinations/experiment_5/run.py

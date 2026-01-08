@@ -62,7 +62,7 @@ from contrakit import Space, Behavior
 from contrakit.constants import FIGURES_DIR, DEFAULT_SEED
 from collections import defaultdict, Counter
 from pydantic import BaseModel, Field
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict, field, replace
 import json
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -1723,7 +1723,6 @@ if __name__ == "__main__":
     )
     
     # Run abstention comparison (reuse one task from sweep to avoid redundant computation)
-    from dataclasses import replace
     mid_result = sweep_results[len(sweep_results)//2]
     k_pos_task = generate_synthetic_task(n_contexts=mid_result.n_contexts)
     

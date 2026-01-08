@@ -171,11 +171,11 @@ Standard accuracy metrics miss these failures. A network achieving 100% training
 
 Confidence thresholds don't reliably filter unreliable predictions. The 59.5% confidence on fabricated answers sits between random guessing (20%) and learned certainty (98.85%), suggesting interpolation rather than abstention. Without explicit training on contradictions, confidence scores reflect geometric position in feature space rather than epistemic uncertainty.
 
-Out-of-distribution detection demonstrates this on a standard benchmark. Standard approaches apply post-hoc calibration—temperature scaling, entropy thresholding—to architectures with $r \approx 0$. These methods retrofit uncertainty after training rather than learning it during training. We tested both approaches on SSB-Hard (Semantic Shift Benchmark - Hard), a near-OOD benchmark where out-of-distribution samples are semantically different but visually similar to in-distribution CIFAR-10. The witness architecture ($r \geq 1$ bit through explicit uncertainty head) achieved AUROC = 0.728. Post-hoc methods on standard architectures reached AUROC = 0.627 at best.
+Out-of-distribution detection demonstrates this on a standard benchmark. We compared witness capacity against established baselines: MSP, ODIN, Energy, and Mahalanobis distance methods. Using CIFAR-10 (ID) vs SVHN (OOD), the witness architecture ($r \geq 1$ bit through explicit uncertainty head) achieved AUROC = 0.759. The best baseline (ODIN/Energy) reached AUROC = 0.733.
 
-![OOD Detection](experiment_11/results/ood_detection.png)
+![OOD Detection](experiment_11/results/benchmark_comparison.png)
 
-The left panel shows the witness model's ROC curve outperforming post-hoc methods by ~16%. The right panel shows substantial overlap in uncertainty distributions between in-distribution (green) and out-of-distribution (red) - realistic for near-OOD where visual features overlap. Both models trained on identical data with identical supervision about which inputs were OOD. The difference was when uncertainty entered the training objective. The witness model learned it end-to-end through backpropagation. Post-hoc methods worked with features already optimized purely for classification. Architectural capacity cannot be added after the fact.
+The witness model outperforms all established OOD detection baselines. All methods use the same WideResNet architecture trained on CIFAR-10. The witness model adds an uncertainty head that learns epistemic uncertainty end-to-end. Post-hoc methods retrofit uncertainty onto classification-optimized features. The 2.6% AUROC improvement demonstrates that architectural capacity for uncertainty representation matters - it cannot be added after training.
 
 The mechanism isn't specific to our toy tasks or synthetic networks. The relationship between training composition and hallucination held across networks ranging from 64-unit feedforward classifiers to llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics. The consistency suggests these are properties of how gradient descent allocates capacity between competing objectives, not accidents of particular architectures.
 
@@ -195,7 +195,7 @@ The training objective is to maximize log probability of correct labels on train
 - **Experiment 8**: [TruthfulQA Benchmark](experiment_8/) — 20% forced vs 10% with abstention
 - **Experiment 9**: [Quantifying Witness Capacity](experiment_9/) — Phase transition at $r=K$ across 100 training runs
 - **Experiment 10**: [Generalization to High-Dimensional Real Data](experiment_10/) — Predicted 70% worst-case error before training, achieved 69.0% ± 0.1%
-- **Experiment 11**: [Architectural Sufficiency for OOD Detection](experiment_11/) — Witness architecture (r ≥ 1) achieved AUROC = 0.728 vs 0.627 for post-hoc methods on SSB-Hard benchmark
+- **Experiment 11**: [Benchmark Comparison of OOD Detection Methods](experiment_11/) — Witness architecture (r ≥ 1) achieved AUROC = 0.759 vs 0.733 for best baseline (ODIN/Energy) on CIFAR-10 vs SVHN
 
 
 **Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a sharp phase transition in error rate when $r$ crosses $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.

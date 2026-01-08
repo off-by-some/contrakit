@@ -28,11 +28,11 @@ Our work has shown it's not only measurable, but it's useful too.
 
 ## But What Does it Do, Practically?
 
-It's a general-purpose yardstick for measuring disagreement. We've used contrakit to quantify structural tension across several domains. 
+It's a general-purpose yardstick for measuring disagreement. We've used contrakit to quantify structural tension across several domains: 
 
 * In quantum systems, $K(P)$ measures "how quantum" a system is—whether you're looking at Bell inequalities, KCBS polytopes, or magic squares, the measure stays consistent and comparable ([quantum examples](examples/quantum/)). 
 * In neural networks, $K(P)$ computed from task structure alone predicts minimum hallucination rates before any training happens ([hallucination experiments](examples/hallucinations/)). 
-* In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)). 
+* In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)), even in cases MI returns 0.
 
 
 
@@ -73,7 +73,9 @@ When perspectives clash, three quantities emerge. $α^\star$ measures how close 
 
 Just as entropy priced randomness, $K(P)$ prices contradiction. In [quantum contextuality](examples/quantum/), it measures which measurement scenarios create irreducible tension. In [neural network hallucination](examples/hallucinations/), it predicts minimum error rates from task structure before training. In [statistical paradoxes](examples/statistics/), it quantifies how much aggregated and stratified views contradict.
 
-Computational systems have long handled multiple perspectives by forcing consensus or averaging them away. Contrakit measures epistemic tension itself, treating contradiction as structured information rather than noise. When experts or models disagree, each contradiction points toward boundaries of current understanding. Perspectives clash, contrakit measures the clash, $λ^\star$ reveals where to investigate, and the structure of disagreement guides the next reasoning step.
+Computational systems have long handled multiple perspectives by forcing consensus or averaging them away. Contrakit measures epistemic tension itself, treating contradiction as structured information rather than noise. When experts or models disagree, each contradiction points toward boundaries of current understanding. 
+
+When perspectives clash, contrakit measures it, $λ^\star$ reveals where to investigate, and the structure of disagreement guides the next reasoning step.
 
 Quantifying epistemic tension reveals not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of—how far it can stretch, where it breaks, and what it leaves out.
 
@@ -104,7 +106,10 @@ $λ^\star$ targets measurements where contradiction concentrates. Mixing in feas
 
 ## Examples
 
-The [examples/intuitions/](examples/intuitions/) directory contains observer perspective conflicts. [examples/statistics/](examples/statistics/) resolves Simpson's paradox using $K(P)$. [examples/quantum/](examples/quantum/) measures contradiction across Bell, KCBS, and magic square scenarios. [examples/hallucinations/](examples/hallucinations/) demonstrates neural network hallucination prediction from task structure.
+* The [examples/intuitions/](examples/intuitions/) directory contains observer perspective conflicts. 
+* [examples/statistics/](examples/statistics/) resolves Simpson's paradox using $K(P)$. 
+* [examples/quantum/](examples/quantum/) measures contradiction across Bell, KCBS, and magic square scenarios. 
+* [examples/hallucinations/](examples/hallucinations/) demonstrates neural network hallucination prediction from task structure.
 
 ```bash
 # Epistemic modeling

@@ -75,7 +75,9 @@ Contrast this with epistemic uncertainty: gaps in the model's knowledge. When ne
 
 We varied the balance between defined and undefined training examples from 10% defined to 90% defined, testing 5 compositions with proper train/test splits and multiple random seeds. $K$ stayed constant at $0.5000$ bits across all compositions (verified to 4 decimal places). The task structure never changed. But hallucination rates ranged from 51.9% ($\pm$7.3%) at 10% defined to 98.3% ($\pm$2.1%) at 70% defined.
 
-This is counterintuitive. Usually more training data helps. Here, more defined data makes things worse. The network learns strong classification patterns from defined examples, then applies those patterns everywhere through interpolation. With 115 defined examples and 13 undefined ones, optimization overwhelmingly favors correct classification. The loss function sees 115 examples rewarding confident predictions and 3 examples suggesting abstention. Almost all gradient flow pushes toward classification.
+This is counterintuitive. Usually more training data helps. Here, more defined data makes things worse. The network doesn't learn to partition space into "I know this" and "I don't know this" regions. Instead, it learns a smooth function that interpolates everywhere. 
+
+With more defined examples, the interpolation becomes more confident in its extrapolations, even into regions where it should abstain. When you have 115 defined examples and 13 undefined ones, optimization overwhelmingly favors correct classification. The loss function sees 115 examples rewarding confident predictions and 3 examples suggesting abstention. Almost all gradient flow pushes toward classification.
 
 The theoretical minimum of 29.3% (from $K = 0.5000$ bits) held in every configuration—we never saw rates below it. But observed rates climbed far higher, ranging from 77% above the minimum (at 10% defined) to 236% above (at 70% defined).
 
@@ -133,11 +135,15 @@ Training composition affects distance from the theoretical floor. At 10% defined
 
 Task structure is fixed. If different contexts demand incompatible behaviors, K > 0 and some error is inevitable. The theoretical minimum of 1 - 2^(-K) sets a floor no training procedure can break.
 
-Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds. The conservation law $E + r \geq K$ (where $E$ is error exponent in hypothesis testing, $r$ is witness rate) implies this relationship. For neural networks, we observe it as a phase transition: when $r$ crosses $K$, error rate drops sharply from near 100% to near 0%.
+Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds. The conservation law $E + r \geq K$ (where $E$ is error exponent in hypothesis testing, $r$ is witness rate) establishes what amounts to a conservation law for uncertainty. 
+
+Just as energy must be conserved in physical systems, uncertainty must be paid for either through error or through architectural capacity to express ignorance. For neural networks, we observe this as a phase transition: when $r$ crosses $K$, error rate drops sharply from near 100% to near 0%. Tasks with contradiction $K$ can achieve arbitrarily low hallucination rates when the architecture provides witness capacity $r \geq K$, but cannot when $r < K$.
 
 Training composition affects how far above the floor you land when architectural support is insufficient. The sigmoid relationship shows rapid increases early (10-30% defined), saturation later (70-90% defined). Small composition changes have large effects in the early phase, diminishing effects later.
 
-Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions.
+Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions. 
+
+The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face limits. They ultimately cannot fix what the architecture cannot represent.
 
 Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 

@@ -2,11 +2,18 @@
 
 We started with a simple question: when a neural network confidently gives wrong answers to inputs it has never seen, where does that confidence come from? After running experiments on both small synthetic networks and actual language models, we found something that holds across architectures, training conditions, and random initializations.
 
-Neural networks seem to hallucinate for two separate reasons that compound each other. The first comes from the task itself—some questions simply have no consistent answer across all the contexts where the network learned. The second comes from how we build networks—softmax outputs and multiple choice formats force the model to pick something even when it shouldn't. These aren't implementation bugs you can fix. They're structural properties of how neural networks learn and how we deploy them.
+Neural networks seem to hallucinate for two separate reasons that compound each other. 
+
+* The first comes from the task itself—some questions simply have no consistent answer across all the contexts where the network learned. 
+* The second comes from how we build networks—softmax outputs and multiple choice formats force the model to pick something even when it shouldn't. 
+
+These aren't implementation bugs you can fix. They're structural properties of how neural networks learn and how we deploy them.
 
 ## The Measure That Predicts Before Training
 
-There's a quantity we can compute before training even begins, using only the task definition. Call it K. It measures whether a single coherent model could satisfy all the different contexts where the network needs to make predictions. When K equals zero, such a model exists—there's a right answer that works everywhere. When K sits above zero, no such model exists. The task itself contains contradictions.
+There's a quantity we can compute before training even begins, using only the task definition. Call it K. It measures whether a single coherent model could satisfy all the different contexts where the network needs to make predictions. When K equals zero, such a model exists—there's a right answer that works everywhere. 
+
+When K sits above zero, no such model exists. The task itself contains contradictions.
 
 Think of this in terms of partial functions. Some inputs have well-defined outputs, others don't:
 

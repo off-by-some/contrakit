@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from pathlib import Path
 import json
 from sklearn.metrics import roc_auc_score, roc_curve
@@ -373,95 +374,230 @@ def run_experiment():
     
     # Evaluate all methods
     print("\nEvaluating OOD detection methods...")
+    all_scores = {}
     results = {}
     
     print("  MSP...")
     id_scores_msp = score_msp(model_standard, id_loader, device)
     ood_scores_msp = score_msp(model_standard, ood_loader, device)
-    results['MSP'] = {
-        'auroc': roc_auc_score(
-            np.concatenate([[0]*len(id_scores_msp), [1]*len(ood_scores_msp)]),
-            np.concatenate([id_scores_msp, ood_scores_msp])
-        )
-    }
+    all_scores['MSP'] = (id_scores_msp, ood_scores_msp)
     
     print("  ODIN...")
     id_scores_odin = score_odin(model_standard, id_loader, device)
     ood_scores_odin = score_odin(model_standard, ood_loader, device)
-    results['ODIN'] = {
-        'auroc': roc_auc_score(
-            np.concatenate([[0]*len(id_scores_odin), [1]*len(ood_scores_odin)]),
-            np.concatenate([id_scores_odin, ood_scores_odin])
-        )
-    }
+    all_scores['ODIN'] = (id_scores_odin, ood_scores_odin)
     
     print("  Energy...")
     id_scores_energy = score_energy(model_standard, id_loader, device)
     ood_scores_energy = score_energy(model_standard, ood_loader, device)
-    results['Energy'] = {
-        'auroc': roc_auc_score(
-            np.concatenate([[0]*len(id_scores_energy), [1]*len(ood_scores_energy)]),
-            np.concatenate([id_scores_energy, ood_scores_energy])
-        )
-    }
+    all_scores['Energy'] = (id_scores_energy, ood_scores_energy)
     
     print("  Mahalanobis...")
     id_scores_maha = score_mahalanobis(model_standard, id_loader, device, class_means, precision)
     ood_scores_maha = score_mahalanobis(model_standard, ood_loader, device, class_means, precision)
-    results['Mahalanobis'] = {
-        'auroc': roc_auc_score(
-            np.concatenate([[0]*len(id_scores_maha), [1]*len(ood_scores_maha)]),
-            np.concatenate([id_scores_maha, ood_scores_maha])
-        )
-    }
+    all_scores['Mahalanobis'] = (id_scores_maha, ood_scores_maha)
     
     print("  Witness...")
     id_scores_witness = score_witness(model_witness, id_loader, device)
     ood_scores_witness = score_witness(model_witness, ood_loader, device)
-    results['Witness'] = {
-        'auroc': roc_auc_score(
-            np.concatenate([[0]*len(id_scores_witness), [1]*len(ood_scores_witness)]),
-            np.concatenate([id_scores_witness, ood_scores_witness])
-        )
+    all_scores['Witness'] = (id_scores_witness, ood_scores_witness)
+    
+    # Calculate metrics and ROC curves
+    roc_data = {}
+    for method, (id_s, ood_s) in all_scores.items():
+        y_true = np.concatenate([[0]*len(id_s), [1]*len(ood_s)])
+        y_scores = np.concatenate([id_s, ood_s])
+        
+        auroc = roc_auc_score(y_true, y_scores)
+        fpr, tpr, _ = roc_curve(y_true, y_scores)
+        
+        results[method] = {'auroc': auroc}
+        roc_data[method] = (fpr, tpr, auroc)
+    
+    # Create enhanced visualization
+    print("\nCreating enhanced multi-panel visualization...")
+    
+    fig = plt.figure(figsize=(18, 10))
+    gs = GridSpec(2, 3, figure=fig, hspace=0.3, wspace=0.3)
+    
+    # Define consistent colors for each method
+    colors = {
+        'MSP': '#e74c3c',
+        'ODIN': '#f39c12',
+        'Energy': '#9b59b6',
+        'Mahalanobis': '#3498db',
+        'Witness': '#27ae60'
     }
     
-    # Visualize
-    print("\nCreating visualizations...")
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    # Panel 1: ROC Curves (top left, spans 2 rows)
+    ax1 = fig.add_subplot(gs[:, 0])
+    for method, (fpr, tpr, auroc) in roc_data.items():
+        lw = 3 if method == 'Witness' else 2
+        alpha = 1.0 if method == 'Witness' else 0.7
+        ax1.plot(fpr, tpr, color=colors[method], lw=lw, alpha=alpha,
+                label=f'{method} (AUC={auroc:.3f})')
     
-    # Bar chart
-    methods = list(results.keys())
-    aurocs = [results[m]['auroc'] for m in methods]
-    colors = ['red' if m != 'Witness' else 'blue' for m in methods]
+    ax1.plot([0, 1], [0, 1], 'k--', lw=1, alpha=0.3, label='Random')
+    ax1.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
+    ax1.set_title('ROC Curves: CIFAR-10 (ID) vs SVHN (OOD)', 
+                 fontsize=14, fontweight='bold', pad=15)
+    ax1.legend(loc='lower right', framealpha=0.95, fontsize=10)
+    ax1.grid(True, alpha=0.3)
+    ax1.set_xlim([-0.02, 1.02])
+    ax1.set_ylim([-0.02, 1.02])
     
-    bars = axes[0].bar(methods, aurocs, color=colors, alpha=0.7, edgecolor='black', linewidth=2)
-    axes[0].set_ylabel('AUROC', fontsize=12)
-    axes[0].set_title('OOD Detection: CIFAR-10 vs SVHN', fontsize=14, fontweight='bold')
-    axes[0].set_ylim([0.5, 1.0])
-    axes[0].grid(True, alpha=0.3, axis='y')
-    axes[0].axhline(0.5, color='gray', linestyle='--', linewidth=1)
+    # Panel 2: Score Distributions (top middle)
+    ax2 = fig.add_subplot(gs[0, 1])
+    methods_ordered = ['MSP', 'ODIN', 'Energy', 'Mahalanobis', 'Witness']
     
-    for bar, auroc in zip(bars, aurocs):
-        height = bar.get_height()
-        axes[0].text(bar.get_x() + bar.get_width()/2, height + 0.01,
-                    f'{auroc:.3f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+    positions = []
+    for i, method in enumerate(methods_ordered):
+        id_s, ood_s = all_scores[method]
+        
+        # Normalize scores to [0, 1] for fair comparison
+        all_s = np.concatenate([id_s, ood_s])
+        id_norm = (id_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
+        ood_norm = (ood_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
+        
+        pos_id = i * 2.5
+        pos_ood = i * 2.5 + 0.8
+        
+        # Violin plots
+        parts_id = ax2.violinplot([id_norm], positions=[pos_id], widths=0.7,
+                                   showmeans=True, showmedians=False)
+        parts_ood = ax2.violinplot([ood_norm], positions=[pos_ood], widths=0.7,
+                                    showmeans=True, showmedians=False)
+        
+        # Color the violins
+        for pc in parts_id['bodies']:
+            pc.set_facecolor('#3498db')
+            pc.set_alpha(0.6)
+            pc.set_edgecolor('black')
+            pc.set_linewidth(1)
+        
+        for pc in parts_ood['bodies']:
+            pc.set_facecolor('#e74c3c')
+            pc.set_alpha(0.6)
+            pc.set_edgecolor('black')
+            pc.set_linewidth(1)
+        
+        positions.extend([pos_id, pos_ood])
     
-    # Rankings
-    sorted_results = sorted(results.items(), key=lambda x: x[1]['auroc'], reverse=True)
-    axes[1].axis('off')
-    axes[1].text(0.5, 0.9, 'Method Rankings', ha='center', fontsize=14, fontweight='bold',
-                transform=axes[1].transAxes)
+    ax2.set_ylabel('Normalized OOD Score', fontsize=11, fontweight='bold')
+    ax2.set_title('Score Distributions', fontsize=13, fontweight='bold', pad=10)
+    ax2.set_xticks([i * 2.5 + 0.4 for i in range(len(methods_ordered))])
+    ax2.set_xticklabels(methods_ordered, rotation=45, ha='right')
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.set_ylim([-0.1, 1.1])
     
-    y_pos = 0.75
-    for rank, (method, res) in enumerate(sorted_results, 1):
-        color = 'blue' if method == 'Witness' else 'black'
-        weight = 'bold' if method == 'Witness' else 'normal'
-        axes[1].text(0.5, y_pos, f"{rank}. {method}: {res['auroc']:.3f}",
-                    ha='center', fontsize=12, color=color, weight=weight,
-                    transform=axes[1].transAxes)
-        y_pos -= 0.12
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [Patch(facecolor='#3498db', alpha=0.6, label='ID (CIFAR-10)'),
+                      Patch(facecolor='#e74c3c', alpha=0.6, label='OOD (SVHN)')]
+    ax2.legend(handles=legend_elements, loc='upper left', fontsize=9)
     
-    plt.tight_layout()
+    # Panel 3: AUROC Bar Chart (top right)
+    ax3 = fig.add_subplot(gs[0, 2])
+    aurocs = [results[m]['auroc'] for m in methods_ordered]
+    bars = ax3.barh(range(len(methods_ordered)), aurocs, 
+                    color=[colors[m] for m in methods_ordered],
+                    alpha=0.8, edgecolor='black', linewidth=1.5)
+    
+    # Highlight best method
+    best_idx = np.argmax(aurocs)
+    bars[best_idx].set_alpha(1.0)
+    bars[best_idx].set_linewidth(2.5)
+    
+    ax3.set_yticks(range(len(methods_ordered)))
+    ax3.set_yticklabels(methods_ordered, fontsize=11)
+    ax3.set_xlabel('AUROC', fontsize=11, fontweight='bold')
+    ax3.set_title('Detection Performance', fontsize=13, fontweight='bold', pad=10)
+    ax3.set_xlim([0.5, 0.85])
+    ax3.grid(True, alpha=0.3, axis='x')
+    ax3.axvline(0.5, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+    
+    # Add value labels
+    for i, (auroc, bar) in enumerate(zip(aurocs, bars)):
+        weight = 'bold' if i == best_idx else 'normal'
+        ax3.text(auroc + 0.005, i, f'{auroc:.3f}', 
+                va='center', fontsize=10, fontweight=weight)
+    
+    # Panel 4: Separation Quality Metrics (bottom middle)
+    ax4 = fig.add_subplot(gs[1, 1])
+    
+    # Calculate separation metrics for each method
+    separations = []
+    overlaps = []
+    
+    for method in methods_ordered:
+        id_s, ood_s = all_scores[method]
+        
+        # Normalize
+        all_s = np.concatenate([id_s, ood_s])
+        id_norm = (id_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
+        ood_norm = (ood_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
+        
+        # Cohen's d (effect size)
+        pooled_std = np.sqrt((id_norm.std()**2 + ood_norm.std()**2) / 2)
+        cohens_d = abs(ood_norm.mean() - id_norm.mean()) / (pooled_std + 1e-8)
+        separations.append(cohens_d)
+        
+        # Distribution overlap (approximate)
+        hist_id, bins = np.histogram(id_norm, bins=50, range=(0, 1), density=True)
+        hist_ood, _ = np.histogram(ood_norm, bins=bins, density=True)
+        overlap = np.minimum(hist_id, hist_ood).sum() / 50
+        overlaps.append(overlap)
+    
+    x = np.arange(len(methods_ordered))
+    width = 0.35
+    
+    bars1 = ax4.bar(x - width/2, separations, width, label="Cohen's d",
+                   color='#2ecc71', alpha=0.8, edgecolor='black', linewidth=1)
+    bars2 = ax4.bar(x + width/2, overlaps, width, label='Overlap',
+                   color='#e67e22', alpha=0.8, edgecolor='black', linewidth=1)
+    
+    ax4.set_ylabel('Value', fontsize=11, fontweight='bold')
+    ax4.set_title('Separation Metrics', fontsize=13, fontweight='bold', pad=10)
+    ax4.set_xticks(x)
+    ax4.set_xticklabels(methods_ordered, rotation=45, ha='right')
+    ax4.legend(fontsize=9)
+    ax4.grid(True, alpha=0.3, axis='y')
+    
+    # Panel 5: Detection at Fixed FPRs (bottom right)
+    ax5 = fig.add_subplot(gs[1, 2])
+    
+    fpr_targets = [0.01, 0.05, 0.10, 0.20]
+    tpr_at_fprs = {method: [] for method in methods_ordered}
+    
+    for method in methods_ordered:
+        fpr, tpr, _ = roc_data[method]
+        for fpr_target in fpr_targets:
+            # Find TPR at target FPR
+            idx = np.argmin(np.abs(fpr - fpr_target))
+            tpr_at_fprs[method].append(tpr[idx])
+    
+    x = np.arange(len(fpr_targets))
+    width = 0.15
+    
+    for i, method in enumerate(methods_ordered):
+        offset = (i - 2) * width
+        bars = ax5.bar(x + offset, tpr_at_fprs[method], width,
+                      label=method, color=colors[method], alpha=0.8,
+                      edgecolor='black', linewidth=0.8)
+    
+    ax5.set_ylabel('True Positive Rate', fontsize=11, fontweight='bold')
+    ax5.set_xlabel('False Positive Rate', fontsize=11, fontweight='bold')
+    ax5.set_title('TPR at Fixed FPR', fontsize=13, fontweight='bold', pad=10)
+    ax5.set_xticks(x)
+    ax5.set_xticklabels([f'{fpr:.2f}' for fpr in fpr_targets])
+    ax5.legend(fontsize=8, loc='lower right')
+    ax5.grid(True, alpha=0.3, axis='y')
+    ax5.set_ylim([0, 1.0])
+    
+    plt.suptitle('OOD Detection Benchmark: CIFAR-10 vs SVHN', 
+                fontsize=16, fontweight='bold', y=0.98)
+    
     plt.savefig(results_dir / 'benchmark_comparison.png', dpi=150, bbox_inches='tight')
     print(f"  Saved: {results_dir / 'benchmark_comparison.png'}")
     
@@ -474,6 +610,7 @@ def run_experiment():
     print("\n" + "="*80)
     print("SUMMARY")
     print("="*80)
+    sorted_results = sorted(results.items(), key=lambda x: x[1]['auroc'], reverse=True)
     for method, res in sorted_results:
         marker = "★" if method == "Witness" else " "
         print(f"{marker} {method:15s}: AUROC = {res['auroc']:.3f}")

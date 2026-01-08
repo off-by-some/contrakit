@@ -1,21 +1,34 @@
-# What We've Learned About Neural Network Hallucination
+# Neural Network Hallucination: What We Found
 
-We started with a simple question: when a neural network confidently gives wrong answers to inputs it has never seen, where does that confidence come from? After running experiments on both small synthetic networks and actual language models, we found something that holds across architectures, training conditions, and random initializations.
+When a neural network confidently gives wrong answers to inputs it has never seen, where does that confidence come from? We trained networks on carefully constructed tasks, measured their behavior across hundreds of runs, and found patterns that held regardless of architecture, training conditions, or random weight initialization.
 
-Neural networks seem to hallucinate for two separate reasons that compound each other. 
+The hallucination comes from two sources. Tasks sometimes demand incompatible behaviors—answer A in one context, answer B in another, using the same query. When you train on both contexts then remove the context marker, no single answer works. The second source is architectural: softmax requires the network to produce a definite prediction for every input, whether or not prediction makes sense. These two factors compound.
 
-* The first comes from the task itself—some questions simply have no consistent answer across all the contexts where the network learned. 
-* The second comes from how we build networks—softmax outputs and multiple choice formats force the model to pick something even when it shouldn't. 
+## TLDR
 
-These aren't implementation bugs you can fix. They're structural properties of how neural networks learn and how we deploy them.
+Our experiments reveal that neural network hallucination is not just a training data scarcity problem—it's a structural and architectural issue with fundamental mathematical constraints:
 
-## The Measure That Predicts Before Training
+1. **Hallucination has two independent sources**: Structural pressure from task contradictions ($K > 0$) and architectural pressure from forcing commitment when uncertain. These compound but can be measured separately.
 
-There's a quantity we can compute before training even begins, using only the task definition. Call it K. It measures whether a single coherent model could satisfy all the different contexts where the network needs to make predictions. When K equals zero, such a model exists—there's a right answer that works everywhere. 
+2. **$K$ quantifies fundamental impossibility**: The contradiction measure $K$ (computed before training) sets a theoretical floor on error that no training procedure can eliminate. When $K = 0.5$ bits, at least 29% error is mathematically guaranteed when models must commit to answers.
 
-When K sits above zero, no such model exists. The task itself contains contradictions.
+3. **$r$ measures available expressive capacity**: Witness capacity $r$ (determined by architecture) quantifies how much uncertainty the system can express. Standard softmax provides $r \approx 0$ bits, while architectures with abstention mechanisms provide $r \geq 1$ bit.
 
-Think of this in terms of partial functions. Some inputs have well-defined outputs, others don't:
+4. **Phase transition exists**: When $r$ exceeds $K$, error collapses sharply from near 100% to near 0%. The transition happens in a narrow zone near $r = K$, demonstrating that $K$ indicates required capacity, not difficulty.
+
+5. **Training composition modulates distance from floor**: The relationship between defined training ratio and hallucination follows a sigmoid curve. Training composition affects how far above the theoretical minimum you land, but cannot remove structural impossibility when $K > 0$.
+
+6. **Standard softmax architectures are inherently limited**: With $r \approx 0$, standard architectures cannot handle epistemic uncertainty (out-of-distribution inputs) because they lack mechanisms to express "I don't know." This explains why we observed 76% hallucination on $K=0.70$ bit tasks when forced to commit.
+
+7. **Actionable design guidance**: To reduce hallucination, you don't just need more data—you need architectural mechanisms for context-aware abstention. Providing witness capacity $r \geq K$ enables approaching theoretical bounds, as demonstrated by achieving 29.2% hallucination (essentially the predicted 29.3% minimum) with $r=1$ bit on $K=0.5$ bit tasks.
+
+## Measuring Task Structure
+
+Before training any network, we can compute a quantity from the task definition that tells us whether consistent behavior is possible. Call it K. When K equals zero, a single coherent strategy exists—one set of rules that works across all training contexts. When K exceeds zero, no such strategy exists. The training contexts contain incompatibilities that no single model can resolve.
+
+This isn't about difficulty or complexity. $K$ measures structural impossibility. For $K = 0.5$ bits, information theory provides a formula: any model working across all contexts must fail on at least 29% of cases when forced to commit. This bound applies to neural networks, decision trees, hand-coded rules, or humans guessing. The impossibility is mathematical.
+
+We can write tasks with specific K values by controlling how contexts relate:
 
 ```python
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -27,141 +40,134 @@ def tomorrow(today):
     index = DAYS.index(today)
     return DAYS[(index + 1) % 7]
 
-# This works fine:
+# This works:
 print(tomorrow("Monday"))  # "Tuesday"
 
-# But this has no answer:
+# This doesn't:
 print(tomorrow())  # Error: missing required argument
 ```
 
-That function has gaps where it's undefined. Not uncertain—uncertain means there's information but you don't have it, like a password you forgot. Undefined means no fact in reality corresponds to this query. "What comes after today?" without knowing what day today is has no answer, not a probabilistic answer.
+The function has gaps where it's undefined. Train a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another. Both examples are correct. Now ask "What comes after today?" without specifying context. That query has no answer that's correct for both training contexts. K quantifies exactly how impossible the situation is.
 
-For a concrete example, imagine training a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another context. Both training examples are correct. But then you ask the network "What comes after today?" without telling it which context applies. That question has no answer that's correct in both contexts. The value of K quantifies exactly how impossible the situation is, measured in bits.
+## What Happens During Training
 
-This isn't a complexity measure or a difficulty score. K tells you whether a solution exists at all. When K = 0.5000 bits, information theory gives you a formula: any model attempting to work across all contexts must fail on at least 29% of cases. That's not a prediction about neural networks specifically. It's a bound that applies to any prediction system, whether it's a neural network, a decision tree, or a human trying to guess. The impossibility comes from the math, not from the algorithm.
+We built a simple task: 128 possible inputs, 5 output classes (A, B, C, D, ⊥). We marked 51 inputs as defined—they should map to A, B, C, or D. The remaining 77 were undefined—they should map to ⊥. Training used 51 defined examples plus 3 undefined examples explicitly labeled ⊥. The other 74 undefined cases never appeared in training.
 
-We tested this across multiple experiments. In one setup where K = 0.5000 bits stayed constant, hallucination rates ranged from 58.6% all the way to 100.0% depending on how we balanced the training data. The theoretical minimum of 29% held in every case—we never saw rates below it—but the observed rates climbed far higher. That gap between what's mathematically unavoidable and what actually happens turns out to be predictable too.
+The network learned the 51 defined examples perfectly. On those inputs, it achieved 100% accuracy with 98.85% confidence. On the 74 undefined test inputs—ones it had never seen—it fabricated answers 96.1% of the time with 59.54% confidence. That confidence sits between random guessing (20%) and learned certainty (98.85%), suggesting the network blends nearby training patterns rather than abstaining.
 
-## Training Composition Makes It Worse
+This behavior held across architectures. We tried adding a separate "definedness head"—a second output branch trained specifically to detect undefined inputs. Testing across 9 training compositions with 3 random seeds each (54 total runs), the definedness head reduced hallucination by 0.6 percentage points on average, from 89.4% to 88.7%. It achieved 100% ($\pm$0.0%) accuracy on the three undefined training examples but only 4.3% ($\pm$0.6%) on the 74 unseen undefined test cases. The head memorized specific examples rather than learning the concept.
 
-When we varied how much of the training data contained defined examples versus undefined examples, something counterintuitive happened. More defined training data led to higher hallucination on undefined inputs. At 10% defined examples, hallucination sat at 58.6%. At 90% defined examples, it reached 100%. Every undefined input got confidently misclassified.
+![Model Comparison](experiment_2/model_comparison.png)
 
-This isn't what you'd expect. Usually more training data helps. But here's what's happening: the network learns strong patterns from the defined examples, then applies those patterns everywhere through interpolation. With 115 defined examples and only 13 undefined ones, the optimization overwhelmingly favors getting the defined cases right. The network has almost no pressure to recognize when an input falls outside its training distribution. It becomes confident about everything because confidence on defined inputs gets rewarded during training.
+## When Networks Learn Uncertainty
 
-The relationship between training composition and hallucination follows a sigmoid curve. We tested 17 different compositions and fit multiple functions to the data. Sigmoid explained 94.7% of the variance, compared to only 52.8% for a linear relationship. The curve has three distinct phases: a rapid rise from 10% to 30% defined where hallucination jumps 34.7 percentage points, a gradual plateau from 30% to 70% where it increases only 4.1 points, and near-saturation from 70% to 90% where it climbs the final 2.6 points to 100%.
+One experiment behaved differently. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs:
 
-What this means practically: small changes in training data composition have large effects early on, then diminishing effects later. By the time you reach 30% defined examples, you're already at 93% hallucination. Adding more defined data from there barely changes the outcome. The system has already learned to classify confidently and apply those classifications everywhere.
+- X-rule: output Z equals X
+- Y-rule: output Z equals NOT Y
 
-## Why Architecture Multiplies the Problem
+These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1). The training set contains equal numbers of examples from each rule. The model sees (0,0)$\to$0 in some examples and (0,0)$\to$1 in others.
 
-We tested the same contradictory task on llama3.1:8b under two conditions. When the model could select "unknown" as an answer, hallucination was 1%. When we forced it to pick a specific weekday, hallucination jumped to 76%. That's a 75 percentage point difference from changing nothing except whether the output format permits uncertainty.
+We computed $K = 0.0760$ bits from the task structure before training. The Total Variation Gap bounds minimum error at 5.1% when forced to make binary predictions—perfect accuracy is mathematically impossible.
 
-The theoretical minimum for that task was 40% based on its K value of 0.70 bits. The 1% with abstention support shows the model can stay near that floor when given appropriate mechanisms. The 76% without abstention shows what happens when architectural constraints require commitment. The gap between 40% (structural impossibility) and 76% (observed hallucination) represents the forcing effect—the model has to pick something, so it picks confidently even when confidence makes no sense.
+Training across 10 random seeds, the network learned something appropriate. On the two inputs where rules agree, it achieved 100% accuracy with 100% confidence. On the two contradictory inputs, it output approximately 50% confidence—essentially expressing "both answers appeared equally in training, I cannot choose." The hallucination rate (confident wrong predictions) was 0.4% $\pm$ 0.4%.
 
-This isn't specific to weekday questions or synthetic tasks. We tested it on TruthfulQA, a benchmark of factual questions with correct answers. The architectural gap was smaller there—20% forced versus 13.3% with abstention, only 6.7 percentage points—because those questions don't have structural contradictions. The questions have right answers; the model either knows them or doesn't. But the forcing effect still shows up. When you require the model to commit to an answer instead of allowing "I don't know," hallucination increases.
+This demonstrates that neural networks can learn uncertainty, but only under specific conditions. The contradictions must be explicit in training data—the same input appearing with different labels. This is *aleatoric uncertainty*: randomness in the data-generating process itself. The model has evidence of the ambiguity and learns to represent it.
 
-Softmax is the source of this forcing. Every input must produce a probability distribution that sums to 1.0 across all output classes. There's no native way to represent "none of these options apply" or "this input is fundamentally different from my training data." The architecture treats every input the same way—embed it, pass it through layers, project to output space, apply softmax, pick the highest probability class. Even when the input has nothing to do with anything the network saw during training, this process produces a confident prediction.
+Contrast this with epistemic uncertainty: gaps in the model's knowledge. When networks encounter inputs they never saw during training, they lack any signal about uncertainty. Training provided no examples of "I don't know" in the relevant regions of input space. The architecture (softmax) forces predictions everywhere. This is why the standard network in our first experiment hallucinated at 96.1%—it faced epistemic uncertainty with no mechanism to express it.
 
-## The Mechanism Holds Across Random Initializations
+## Training Composition Matters
 
-We ran the same training procedure with five different random seeds to check whether the patterns depended on lucky weight initialization. All five seeds showed strong positive correlation between defined training ratio and hallucination rate: ρ = 0.860 ± 0.029, with every p-value below 0.001. The starting points varied—hallucination at 10% defined ranged from 48.3% to 71.6% depending on seed—but the directional trend was consistent. More defined data led to more hallucination in every single run.
+We varied the balance between defined and undefined training examples from 10% defined to 90% defined, testing 5 compositions with proper train/test splits and multiple random seeds. $K$ stayed constant at $0.5000$ bits across all compositions (verified to 4 decimal places). The task structure never changed. But hallucination rates ranged from 51.9% ($\pm$7.3%) at 10% defined to 98.3% ($\pm$2.1%) at 70% defined.
 
-Small violations appeared in the trajectories. Each seed showed one to three points where hallucination decreased instead of increasing, averaging 1.2 percentage points in magnitude. These violations happened precisely where sample sizes became small—at 85% defined ratio, only 19 undefined examples remained in training while we tested on 74 undefined inputs. That creates sampling noise. But across the full trajectory from 10% to 90% defined, hallucination increased by 41.6 percentage points on average. The violations represented 2.8% of that total increase.
+This is counterintuitive. Usually more training data helps. Here, more defined data makes things worse. The network learns strong classification patterns from defined examples, then applies those patterns everywhere through interpolation. With 115 defined examples and 13 undefined ones, optimization overwhelmingly favors correct classification. The loss function sees 115 examples rewarding confident predictions and 3 examples suggesting abstention. Almost all gradient flow pushes toward classification.
 
-The consistency across seeds tells you this isn't an artifact of one particular training run or a lucky set of weights. The relationship between training composition and hallucination reflects how gradient descent interacts with softmax, how interpolation works in high-dimensional spaces, and how optimization distributes representational capacity between different parts of the loss function. These are properties of the learning algorithm, not accidents of initialization.
+The theoretical minimum of 29.3% (from $K = 0.5000$ bits) held in every configuration—we never saw rates below it. But observed rates climbed far higher, ranging from 77% above the minimum (at 10% defined) to 236% above (at 70% defined).
 
-## What We Actually Observed
+To understand the relationship precisely, we tested 17 compositions with 3 random seeds each—51 total training runs. We fit four mathematical functions (linear, exponential, power law, sigmoid) using proper model selection criteria. All three criteria (AIC, BIC, cross-validation) agreed: sigmoid fit best. It explained 94.4% of variance with strong statistical evidence ($\Delta BIC = 27.3$) and cross-validation $R^2$ of 0.8655.
 
-In [Experiment 1](experiment_1/), a standard network trained on 51 defined inputs hallucinated on 96.1% of undefined inputs with average confidence of 59.54%. That confidence sits halfway between random guessing (20%) and learned patterns (98.85%), which tells you the network is interpolating in feature space rather than abstaining or guessing randomly.
+![Hallucination Curve](../../figures/hallucination_curve_fitting.png)
 
-![Experiment 2 Model Comparison](experiment_2/model_comparison.png)
+The sigmoid reveals three phases. From 10% to 30% defined, hallucination jumps roughly 23 percentage points—the steepest region of the curve. From 30% to 70% defined, increases diminish to about 8.5 points across 40 percentage points of training composition. From 70% to 90%, near-saturation appears with only 2.6 additional points. By 30% defined composition, hallucination already reaches approximately 89%. Adding more defined data barely changes the outcome.
 
-In [Experiment 2](experiment_2/), adding a separate "definedness head" to detect undefined inputs reduced hallucination by only 1.7 percentage points, from 90.5% to 88.8%. The head achieved 100% accuracy on the three undefined training examples it saw but only 3.9% accuracy on the 74 unseen undefined test examples. It memorized specific examples instead of learning to detect the concept of "undefined."
+This held across random initializations. Testing the same procedure with five different random seeds, all showed strong positive correlation between defined ratio and hallucination: $\rho = 0.860 \pm 0.029$, every p-value below 0.001. The starting points varied (48.3% to 71.6% hallucination at 10% defined), but the directional trend remained consistent. Small violations appeared—one to three points per seed where hallucination briefly decreased—averaging 1.2 percentage points against a 41.6 point total increase. Statistical testing confirmed violations occurred significantly less than expected under random ordering (1 observed versus 6.8 expected, $p < 0.0001$), demonstrating monotonic pressure despite finite-sample noise.
 
-In [Experiment 3](experiment_3/), we computed K = 0.2925 bits from the task structure before training, predicted a minimum 18.4% hallucination rate, then observed 76.0% ± 23.2% across 10 seeds. The prediction held—hallucination was inevitable—and the excess came from explainable factors like the network having to choose among discrete outputs and optimize with softmax.
+![Monotonicity Analysis](experiment_6/image.png)
 
-![Hallucination Curve Fitting](../../figures/hallucination_curve_fitting.png)
+The effect size was large (Cohen's d = 4.04). This isn't an artifact of particular weight initializations. It reflects how gradient descent distributes capacity between classification and abstention when the training signal heavily favors one over the other.
 
-In [Experiment 4](experiment_4/), K stayed constant at 0.5000 bits across five training compositions while hallucination varied from 58.6% to 100.0%. The task's structural impossibility didn't change, but how that impossibility manifested in network behavior depended entirely on training data composition.
+## Architectural Forcing
 
-In [Experiment 5](experiment_5/), testing 17 compositions revealed the sigmoid relationship with R² = 0.9467. The curve's inflection point occurred around 15-20% defined ratio. Before that point, each percentage of defined data caused large hallucination increases. After that point, the rate of increase slowed dramatically.
+We tested llama3.1:8b on weekday prediction tasks with varying numbers of contexts. Each context specified a different day as "today" and asked "What day comes after today?" without context. For n contexts, we measured K from the model's context-conditional response patterns, then tested behavior when context was removed.
 
-In [Experiment 6](experiment_6/), five independent random seeds all showed ρ > +0.8 correlations between defined ratio and hallucination. The relationship wasn't deterministic at every single point—small decreases appeared in 1-3 places per seed—but the overall trend was robust across different initializations.
+Tasks ranged from $n=1$ ($K=0$, control condition) to $n=5$ ($K=1.10$ bits). Even $K=0$ showed 45% fabrication—underspecification pressure, since "tomorrow" depends on knowing "today." For $K>0$ tasks, fabrication increased monotonically from 64% to 75% as $K$ grew, never violating the theoretical bounds (29% to 53%).
 
-![Contradiction Hallucination Analysis](experiment_7/contradiction_hallucination_analysis.png)
+Then we ran one task ($K=0.70$ bits, 3 contexts) under two architectural conditions. When the model could select "unknown" as a valid response, hallucination was 1% (495 abstentions, 5 fabrications out of 500 trials). When we forced the model to pick a specific weekday with no "unknown" option, hallucination jumped to 76% (380 fabrications, 120 abstentions out of 500 trials).
 
-In [Experiment 7](experiment_7/), llama3.1:8b on contradictory weekday questions showed that K = 0 (control) produced unexpected 45% hallucination, while K > 0 tasks produced 64-75% hallucination. The architectural comparison isolated forcing effects: 1% with abstention versus 76% without, a 75 percentage point gap.
+![Architectural Comparison](experiment_7/contradiction_hallucination_analysis.png)
 
-![TruthfulQA Results](experiment_8/results/truthfulqa_results.png)
+That 75 percentage point gap isolates architectural pressure from structural pressure. The theoretical minimum for $K=0.70$ bits is 40%. With abstention support, the model stayed near that floor at 1%. Without it, hallucination shot to 76%. The structural contradiction remained constant—only the architectural support changed.
 
-In [Experiment 8](experiment_8/), TruthfulQA questions without structural contradictions showed smaller architectural gaps: 20% forced versus 13.3% with abstention, only 6.7 points. The model used abstention heavily when allowed (66.7% of trials), but targeting was imperfect—it sometimes abstained on questions it could answer and committed to questions it got wrong.
+Softmax creates this forcing. Every input must produce a probability distribution summing to 1.0 across output classes. There's no native way to represent "none of these options apply." The architecture treats every input identically: embed, transform through layers, project to output space, apply softmax, select highest probability. Even when the input has nothing to do with training data, this process generates a confident prediction.
 
-## Two Independent Pressures
+## The Phase Transition
 
-You can separate hallucination into components that add up. Structural pressure comes from K—the mathematical impossibility of satisfying all training contexts with a single model. This creates a floor on error that no training procedure can eliminate. When K = 0.5000 bits, at least 29% hallucination is guaranteed when the model has to commit to answers. When K = 1.10 bits, at least 53% is guaranteed.
+We systematically varied task contradiction $K$ (0.5 to 1.16 bits) and witness capacity $r$ (0 to 2 bits) across 20 combinations with 5 random seeds each—100 training runs total. Witness capacity measures the architecture's ability to express uncertainty: $r = \log_2$(number of abstention states). Standard softmax provides $r \approx 0$. An architecture with 2 abstention states provides $r = 1$ bit.
 
-Architectural pressure comes from requiring commitment when the model is uncertain. Softmax forces every input to produce a definite answer. Multiple choice formats eliminate "I don't know" as an option. This adds hallucination on top of the structural minimum. The 75 point gap between 1% (with abstention) and 76% (forced choice) on K = 0.70 bit tasks quantifies this effect cleanly.
+![Error Rate Heatmap](experiment_9/results/error_rate_heatmap.png)
 
-These pressures are independent. You can have architectural pressure without structural pressure (TruthfulQA questions with correct answers still show 6.7 point gaps from forcing). You can have structural pressure without architectural pressure (K = 0.5000 bits creates a 29% minimum regardless of architecture). When both pressures apply simultaneously, they compound—the structural floor says you can't get below 29%, then architectural forcing adds another 35-45 points on top of that, giving you observed rates around 64-76%.
+The results showed sharp transitions. When $r$ fell well below $K$, error stayed at 100%—forced hallucination on all contradictory inputs across all seeds. When $r$ exceeded $K$ by a comfortable margin, error dropped to 0%—successful abstention across all runs. The transition happened in a narrow zone near $r = K$.
 
-Training composition affects how close you get to the structural floor. With 10% defined data, hallucination sits at 58.6%—roughly twice the theoretical minimum of 29%. With 90% defined data, hallucination reaches 100%—more than three times the minimum. The sigmoid relationship quantifies exactly how this scales: rapid increases early when you're moving away from the floor, saturation later when you've already climbed far above it.
+![Phase Transition](experiment_9/results/error_vs_witness.png)
 
-## What This Means for Building Systems
+This confirms $K$ indicates required capacity, not difficulty. Systems need $r$ above $K$ for reliable success. Training cannot compensate for insufficient architectural capacity. If $r$ is well below $K$, failure is nearly certain regardless of data or optimization.
 
-Standard accuracy metrics can miss these failure modes entirely. A network that achieves 100% accuracy on its training data might hallucinate on 96% of undefined test inputs. A language model that performs well on average might fail catastrophically on questions with structural contradictions. Aggregate statistics hide the problem because defined inputs and undefined inputs get pooled together.
+Standard softmax architectures have $r \approx 0$, explaining why we observed 76% hallucination on $K=0.70$ bit tasks when forced to commit. The model lacked capacity to abstain.
 
-Confidence scores don't help either. The 59.5% confidence on fabricated answers from [Experiment 1](experiment_1/) looks reasonable—it's not the overconfident 98% or the random 20%. Users relying on confidence thresholds to filter unreliable predictions would let these through. The 88% confidence on contradictory queries from [Experiment 3](experiment_3/) is even worse—it's high enough that most systems would treat it as trustworthy.
+## Two Kinds of Pressure
 
-Adding separate uncertainty heads doesn't fix the core issue. The 1.7 percentage point improvement from [Experiment 2](experiment_2/)'s definedness head came with 49% higher variance and memorization instead of generalization. The head learned to recognize the three specific training examples that were labeled "undefined" but couldn't extend that to detect novel out-of-distribution inputs. This happened despite the head being explicitly designed to solve exactly that problem.
+Structural pressure comes from $K$. When $K = 0.5000$ bits, at least 29% error is guaranteed when models must commit to answers. When $K = 1.10$ bits, at least 53% is guaranteed. This bound applies regardless of architecture, training procedure, or data quantity. The impossibility is mathematical.
 
-What does help is supporting abstention at the architectural level. The 75 point gap from [Experiment 7](experiment_7/) shows this clearly. When the model can say "unknown," hallucination drops to nearly zero even on tasks with K = 0.70 bits (40% theoretical minimum). When forced to choose, it jumps to 76%. The difference is whether the output format permits expressing uncertainty.
+Architectural pressure comes from requiring commitment when the model is uncertain. The 75-point gap (1% with abstention, 76% forced) on $K=0.70$ bit tasks quantifies this cleanly. The theoretical minimum was 40%. With abstention, the model achieved 1%. Forced to choose, it hit 76%.
 
-But abstention support isn't a complete solution either. [Experiment 8](experiment_8/) showed the model used abstention heavily (66.7% of trials) but with imperfect targeting—it sometimes abstained on questions it could answer correctly and committed to questions where training data misconceptions overpowered truth. The confidence threshold we used (70%) is a parameter that trades off between over-abstaining and under-abstaining, with no optimal setting that works across all question types.
+These pressures are independent. TruthfulQA questions without structural contradictions showed architectural effects: 20% forced versus 10% with abstention, though not statistically significant with only 10 questions tested. You can have structural pressure without architectural pressure: $K = 0.5000$ bits creates a 29% minimum whether or not the architecture forces commitment. When both apply, they compound.
 
-## The Pattern That Keeps Appearing
+Training composition affects distance from the theoretical floor. At 10% defined, hallucination was 51.9% ($\pm$7.3%)—77% above the 29.3% minimum. At 70% defined, hallucination reached 98.3% ($\pm$2.1%)—more than three times the minimum. The sigmoid relationship quantifies exactly how this scales.
 
-Across all eight experiments, one relationship showed up consistently: when you increase the proportion of defined training data, hallucination on undefined inputs increases. This held for tiny synthetic networks with 128 inputs, feedforward classifiers with 64 hidden units, and llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics.
+## What We Can and Cannot Control
 
-The mechanism is interpolation. Neural networks don't partition their input space into "seen" and "unseen" regions. They create continuous feature representations where similar inputs produce similar outputs. When you train heavily on defined examples, those examples create strong gradients that shape the entire feature space. Undefined inputs land somewhere in that space, get mapped to nearby defined patterns, and produce confident predictions.
+Task structure is fixed. If different contexts demand incompatible behaviors, K > 0 and some error is inevitable. The theoretical minimum of 1 - 2^(-K) sets a floor no training procedure can break.
 
-More defined training data strengthens these patterns. With 115 defined examples and 13 undefined ones, the optimization signal overwhelmingly favors classification. The loss function sees 115 examples telling it "classify these correctly" and maybe 1 example telling it "abstain here." Almost all gradient flow pushes toward confident classification everywhere. The network learns to be confident because confidence on defined inputs gets rewarded, and that confidence generalizes to the entire space.
+Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds. The conservation law $E + r \geq K$ (where $E$ is error exponent in hypothesis testing, $r$ is witness rate) implies this relationship. For neural networks, we observe it as a phase transition: when $r$ crosses $K$, error rate drops sharply from near 100% to near 0%.
 
-This isn't a bug. It's how gradient descent works with softmax. The training objective is to maximize log probability of correct labels on training data. That objective has no term for "abstain when uncertain" unless you explicitly add one with sufficient weight to compete with the classification term. The standard cross-entropy loss gives you maximum likelihood estimation, which finds parameters that best explain the training data. It doesn't give you models that recognize their own limitations.
+Training composition affects how far above the floor you land when architectural support is insufficient. The sigmoid relationship shows rapid increases early (10-30% defined), saturation later (70-90% defined). Small composition changes have large effects in the early phase, diminishing effects later.
 
-## The Conservation Law
+Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions.
 
-There's a relationship that binds error rate, witness capacity, and task complexity: E + r ≥ K. Error rate (E) measures how often the model gets things wrong. Witness capacity (r) measures how much side information the model has available to reduce error below the structural minimum. Task complexity (K) measures the contradiction built into the task itself.
+Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 
-This isn't a soft constraint or statistical trend. It's a bound that holds exactly. When K = 0.5000 bits (moderate contradiction), you need at least 0.5000 bits of witness capacity to achieve zero error. Standard softmax architectures have near-zero witness capacity—they can't natively express "I don't know"—so all the task complexity shows up as error. That's why we observed 76% hallucination on tasks with K = 0.70 bits when forced to commit.
+## What This Means
 
-The conservation shows up in our experiments: add abstention support (increasing r from ~0 to ~0.69 bits) and hallucination drops from 76% to 1%. The witness capacity absorbed almost all the task complexity, leaving minimal error. Remove that capacity and error jumps back up. The sum E + r stays roughly constant, just distributed differently between error and witness information.
+Standard accuracy metrics miss these failures. A network achieving 100% training accuracy might hallucinate on 96% of undefined test inputs. Aggregate statistics hide the problem because defined and undefined inputs get pooled together.
 
-## What Training Cannot Fix
+Confidence thresholds don't reliably filter unreliable predictions. The 59.5% confidence on fabricated answers sits between random guessing (20%) and learned certainty (98.85%), suggesting interpolation rather than abstention. Without explicit training on contradictions, confidence scores reflect geometric position in feature space rather than epistemic uncertainty.
 
-We can measure task structure before training and predict minimum hallucination rates. We can identify which training compositions push observed rates far above theoretical minimums. We can quantify how much hallucination comes from structural impossibility versus architectural forcing. We know the relationship between training composition and hallucination follows a sigmoid with three distinct phases. We know this holds across random initializations and scales from toy problems to actual language models.
+The mechanism isn't specific to our toy tasks or synthetic networks. The relationship between training composition and hallucination held across networks ranging from 64-unit feedforward classifiers to llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics. The consistency suggests these are properties of how gradient descent allocates capacity between competing objectives, not accidents of particular architectures.
 
-What we can't do yet is eliminate hallucination when K > 0. The structural contradiction is baked into the task definition. If different training contexts demand different answers to the same query, no single answer works everywhere. You can approach the theoretical minimum by supporting abstention, designing better uncertainty representations, or changing how the model commits to outputs. But you can't get below the minimum without changing the task itself.
+Neural networks don't partition input space into "seen" and "unseen" regions. They create continuous representations where similar inputs produce similar outputs. When you train heavily on defined examples, those examples shape the entire feature space through interpolation. Undefined inputs land somewhere in that space and get mapped to nearby defined patterns.
 
-Even when K = 0, architectural pressure still produces hallucination. [Experiment 7](experiment_7/) showed 45% hallucination on a control task with a unique correct answer. The query "What comes after today?" is underspecified without context—the model doesn't know which day is today—so it faces a choice between abstaining and guessing. Standard architectures favor guessing because that's what training optimizes for.
+The training objective is to maximize log probability of correct labels on training data. Cross-entropy loss provides maximum likelihood estimation. It finds parameters that best explain what the model saw. It doesn't provide parameters that recognize limitations. Unless you explicitly add a term for "abstain when uncertain" with sufficient weight to compete with classification loss, the optimization pushes toward confident predictions everywhere.
 
-The sigmoid relationship suggests intervention strategies might have different effectiveness at different scales. Below 30% defined ratio, small reductions in defined data produce large decreases in hallucination. Above 70% defined ratio, changes barely matter because the system is already near saturation. If you're deploying a model trained on 80% defined data, rebalancing to 50% defined might drop hallucination from 96% to 92%—helpful but not transformative. Rebalancing from 30% to 10% might drop it from 93% to 59%—a much larger effect.
+## References
 
-## Open Questions and Future Work
+- **Experiment 1**: [Neural Network Hallucination on Undefined Inputs](experiment_1/) — 96.1% hallucination on out-of-distribution inputs
+- **Experiment 2**: [Architectural Separation with Definedness Head](experiment_2/) — 0.6 point improvement, 95.7% generalization gap
+- **Experiment 3**: [Learning Under Contradictory Training Data](experiment_3/) — Aleatoric uncertainty, 50.2% confidence, 0.4% hallucination
+- **Experiment 4**: [Invariance of Task Structure](experiment_4/) — K constant at 0.5 bits, hallucination varies 51.9% to 98.3%
+- **Experiment 5**: [Non-Linearity of Hallucination Scaling](experiment_5/) — Sigmoid relationship, $R^2=0.944$
+- **Experiment 6**: [Hallucination Across Random Seeds](experiment_6/) — $\rho=0.860$ across 5 seeds, Cohen's $d=4.04$
+- **Experiment 7**: [Structural Inevitability vs Architectural Commitment](experiment_7/) — 1% with abstention, 76% forced (75-point gap)
+- **Experiment 8**: [TruthfulQA Benchmark](experiment_8/) — 20% forced vs 10% with abstention
+- **Experiment 9**: [Quantifying Witness Capacity](experiment_9/) — Phase transition at $r=K$ across 100 training runs
 
-Our experiments identified three pressures—45% partiality baseline, ~11 percentage points from structural contradiction, ~75 points from architectural forcing. These proportions held across synthetic tasks. Do they generalize to different task families? Could other mechanisms contribute that we haven't isolated yet?
-
-**Task structure across domains**. We expect contradiction levels vary by domain. Factual questions with temporal ambiguity probably carry high K values. Reasoning tasks with multiple valid interpretations might have moderate K. Creative generation where most outputs are acceptable might have low K. Measuring K on standard benchmarks like TruthfulQA, MMLU, and HumanEval would identify where structural impossibility contributes versus where partiality dominates.
-
-**How capacity distributes across components**. Uncertainty capacity seems to split across system components—retrievers, planners, verifiers. But we don't know how it combines. Does it add linearly across modules? Bottleneck at the weakest component? Interact nonlinearly? Chain-of-thought degradation over long sequences suggests insufficient per-step capacity compounds, but we need direct multi-module tests to confirm.
-
-**System versus task properties**. Is witness capacity a property of the architecture (constant across all tasks) or does it depend on task characteristics? Standard softmax showed near-zero capacity across everything we tested, suggesting system-level constraint. But different supervision densities in training affected how well the definedness head generalized, suggesting task dependence. Testing across factual QA, causal reasoning, and creative generation would resolve this.
-
-**Natural language ambiguity**. Production systems use natural language to express uncertainty, not dedicated tokens. "I'm not sure" and "It's unclear" compete with all possible continuations in the autoregressive process. This dilutes capacity compared to our structured output experiments. How much capacity do these natural language hedges provide? Can we measure it directly?
-
-**Optimal architectures**. What designs provide sufficient witness capacity while maintaining computational efficiency? Mixture-of-experts with explicit uncertainty routing? Probabilistic programming embeddings? Structured output spaces with native null support? What are the tradeoffs between uncertainty capacity, error rates, and computational cost?
-
-**Decomposition diagnostics**. Can we build tools that automatically attribute observed hallucination to partiality, structural contradiction, or architectural forcing? This would let practitioners identify which interventions matter for their specific use case. A system facing high structural contradiction needs different solutions than one dominated by partiality pressure.
-
-The theory makes testable predictions. It would be in trouble if hallucination reduction didn't correlate with abstention freedom (contradicted: we observed 75 point reduction in [Experiment 7](experiment_7/)), if the conservation law E + r ≥ K was violated (not observed: holds across 2,500+ trials), if adding independent witness channels produced diminishing returns (testable but not yet tested), or if architectures with radically different designs showed identical behavior when capacity differs (testable but not yet tested).
-
-These aren't hypothetical relationships or statistical trends that might reverse with more data. They're consequences of how information theory bounds prediction, how softmax forces commitment, and how gradient descent allocates representational capacity. The experiments measure these effects across different conditions, but the underlying mechanisms don't depend on the specific networks we tested. They're properties of the learning problem itself.
+**Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a sharp phase transition in error rate when $r$ crosses $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.

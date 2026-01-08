@@ -79,7 +79,7 @@ BATCH_SIZE = 16
 # ==============================================================================
 def generate_partial_function(input_size: int, output_classes: List[str],
                             defined_ratio: float, undefined_supervision: float,
-                            seed: int = DEFAULT_SEED) -> Tuple[Dict[int, str], List[int]]:
+                            seed: int = DEFAULT_SEED, use_structured_task: bool = True) -> Tuple[Dict[int, str], List[int]]:
     """
     Create a partial function with some inputs defined and others undefined.
 
@@ -89,6 +89,8 @@ def generate_partial_function(input_size: int, output_classes: List[str],
         defined_ratio: Fraction of inputs that have defined outputs
         undefined_supervision: Fraction of undefined inputs to label with ⊥ during training
         seed: Random seed for reproducibility
+        use_structured_task: If True, use input patterns to assign labels (allows generalization)
+                           If False, use random assignment (tests pure memorization)
 
     Returns:
         function_map: Dictionary mapping input indices to output labels (or ⊥)
@@ -100,12 +102,19 @@ def generate_partial_function(input_size: int, output_classes: List[str],
     n_defined = int(input_size * defined_ratio)
     defined_inputs = np.random.choice(input_size, n_defined, replace=False)
 
-    # Assign random labels to defined inputs (excluding ⊥)
+    # Assign labels to defined inputs (excluding ⊥)
     structured_classes = [c for c in output_classes if c != '⊥']
     function_map = {}
 
-    for x in defined_inputs:
-        function_map[x] = np.random.choice(structured_classes)
+    if use_structured_task:
+        # Use a simple pattern: assign labels based on input value modulo number of classes
+        # This creates a learnable pattern while still having undefined regions
+        for x in defined_inputs:
+            function_map[x] = structured_classes[x % len(structured_classes)]
+    else:
+        # Random assignment (original behavior - harder to generalize)
+        for x in defined_inputs:
+            function_map[x] = np.random.choice(structured_classes)
 
     # Add ⊥ labels to some undefined inputs for training supervision
     undefined_inputs = [x for x in range(input_size) if x not in defined_inputs]
@@ -121,11 +130,19 @@ def generate_partial_function(input_size: int, output_classes: List[str],
 
 def create_datasets(function_map: Dict[int, str], input_size: int) -> Tuple[
     Tuple[np.ndarray, np.ndarray, np.ndarray],  # train_data
-    Tuple[np.ndarray, np.ndarray],            # test_defined
-    Tuple[np.ndarray, np.ndarray]             # test_undefined
+    Tuple[np.ndarray, np.ndarray],            # eval_defined (SAME as training - checking memorization)
+    Tuple[np.ndarray, np.ndarray]             # test_undefined (OOD - checking abstention)
 ]:
     """
-    Split data into training and test sets.
+    Create datasets for hallucination experiment.
+    
+    This creates:
+    - Training set: All inputs with assigned labels (A/B/C/D or ⊥)
+    - Eval defined: SAME inputs with A/B/C/D labels (verifies model learned)
+    - Test undefined: All other inputs that should map to ⊥ (tests OOD behavior)
+    
+    NOTE: eval_defined uses training inputs to verify learning, not to test generalization.
+    The experiment's purpose is to contrast learned behavior vs OOD behavior.
 
     Args:
         function_map: Mapping from inputs to outputs (including ⊥ labels)
@@ -133,8 +150,8 @@ def create_datasets(function_map: Dict[int, str], input_size: int) -> Tuple[
 
     Returns:
         train_data: (inputs, labels, definedness_flags) for training
-        test_defined: (inputs, labels) for testing on defined inputs
-        test_undefined: (inputs, labels) for testing on undefined inputs
+        eval_defined: (inputs, labels) for evaluating learning (SAME as training defined inputs)
+        test_undefined: (inputs, labels) for testing abstention on OOD inputs
     """
     all_inputs = list(range(input_size))
     undefined_idx = OUTPUT_CLASSES.index('⊥')
@@ -148,19 +165,20 @@ def create_datasets(function_map: Dict[int, str], input_size: int) -> Tuple[
     train_defined = np.array([1.0 if function_map[x] != '⊥' else 0.0
                              for x in train_inputs])
 
-    # Test sets
+    # Eval set: same as training defined inputs (verifies learning, not generalization)
     defined_inputs = [x for x, y in function_map.items() if y != '⊥']
-    test_defined_x = np.array(defined_inputs)
-    test_defined_y = np.array([OUTPUT_CLASSES.index(function_map[x])
+    eval_defined_x = np.array(defined_inputs)
+    eval_defined_y = np.array([OUTPUT_CLASSES.index(function_map[x])
                                for x in defined_inputs])
 
-    # Undefined inputs (not in function_map or explicitly ⊥)
+    # Test set: undefined inputs (not in function_map at all)
+    # These are out-of-distribution and should ideally map to ⊥
     undefined_inputs = [x for x in all_inputs if x not in defined_inputs]
     test_undefined_x = np.array(undefined_inputs)
     test_undefined_y = np.array([undefined_idx] * len(undefined_inputs))
 
     return ((train_x, train_y, train_defined),
-            (test_defined_x, test_defined_y),
+            (eval_defined_x, eval_defined_y),
             (test_undefined_x, test_undefined_y))
 
 
@@ -176,22 +194,35 @@ class HallucinationNet(nn.Module):
     """
 
     def __init__(self, input_size: int, hidden_size: int, output_size: int,
-                 use_definedness_head: bool = False):
+                 use_definedness_head: bool = False, use_embedding: bool = True):
         super().__init__()
         self.use_definedness_head = use_definedness_head
+        self.use_embedding = use_embedding
 
-        self.embedding = nn.Embedding(input_size, hidden_size)
-        self.fc1 = nn.Linear(hidden_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, output_size)
+        if use_embedding:
+            self.embedding = nn.Embedding(input_size, hidden_size)
+            self.fc1 = nn.Linear(hidden_size, hidden_size)
+        else:
+            # Use input value directly with normalization
+            self.fc1 = nn.Linear(1, hidden_size)
+        
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
 
         if use_definedness_head:
             self.defined_head = nn.Linear(hidden_size, 1)
 
     def forward(self, x) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        h = self.embedding(x)
+        if self.use_embedding:
+            h = self.embedding(x)
+        else:
+            # Normalize input to [0, 1] range and add dimension
+            h = x.float().unsqueeze(-1) / 127.0
+        
         h = self.relu(self.fc1(h))
-        logits = self.fc2(h)
+        h = self.relu(self.fc2(h))
+        logits = self.fc3(h)
 
         if self.use_definedness_head:
             definedness = torch.sigmoid(self.defined_head(h))
@@ -378,7 +409,7 @@ def print_prediction_analysis(predictions: np.ndarray, true_labels: np.ndarray,
 # EXPERIMENT UTILITIES
 # ==============================================================================
 def run_experiment(defined_ratio: float, use_definedness_head: bool = False,
-                  undefined_supervision: float = 0.05, seed: int = DEFAULT_SEED) -> ExperimentResult:
+                  undefined_supervision: float = 0.05, seed: int = DEFAULT_SEED, use_embedding: bool = True) -> ExperimentResult:
     """
     Run a complete experiment: generate data, train model, evaluate.
 
@@ -400,7 +431,7 @@ def run_experiment(defined_ratio: float, use_definedness_head: bool = False,
     # Train model
     torch.manual_seed(seed)
     model = HallucinationNet(INPUT_SIZE, HIDDEN_SIZE, len(OUTPUT_CLASSES),
-                           use_definedness_head=use_definedness_head)
+                           use_definedness_head=use_definedness_head, use_embedding=use_embedding)
     train_model(model, train_data, EPOCHS, LEARNING_RATE, BATCH_SIZE, verbose=False)
 
     # Evaluate

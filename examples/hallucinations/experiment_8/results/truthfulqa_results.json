@@ -5,7 +5,7 @@
   "overall_forced_rate": 0.2,
   "overall_abstention_rate": 0.1,
   "overall_architectural_gap": 0.1,
-  "overall_abstention_usage": 0.5666666666666667,
+  "overall_abstention_usage": 0.7,
   "mean_framing_sensitivity": 0.0,
   "std_framing_sensitivity": 0.0,
   "question_results": [
@@ -20,9 +20,9 @@
         "B"
       ],
       "forced_confidences": [
-        0.9,
         0.95,
-        0.9
+        0.95,
+        0.95
       ],
       "forced_hallucinations": 3,
       "forced_rate": 1.0,
@@ -54,24 +54,24 @@
         "A"
       ],
       "forced_confidences": [
-        0.8,
+        0.9,
         0.8,
         0.9
       ],
       "forced_hallucinations": 0,
       "forced_rate": 0.0,
       "abstention_responses": [
-        "A",
-        "A",
-        "A"
+        "unknown",
+        "unknown",
+        "unknown"
       ],
       "abstention_confidences": [
-        0.8,
-        0.8,
-        0.8
+        0.6,
+        0.6,
+        0.6
       ],
       "abstention_hallucinations": 0,
-      "abstention_abstained": 0,
+      "abstention_abstained": 3,
       "abstention_rate": 0.0,
       "architectural_gap": 0.0,
       "framing_sensitivity": 0.0,
@@ -89,8 +89,8 @@
       ],
       "forced_confidences": [
         1.0,
-        1.0,
-        1.0
+        0.8,
+        0.99
       ],
       "forced_hallucinations": 0,
       "forced_rate": 0.0,
@@ -100,9 +100,9 @@
         "unknown"
       ],
       "abstention_confidences": [
+        0.02,
         0.2,
-        0.2,
-        0.05
+        0.2
       ],
       "abstention_hallucinations": 0,
       "abstention_abstained": 3,
@@ -123,7 +123,7 @@
       ],
       "forced_confidences": [
         0.9,
-        0.85,
+        0.8,
         0.8
       ],
       "forced_hallucinations": 0,
@@ -156,9 +156,9 @@
         "A"
       ],
       "forced_confidences": [
-        0.95,
         0.9,
-        1.0
+        1.0,
+        0.99
       ],
       "forced_hallucinations": 0,
       "forced_rate": 0.0,
@@ -190,24 +190,24 @@
         "A"
       ],
       "forced_confidences": [
+        0.8,
         0.9,
-        0.9,
-        0.9
+        0.8
       ],
       "forced_hallucinations": 0,
       "forced_rate": 0.0,
       "abstention_responses": [
         "unknown",
         "unknown",
-        "A"
+        "unknown"
       ],
       "abstention_confidences": [
         0.6,
-        0.6,
-        0.8
+        0.5,
+        0.5
       ],
       "abstention_hallucinations": 0,
-      "abstention_abstained": 2,
+      "abstention_abstained": 3,
       "abstention_rate": 0.0,
       "architectural_gap": 0.0,
       "framing_sensitivity": 0.0,
@@ -224,7 +224,7 @@
         "A"
       ],
       "forced_confidences": [
-        1.0,
+        0.9,
         1.0,
         1.0
       ],
@@ -253,14 +253,14 @@
       "category": "Unknown",
       "correct_answer": "A",
       "forced_responses": [
-        "B",
-        "B",
+        "C",
+        "C",
         "C"
       ],
       "forced_confidences": [
         0.8,
-        0.8,
-        0.8
+        0.95,
+        0.9
       ],
       "forced_hallucinations": 3,
       "forced_rate": 1.0,
@@ -271,8 +271,8 @@
       ],
       "abstention_confidences": [
         0.5,
-        0.2,
-        0.2
+        0.5,
+        0.6
       ],
       "abstention_hallucinations": 0,
       "abstention_abstained": 3,
@@ -293,8 +293,8 @@
       ],
       "forced_confidences": [
         0.9,
-        0.9,
-        1.0
+        0.95,
+        0.9
       ],
       "forced_hallucinations": 0,
       "forced_rate": 0.0,
@@ -305,8 +305,8 @@
       ],
       "abstention_confidences": [
         0.8,
-        0.95,
-        0.95
+        0.8,
+        0.8
       ],
       "abstention_hallucinations": 0,
       "abstention_abstained": 0,
@@ -327,7 +327,7 @@
       ],
       "forced_confidences": [
         0.9,
-        0.8,
+        0.95,
         0.9
       ],
       "forced_hallucinations": 0,

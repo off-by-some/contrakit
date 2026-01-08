@@ -1,0 +1,1402 @@
+[
+  {
+    "num_contexts": 2,
+    "K_task": 0.4999999999990186,
+    "witness_bits": 0.0,
+    "r_theoretical": 0.0,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.4999999999990187,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.2928932188129715,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999990186,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999990186,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999990186,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999990186,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999990186,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 2,
+    "K_task": 0.4999999999990186,
+    "witness_bits": 0.5,
+    "r_theoretical": 0.5,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 9.813816426174071e-13,
+    "correct_predictions": 0,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.2928932188129715,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.813816426174071e-13,
+        "prediction_correct": false,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.813816426174071e-13,
+        "prediction_correct": false,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.813816426174071e-13,
+        "prediction_correct": false,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.813816426174071e-13,
+        "prediction_correct": false,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.813816426174071e-13,
+        "prediction_correct": false,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 2,
+    "K_task": 0.4999999999990186,
+    "witness_bits": 1.0,
+    "r_theoretical": 1.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.5000000000009814,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.2928932188129715,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 2,
+    "K_task": 0.4999999999990186,
+    "witness_bits": 1.5,
+    "r_theoretical": 1.5,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 1.0000000000009814,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.2928932188129715,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 2,
+    "K_task": 0.4999999999990186,
+    "witness_bits": 2.0,
+    "r_theoretical": 2.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 1.5000000000009814,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.2928932188129715,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.4999999999990186,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.5000000000009814,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 3,
+    "K_task": 0.7924812503596663,
+    "witness_bits": 0.0,
+    "r_theoretical": 0.0,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.7924812503596663,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.42264973081000934,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.7924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.7924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.7924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.7924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.7924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 3,
+    "K_task": 0.7924812503596663,
+    "witness_bits": 0.5,
+    "r_theoretical": 0.5,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.2924812503596663,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.42264973081000934,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.2924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.2924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.2924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.2924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.2924812503596663,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 3,
+    "K_task": 0.7924812503596663,
+    "witness_bits": 1.0,
+    "r_theoretical": 1.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.20751874964033368,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.42264973081000934,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.20751874964033368,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.20751874964033368,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.20751874964033368,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.20751874964033368,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.20751874964033368,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 3,
+    "K_task": 0.7924812503596663,
+    "witness_bits": 1.5,
+    "r_theoretical": 1.5,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.7075187496403337,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.42264973081000934,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.7075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.7075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.7075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.7075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.7075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 3,
+    "K_task": 0.7924812503596663,
+    "witness_bits": 2.0,
+    "r_theoretical": 2.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 1.2075187496403337,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.42264973081000934,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.2075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.2075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.2075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.2075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.7924812503596663,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.2075187496403337,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 4,
+    "K_task": 0.9999999999999907,
+    "witness_bits": 0.0,
+    "r_theoretical": 0.0,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.9999999999999908,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.4999999999999968,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.9999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.9999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.9999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.9999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.9999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 4,
+    "K_task": 0.9999999999999907,
+    "witness_bits": 0.5,
+    "r_theoretical": 0.5,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.4999999999999907,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.4999999999999968,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.4999999999999907,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 4,
+    "K_task": 0.9999999999999907,
+    "witness_bits": 1.0,
+    "r_theoretical": 1.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 9.325873406851315e-15,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.4999999999999968,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.325873406851315e-15,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.325873406851315e-15,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.325873406851315e-15,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.325873406851315e-15,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 9.325873406851315e-15,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 4,
+    "K_task": 0.9999999999999907,
+    "witness_bits": 1.5,
+    "r_theoretical": 1.5,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.5000000000000093,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.4999999999999968,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.5000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 4,
+    "K_task": 0.9999999999999907,
+    "witness_bits": 2.0,
+    "r_theoretical": 2.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 1.0000000000000093,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.4999999999999968,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 0.9999999999999907,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 1.0000000000000093,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 5,
+    "K_task": 1.1609640474436378,
+    "witness_bits": 0.0,
+    "r_theoretical": 0.0,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -1.1609640474436378,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.5527864045000286,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -1.1609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -1.1609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -1.1609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -1.1609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -1.1609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 5,
+    "K_task": 1.1609640474436378,
+    "witness_bits": 0.5,
+    "r_theoretical": 0.5,
+    "E_mean": 1.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.6609640474436378,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.5527864045000286,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.6609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.6609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.6609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.6609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 1.0,
+        "abstention_rate": 0.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 0.5,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.6609640474436378,
+        "prediction_correct": true,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 5,
+    "K_task": 1.1609640474436378,
+    "witness_bits": 1.0,
+    "r_theoretical": 1.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": -0.1609640474436378,
+    "correct_predictions": 0,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.5527864045000286,
+    "has_sufficient_capacity": false,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.1609640474436378,
+        "prediction_correct": false,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.1609640474436378,
+        "prediction_correct": false,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.1609640474436378,
+        "prediction_correct": false,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.1609640474436378,
+        "prediction_correct": false,
+        "phase": "insufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.0,
+        "has_sufficient_capacity": false,
+        "capacity_surplus": -0.1609640474436378,
+        "prediction_correct": false,
+        "phase": "insufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 5,
+    "K_task": 1.1609640474436378,
+    "witness_bits": 1.5,
+    "r_theoretical": 1.5,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.3390359525563622,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.5527864045000286,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.3390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.3390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.3390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.3390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 1.5,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.3390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  },
+  {
+    "num_contexts": 5,
+    "K_task": 1.1609640474436378,
+    "witness_bits": 2.0,
+    "r_theoretical": 2.0,
+    "E_mean": 0.0,
+    "E_std": 0.0,
+    "capacity_surplus_mean": 0.8390359525563621,
+    "correct_predictions": 5,
+    "total_predictions": 5,
+    "theoretical_min_error": 0.5527864045000286,
+    "has_sufficient_capacity": true,
+    "seed_results": [
+      {
+        "seed": 0,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.8390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 1,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.8390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 2,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.8390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 3,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.8390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      },
+      {
+        "seed": 4,
+        "E_measured": 0.0,
+        "abstention_rate": 1.0,
+        "K_task": 1.1609640474436378,
+        "r_theoretical": 2.0,
+        "has_sufficient_capacity": true,
+        "capacity_surplus": 0.8390359525563622,
+        "prediction_correct": true,
+        "phase": "sufficient"
+      }
+    ]
+  }
+]

@@ -53,6 +53,7 @@ from scipy.stats import spearmanr
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from sklearn.model_selection import LeaveOneOut
 from utils import (
     HallucinationNet, generate_partial_function, create_datasets,
     train_model, INPUT_SIZE, OUTPUT_CLASSES, HIDDEN_SIZE,
@@ -76,6 +77,52 @@ def run_experiment(defined_ratio, seed=DEFAULT_SEED):
         preds = torch.argmax(model(torch.LongTensor(test_undefined_x)), dim=1).numpy()
     return calculate_hallucination_rate(preds)
 
+def calculate_aic(n, mse, num_params):
+    """Calculate Akaike Information Criterion."""
+    return n * np.log(mse) + 2 * num_params
+
+def calculate_bic(n, mse, num_params):
+    """Calculate Bayesian Information Criterion."""
+    return n * np.log(mse) + num_params * np.log(n)
+
+def bootstrap_r_squared(x_data, y_data, fit_func, params, n_bootstrap=1000, seed=DEFAULT_SEED):
+    """Bootstrap confidence interval for R²."""
+    rng = np.random.RandomState(seed)
+    r_squared_samples = []
+    
+    for _ in range(n_bootstrap):
+        indices = rng.choice(len(x_data), size=len(x_data), replace=True)
+        x_boot = x_data[indices]
+        y_boot = y_data[indices]
+        
+        y_pred = fit_func(x_boot, *params)
+        ss_res = np.sum((y_boot - y_pred)**2)
+        ss_tot = np.sum((y_boot - np.mean(y_boot))**2)
+        
+        if ss_tot > 0:
+            r2 = 1 - (ss_res / ss_tot)
+            r_squared_samples.append(r2)
+    
+    return np.percentile(r_squared_samples, [2.5, 97.5])
+
+def cross_validate_model(x_data, y_data, fit_func, initial_params):
+    """Perform leave-one-out cross-validation."""
+    loo = LeaveOneOut()
+    predictions = np.zeros_like(y_data)
+    
+    for train_idx, test_idx in loo.split(x_data):
+        x_train, x_test = x_data[train_idx], x_data[test_idx]
+        y_train = y_data[train_idx]
+        
+        params, _ = curve_fit(fit_func, x_train, y_train, p0=initial_params, maxfev=10000)
+        predictions[test_idx] = fit_func(x_test, *params)
+    
+    mse = np.mean((y_data - predictions)**2)
+    ss_tot = np.sum((y_data - np.mean(y_data))**2)
+    cv_r_squared = 1 - (np.sum((y_data - predictions)**2) / ss_tot) if ss_tot > 0 else -float('inf')
+    
+    return cv_r_squared, mse
+
 # Define candidate functional forms
 def linear(x, a, b):
     """Linear: y = ax + b"""
@@ -94,53 +141,53 @@ def power_law(x, a, b):
     return a * np.power(x, b)
 
 def fit_curves(x_data, y_data):
-    """Fit multiple functional forms and return best fit."""
+    """Fit multiple functional forms with model selection criteria."""
     results = {}
+    n = len(x_data)
     
-    # Linear fit
-    try:
-        params, _ = curve_fit(linear, x_data, y_data)
-        y_pred = linear(x_data, *params)
-        rmse = np.sqrt(np.mean((y_data - y_pred)**2))
-        r_squared = 1 - (np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2))
-        results['linear'] = {'params': params, 'rmse': rmse, 'r_squared': r_squared, 'func': linear}
-    except:
-        results['linear'] = {'rmse': float('inf'), 'r_squared': -float('inf')}
+    model_configs = [
+        ('linear', linear, [0.5, 0.5], 2),
+        ('exponential', exponential, [0.1, 2.0, 0.5], 3),
+        ('sigmoid', sigmoid, [1.0, 5.0, 0.5], 3),
+        ('power_law', power_law, [0.5, 2.0], 2)
+    ]
     
-    # Exponential fit
-    try:
-        params, _ = curve_fit(exponential, x_data, y_data, p0=[0.1, 2.0, 0.5], maxfev=10000)
-        y_pred = exponential(x_data, *params)
-        rmse = np.sqrt(np.mean((y_data - y_pred)**2))
-        r_squared = 1 - (np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2))
-        results['exponential'] = {'params': params, 'rmse': rmse, 'r_squared': r_squared, 'func': exponential}
-    except:
-        results['exponential'] = {'rmse': float('inf'), 'r_squared': -float('inf')}
+    for model_name, fit_func, initial_params, num_params in model_configs:
+        params, _ = curve_fit(fit_func, x_data, y_data, p0=initial_params, maxfev=10000)
+        y_pred = fit_func(x_data, *params)
+        
+        residuals = y_data - y_pred
+        mse = np.mean(residuals**2)
+        rmse = np.sqrt(mse)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((y_data - np.mean(y_data))**2)
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else -float('inf')
+        
+        aic = calculate_aic(n, mse, num_params)
+        bic = calculate_bic(n, mse, num_params)
+        
+        r2_ci = bootstrap_r_squared(x_data, y_data, fit_func, params, n_bootstrap=1000)
+        
+        cv_r2, cv_mse = cross_validate_model(x_data, y_data, fit_func, initial_params)
+        
+        results[model_name] = {
+            'params': params,
+            'num_params': num_params,
+            'rmse': rmse,
+            'mse': mse,
+            'r_squared': r_squared,
+            'r_squared_ci': r2_ci,
+            'cv_r_squared': cv_r2,
+            'aic': aic,
+            'bic': bic,
+            'func': fit_func
+        }
     
-    # Sigmoid fit
-    try:
-        params, _ = curve_fit(sigmoid, x_data, y_data, p0=[1.0, 5.0, 0.5], maxfev=10000)
-        y_pred = sigmoid(x_data, *params)
-        rmse = np.sqrt(np.mean((y_data - y_pred)**2))
-        r_squared = 1 - (np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2))
-        results['sigmoid'] = {'params': params, 'rmse': rmse, 'r_squared': r_squared, 'func': sigmoid}
-    except:
-        results['sigmoid'] = {'rmse': float('inf'), 'r_squared': -float('inf')}
+    best_model_aic = min(results.keys(), key=lambda k: results[k]['aic'])
+    best_model_bic = min(results.keys(), key=lambda k: results[k]['bic'])
+    best_model_cv = max(results.keys(), key=lambda k: results[k]['cv_r_squared'])
     
-    # Power law fit
-    try:
-        params, _ = curve_fit(power_law, x_data, y_data, p0=[0.5, 2.0])
-        y_pred = power_law(x_data, *params)
-        rmse = np.sqrt(np.mean((y_data - y_pred)**2))
-        r_squared = 1 - (np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2))
-        results['power_law'] = {'params': params, 'rmse': rmse, 'r_squared': r_squared, 'func': power_law}
-    except:
-        results['power_law'] = {'rmse': float('inf'), 'r_squared': -float('inf')}
-    
-    # Find best fit
-    best_model = min(results.keys(), key=lambda k: results[k]['rmse'])
-    
-    return results, best_model
+    return results, best_model_aic, best_model_bic, best_model_cv
 
 def main():
     print("="*70)
@@ -152,64 +199,99 @@ def main():
     print("\nMechanism:")
     print("  Compounding of local K values through learned priors")
     
-    # Collect data
+    # Collect data with multiple seeds for robustness
     defined_ratios = np.linspace(0.1, 0.9, 17)
+    n_seeds = 3
     
     print(f"\n{'='*70}")
     print("DATA COLLECTION")
     print('='*70)
-    print(f"\nRunning {len(defined_ratios)} experiments...\n")
+    print(f"\nRunning {len(defined_ratios)} experiments with {n_seeds} seeds each for robustness...\n")
     
-    hallucination_rates = []
+    hallucination_rates_all_seeds = []
     for ratio in defined_ratios:
         print(f"Defined ratio: {ratio:.1%}...", end=" ", flush=True)
-        hall_rate = run_experiment(defined_ratio=ratio, seed=DEFAULT_SEED)
-        hallucination_rates.append(hall_rate)
-        print(f"Hallucination: {hall_rate:.1%}")
+        rates_for_ratio = []
+        for seed_offset in range(n_seeds):
+            seed = DEFAULT_SEED + int(ratio * 1000) + seed_offset
+            hall_rate = run_experiment(defined_ratio=ratio, seed=seed)
+            rates_for_ratio.append(hall_rate)
+        
+        mean_rate = np.mean(rates_for_ratio)
+        std_rate = np.std(rates_for_ratio)
+        hallucination_rates_all_seeds.append(rates_for_ratio)
+        print(f"Hallucination: {mean_rate:.1%} ± {std_rate:.1%}")
     
-    hallucination_rates = np.array(hallucination_rates)
+    hallucination_rates = np.array([np.mean(rates) for rates in hallucination_rates_all_seeds])
+    hallucination_std = np.array([np.std(rates) for rates in hallucination_rates_all_seeds])
     
     # Fit curves
     print(f"\n{'='*70}")
-    print("CURVE FITTING ANALYSIS")
+    print("CURVE FITTING ANALYSIS (with model selection criteria)")
     print('='*70)
     
-    fits, best_model = fit_curves(defined_ratios, hallucination_rates)
+    fits, best_model_aic, best_model_bic, best_model_cv = fit_curves(defined_ratios, hallucination_rates)
     
     print("\nFit quality for each functional form:")
-    print(f"{'Model':<15} {'RMSE':<12} {'R²':<12} {'Result'}")
-    print("-"*70)
+    print(f"{'Model':<15} {'Params':<8} {'RMSE':<12} {'R²':<20} {'CV R²':<12} {'AIC':<12} {'BIC':<12}")
+    print("-"*100)
     
     for model_name in ['linear', 'exponential', 'sigmoid', 'power_law']:
         fit = fits[model_name]
-        rmse = fit['rmse']
-        r2 = fit['r_squared']
-        is_best = " ← BEST FIT" if model_name == best_model else ""
-        print(f"{model_name:<15} {rmse:<12.4f} {r2:<12.4f} {is_best}")
+        r2_low, r2_high = fit['r_squared_ci']
+        r2_str = f"{fit['r_squared']:.4f} [{r2_low:.4f}, {r2_high:.4f}]"
+        print(f"{model_name:<15} {fit['num_params']:<8} {fit['rmse']:<12.4f} {r2_str:<20} {fit['cv_r_squared']:<12.4f} {fit['aic']:<12.2f} {fit['bic']:<12.2f}")
     
-    # Check for non-linearity
+    print(f"\nBest model by AIC (penalizes complexity): {best_model_aic}")
+    print(f"Best model by BIC (penalizes complexity more): {best_model_bic}")
+    print(f"Best model by cross-validation: {best_model_cv}")
+    
+    consensus_models = {best_model_aic, best_model_bic, best_model_cv}
+    if len(consensus_models) == 1:
+        best_model = list(consensus_models)[0]
+        print(f"\n✓ All criteria agree: {best_model.upper()} is the best model")
+    else:
+        best_model = best_model_bic
+        print(f"\n⚠ Criteria disagree. Using BIC choice: {best_model.upper()}")
+    
+    # Check for non-linearity with proper statistical assessment
     print(f"\n{'='*70}")
-    print("NON-LINEARITY TEST")
+    print("NON-LINEARITY ASSESSMENT")
     print('='*70)
     
-    linear_r2 = fits['linear']['r_squared']
-    best_r2 = fits[best_model]['r_squared']
-    improvement = best_r2 - linear_r2
+    linear_fit = fits['linear']
+    best_fit = fits[best_model]
     
-    print(f"\nLinear model R²:        {linear_r2:.4f}")
-    print(f"Best non-linear R²:     {best_r2:.4f}")
-    print(f"Improvement:            {improvement:+.4f}")
+    delta_aic = linear_fit['aic'] - best_fit['aic']
+    delta_bic = linear_fit['bic'] - best_fit['bic']
     
-    is_nonlinear = (best_model != 'linear') and (improvement > 0.05)
+    print(f"\nLinear model:")
+    print(f"  R² = {linear_fit['r_squared']:.4f} [{linear_fit['r_squared_ci'][0]:.4f}, {linear_fit['r_squared_ci'][1]:.4f}]")
+    print(f"  CV R² = {linear_fit['cv_r_squared']:.4f}")
+    print(f"  AIC = {linear_fit['aic']:.2f}")
+    print(f"  BIC = {linear_fit['bic']:.2f}")
+    
+    print(f"\nBest non-linear model ({best_model}):")
+    print(f"  R² = {best_fit['r_squared']:.4f} [{best_fit['r_squared_ci'][0]:.4f}, {best_fit['r_squared_ci'][1]:.4f}]")
+    print(f"  CV R² = {best_fit['cv_r_squared']:.4f}")
+    print(f"  AIC = {best_fit['aic']:.2f}")
+    print(f"  BIC = {best_fit['bic']:.2f}")
+    
+    print(f"\nModel comparison:")
+    print(f"  ΔAIC = {delta_aic:.2f} (>10 = strong evidence for non-linear)")
+    print(f"  ΔBIC = {delta_bic:.2f} (>10 = strong evidence for non-linear)")
+    
+    is_nonlinear = (best_model != 'linear') and (delta_bic > 10)
     
     if is_nonlinear:
-        print(f"\n✓ NON-LINEAR: {best_model.upper()} fits significantly better")
-        print(f"  The relationship shows clear non-linear structure")
+        print(f"\n✓ NON-LINEAR: {best_model.upper()} strongly preferred")
+        print(f"  Strong statistical evidence for non-linear structure")
+    elif best_model != 'linear' and delta_bic > 2:
+        print(f"\n✓ LIKELY NON-LINEAR: {best_model.upper()} preferred")
+        print(f"  Moderate evidence for non-linear structure")
     else:
-        print(f"\n? UNCLEAR: Best fit is {best_model.upper()}")
-        print(f"  Improvement over linear: {improvement:.4f}")
-        if improvement < 0.05:
-            print(f"  Improvement is small (< 0.05)")
+        print(f"\n? UNCLEAR: Evidence for non-linearity is weak")
+        print(f"  Linear model may be sufficient given the data")
     
     # Create visualization
     print(f"\n{'='*70}")
@@ -219,8 +301,9 @@ def main():
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     
     # Plot 1: Data with all fits
-    ax1.scatter(defined_ratios, hallucination_rates, color='black', s=50, 
-                label='Observed', zorder=5)
+    ax1.errorbar(defined_ratios, hallucination_rates, yerr=hallucination_std,
+                 fmt='o', color='black', markersize=6, capsize=3,
+                 label='Observed (mean ± std)', zorder=5, elinewidth=1.5)
     
     x_smooth = np.linspace(0.1, 0.9, 100)
     colors = {'linear': 'blue', 'exponential': 'red', 'sigmoid': 'green', 'power_law': 'orange'}
@@ -263,20 +346,23 @@ def main():
     
     if is_nonlinear and best_model in ['exponential', 'sigmoid', 'power_law']:
         print("\n✓ PREDICTION CONFIRMED")
-        print(f"  Best fit: {best_model.upper()} (R² = {best_r2:.4f})")
-        print(f"  The relationship is clearly non-linear")
-        print(f"  This supports the compounding K mechanism")
-    elif is_nonlinear:
-        print("\n? PREDICTION PARTIALLY CONFIRMED")
-        print(f"  Best fit is non-linear but unexpected form: {best_model}")
+        print(f"  Best fit: {best_model.upper()}")
+        print(f"  R² = {best_fit['r_squared']:.4f} [95% CI: {best_fit['r_squared_ci'][0]:.4f}-{best_fit['r_squared_ci'][1]:.4f}]")
+        print(f"  CV R² = {best_fit['cv_r_squared']:.4f}")
+        print(f"  The relationship shows statistically significant non-linear structure")
+        print(f"  This supports the compounding mechanism hypothesis")
+    elif best_model != 'linear' and delta_bic > 2:
+        print("\n✓ PREDICTION LIKELY CONFIRMED")
+        print(f"  Best fit: {best_model.upper()}")
+        print(f"  Moderate evidence for non-linearity")
     else:
-        print("\n✗ PREDICTION NOT CLEARLY CONFIRMED")
-        print(f"  Linear model fits nearly as well as non-linear")
-        print(f"  May need more data points or different K regime")
+        print("\n⚠ PREDICTION UNCERTAIN")
+        print(f"  Evidence for non-linearity is not conclusive")
+        print(f"  More data or different experimental conditions may be needed")
     
     print('\n' + '='*70)
     
-    return defined_ratios, hallucination_rates, fits, best_model
+    return defined_ratios, hallucination_rates, hallucination_std, fits, best_model
 
 if __name__ == "__main__":
     main()

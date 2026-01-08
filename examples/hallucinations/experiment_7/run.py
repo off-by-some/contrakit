@@ -1,51 +1,52 @@
 """
-Large language model hallucination experiment: Testing contradiction-induced fabrication.
+Large language model hallucination experiment: Testing contextual response contradiction.
 
-This experiment tests whether language models hallucinate when asked logically
-impossible questions, using contradiction theory to predict minimum hallucination rates.
+This experiment tests whether pre-trained language models exhibit contradictory responses
+across different contexts, and how they behave when context is removed, using contradiction
+theory to characterize the response structure.
 
 Hypothesis tested:
-When language models learn contradictory mappings in different contexts, they
-become "confused" when those contexts are removed, forcing confident wrong answers
-(hallucinations) at rates exceeding theoretically predicted minima.
+When pre-trained language models exhibit different response patterns in different contexts,
+removing context forces them to select responses without sufficient information, leading to
+fabricated answers (hallucinations) that reflect the underlying response inconsistency.
 
 Testing approach:
-- Fine-tune language models on contradictory weekday sequences in different contexts
-- Create tasks where "What comes after today?" is impossible due to conflicting mappings
-- Query models without context to elicit hallucinated answers
+- Measure pre-trained model responses to contextual prompts (e.g., "Today is Monday. What comes after today?")
+- Compute contradiction measure K from the inconsistency of context-conditional responses
+- Query models without context to measure fabrication rates
 - Measure hallucination rates, confidence scores, and abstention behavior
-- Compare observed rates against theoretical bounds from contradiction measure K
-- Test statistical significance against predicted minimum hallucination rates
+- Compare observed fabrication rates against theoretical characterization from K
+- Test how output format constraints (forced choice vs abstention-allowed) affect behavior
 
 Key measurements:
-- Contradiction measure K computed from conflicting training contexts
-- Theoretical minimum hallucination rate = 1-2^(-K)
-- Observed hallucination rates with confidence intervals across multiple queries
-- Confidence distributions for hallucinated vs correct answers
+- Contradiction measure K computed from context-conditional response distributions
+- Theoretical characterization: behaviors with K bits of contradiction have minimum incoherence 1-2^(-K)
+- Observed fabrication rates with confidence intervals across multiple queries
+- Confidence distributions for fabricated vs abstained responses
 - Abstention rates and witness capacity utilization
-- Statistical significance testing against theoretical predictions
+- Output format effects: forced choice vs abstention-allowed conditions
 
 Assumptions:
-- Language models can be fine-tuned on contradictory context pairs
-- Contradiction K is correctly computed from training context incompatibilities
-- Models respond consistently to impossible queries without context
-- Hallucination vs abstention classification is reliable from model outputs
+- Pre-trained models exhibit measurable context-conditional response patterns
+- Contradiction K correctly characterizes response inconsistency across contexts
+- Models respond consistently to queries within each experimental condition
+- Fabrication vs abstention classification is reliable from structured model outputs
 
 Expected outcome:
-Hallucination rates exceed theoretical minima, confirming that logical
-contradictions force language models to fabricate answers when mathematically
-impossible ones are required.
+Context removal creates underspecified queries where models must either fabricate or abstain.
+Fabrication rates reflect both the response contradiction (K) and architectural constraints
+(whether abstention is supported). K characterizes the minimum incoherence in any
+frame-independent response strategy.
 
 Typical usage:
 - Requires Ollama with llama3.1:8b model: ollama pull llama3.1:8b
-- Run run_experiment() to test contradiction-induced hallucination
-- Use analyze_results() to compare theory vs observation
-- Results demonstrate that impossibility forces fabrication in LLMs
+- Run run_experiment() to test context-dependent response patterns
+- Results characterize how response contradiction and output constraints drive fabrication
 
 Dependencies:
-- ollama (for LLM inference)
+- ollama (for LLM inference with structured outputs)
 - contrakit (for contradiction analysis)
-- numpy, torch, transformers (for fine-tuning)
+- numpy, pydantic (for data handling and validation)
 """
 
 import sys

@@ -21,15 +21,20 @@ When multiple experts give conflicting advice about the same problem, most syste
 
 ## What is Contrakit?
 
-Most tools treat disagreement as error—something to iron out until every model or expert agrees. But not all clashes are noise. Some are structural: valid perspectives that simply refuse to collapse into one account. **Contrakit is the first Python toolkit to measure that irreducible tension**, and to treat it as information—just as Shannon treated randomness. Our work has shown it's not only measurable, but it's useful too. 
+Most tools treat disagreement as error—something to iron out until every model or expert agrees. But not all clashes are noise. Some are structural: valid perspectives that simply refuse to collapse into one account. **Contrakit is the first Python toolkit to measure that irreducible tension**, and to treat it as information—just as Shannon treated randomness. 
 
-It tells you things like:
+Our work has shown it's not only measurable, but it's useful too. 
 
-1. How close can all perspectives get to a single account? (agreement $α^\star$)
-2. How expensive is it to pretend they agree? (contradiction bits $K(P)$)
-3. Which contexts drive the conflict? (witness weights $λ^\star$)
 
-Think of it as an information-theoretic microscope for disagreement. Just as entropy priced *randomness*, Contrakit prices *contradiction*—so you can see exactly what it costs to flatten diverse perspectives into one.
+## But What Does it Do, Practically?
+
+It's a general-purpose yardstick for measuring disagreement. We've used contrakit to quantify structural tension across several domains. 
+
+* In quantum systems, $K(P)$ measures "how quantum" a system is—whether you're looking at Bell inequalities, KCBS polytopes, or magic squares, the measure stays consistent and comparable ([quantum examples](examples/quantum/)). 
+* In neural networks, $K(P)$ computed from task structure alone predicts minimum hallucination rates before any training happens ([hallucination experiments](examples/hallucinations/)). 
+* In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)). 
+
+
 
 ## Quickstart
 > **⚠️ Under Construction**: This project is currently under active development. Currently i'm in the process of translating all of my Coq formalizations, notebooks, and personal scripts into API functionality and documentation. The core functionality is ready to use, but APIs, documentation, and features will change.
@@ -63,19 +68,21 @@ print("lambda*:", witness)  # ~0.5 each expert (balanced conflict)
 ```
 
 ## Why This Matters
-Computational systems have long handled multiple perspectives—but only by forcing consensus or averaging them away. What has been missing is a way to measure epistemic tension itself: to treat contradiction not as noise, but as structured information.
 
-Without this, information is lost. Standard models can’t register paradox as paradox; they flatten it. Contrakit flips the script: when experts or models disagree, you don’t lose information—you gain direction. Each contradiction becomes a gradient pointing toward the boundaries of current understanding. You don’t just resolve conflicts—you use them to build better models.
+When perspectives clash, three quantities emerge. $α^\star$ measures how close they can get to a single account—the best-case agreement coefficient. $K(P)$ measures the cost of forcing consensus—the bits you pay to pretend they agree. $λ^\star$ identifies which contexts drive the conflict—where the tension concentrates.
 
-The loop is simple: perspectives clash → Contrakit measures the clash → $λ*$ shows you where to investigate → your next reasoning step is guided by the structure of the disagreement itself.
+Just as entropy priced randomness, $K(P)$ prices contradiction. In [quantum contextuality](examples/quantum/), it measures which measurement scenarios create irreducible tension. In [neural network hallucination](examples/hallucinations/), it predicts minimum error rates from task structure before training. In [statistical paradoxes](examples/statistics/), it quantifies how much aggregated and stratified views contradict.
 
-By quantifying epistemic tension, Contrakit shows not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of—how far it can stretch, where it breaks, and what it leaves out. In this way, contradiction becomes more than a clash; it becomes the lens that reveals what a “viewpoint” really is, and the information that drives resolution.
+Computational systems have long handled multiple perspectives by forcing consensus or averaging them away. Contrakit measures epistemic tension itself, treating contradiction as structured information rather than noise. When experts or models disagree, each contradiction points toward boundaries of current understanding. Perspectives clash, contrakit measures the clash, $λ^\star$ reveals where to investigate, and the structure of disagreement guides the next reasoning step.
+
+Quantifying epistemic tension reveals not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of—how far it can stretch, where it breaks, and what it leaves out.
 
 
 ## The K(P) Tax
-Contrakit’s measure of epistemic tension isn’t ad-hoc. It follows from six simple axioms about how perspectives should combine. From these, a unique formula emerges: contradiction bits K(P), built from the Bhattacharyya overlap between distributions. That’s why the measure behaves consistently across domains—from distributed consensus to ensemble learning to quantum contextuality.
 
-And contradiction isn’t free. The same tension that guides reasoning also imposes an exact tax: across compression, communication, and simulation, disagreement costs K(P) bits per symbol. In practice, this means real performance deficits in any engineering task that must reconcile contextual data—unless you use the signal of contradiction itself to guide resolution.
+The measure follows from [six axioms](docs/paper/axioms/axioms.md) about how perspectives should combine. From these, a unique formula emerges: contradiction bits $K(P)$, built from the Bhattacharyya overlap between distributions. The measure behaves consistently across domains—from distributed consensus to ensemble learning to quantum contextuality.
+
+Contradiction imposes an exact cost. Across [compression, communication, and simulation](docs/paper/theorems/2.%20Operational%20Theorems/), disagreement costs $K(P)$ bits per symbol. Engineering tasks that must reconcile contextual data face real performance deficits—compression needs extra bits, communication loses capacity, simulation incurs variance penalties.
 
 | Task | Impact |
 |---|---|
@@ -84,26 +91,31 @@ And contradiction isn’t free. The same tension that guides reasoning also impo
 | Simulation with conflicting models | $×(2^{2K(P)} - 1)$ variance penalty |
 
 
-We can now use $λ^\star$ to target measurements and understand where this will have the most impact. Reduce $K(P)$ by mixing in feasible "compromise" distributions.
+$λ^\star$ targets measurements where contradiction concentrates. Mixing in feasible "compromise" distributions reduces $K(P)$.
 
 
 ## API Reference
 
-* **Core classes:** [`Observatory`](https://github.com/off-by-some/contrakit/blob/main/docs/api/observatory.md), [`Behavior`](https://github.com/off-by-some/contrakit/blob/main/docs/api/behavior.md), [`Space`](https://github.com/off-by-some/contrakit/blob/main/docs/api/space.md)
-* **Key properties:** `contradiction_bits`, `alpha_star` 
-* **Key methods:** `least_favorable_lambda()`, `to_behavior()`
-* **Full API:** [docs/api/](https://github.com/off-by-some/contrakit/tree/main/docs/api/) | **Theory:** [docs/paper/](https://github.com/off-by-some/contrakit/tree/main/docs/paper/)
+* **Core classes:** [`Observatory`](docs/api/observatory.md) for modeling perspectives, [`Behavior`](docs/api/behavior.md) for analyzing distributions, [`Space`](docs/api/space.md) for defining observable systems
+* **Key properties:** `contradiction_bits` (the $K(P)$ measure), `alpha_star` (maximum agreement coefficient)
+* **Key methods:** `least_favorable_lambda()` (witness weights showing where conflict concentrates), `to_behavior()` (convert lens compositions to analyzable behaviors)
+* **Full docs:** [API reference](docs/api/) | [Mathematical theory](docs/paper/)
 
 
 ## Examples
 
-```bash
-# Epistemic modeling examples
-poetry run python examples/intuitions/day_or_night.py      # Observer perspective conflicts
-poetry run python examples/statistics/simpsons_paradox.py # Statistical paradox resolution
+The [examples/intuitions/](examples/intuitions/) directory contains observer perspective conflicts. [examples/statistics/](examples/statistics/) resolves Simpson's paradox using $K(P)$. [examples/quantum/](examples/quantum/) measures contradiction across Bell, KCBS, and magic square scenarios. [examples/hallucinations/](examples/hallucinations/) demonstrates neural network hallucination prediction from task structure.
 
-# Quantum contextuality (writes analysis PNGs to figures/)
+```bash
+# Epistemic modeling
+poetry run python examples/intuitions/day_or_night.py
+poetry run python examples/statistics/simpsons_paradox.py
+
+# Quantum contextuality (writes analysis to figures/)
 poetry run python -m examples.quantum.run
+
+# Neural network hallucination experiments
+poetry run python examples/hallucinations/run.py
 ```
 
 ## Installing from Source
@@ -123,7 +135,7 @@ $ poetry run pytest -q
 
 ## A Mathematical Theory of Contradiction
 
-Contrakit is powered by a formal framework introduced in [A Mathematical Theory of Contradiction](https://zenodo.org/records/17203336). The paper lays out the six axioms, derives the unique measure K(P), and proves its consequences across compression, communication, and simulation. If you'd like to see the mathematics in full details, make suggestions, comments, or contribute check out [docs/paper/](https://github.com/off-by-some/contrakit/tree/main/docs/paper/)
+Contrakit implements the formal framework from [A Mathematical Theory of Contradiction](https://zenodo.org/records/17203336). The paper presents six axioms about how perspectives should combine, derives the unique measure $K(P)$, and proves its consequences across compression, communication, and simulation. Mathematical details, proofs, and axiom structure are in [docs/paper/](docs/paper/).
 
 ## License
 

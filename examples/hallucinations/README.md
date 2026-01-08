@@ -143,7 +143,7 @@ Training composition affects how far above the floor you land when architectural
 
 Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions. 
 
-giThe finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.
+The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.
 
 Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 

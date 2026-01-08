@@ -2,7 +2,7 @@
 
 Neural networks sometimes answer with complete confidence when they shouldn't. You give them inputs they've never seen, and they fabricate responses as if certain. We wanted to understand where that confidence comes from, so we trained networks on carefully constructed tasks and measured their behavior across hundreds of runs. The patterns we found held regardless of architecture, training conditions, or random weight initialization.
 
-The hallucination stems from two sources that work independently but compound when combined. The first is structural: some tasks demand incompatible behaviors across different contexts—answer A here, answer B there, but using the same query. When you train on both contexts then remove the context marker, no single answer works for both. That creates an impossibility that no training procedure can resolve. The second source is architectural: softmax requires producing a definite prediction for every input, whether prediction makes sense or not. This forces the network to guess even when it shouldn't.
+Hallucination stems from two sources that work independently but compound when combined. The first is structural: some tasks demand incompatible behaviors across different contexts—answer A here, answer B there, but using the same query. When you train on both contexts then remove the context marker, no single answer works for both. That creates an impossibility that no training procedure can resolve. The second source is architectural: softmax requires producing a definite prediction for every input, whether prediction makes sense or not. This forces the network to guess even when it shouldn't.
 
 ## The Core Finding
 
@@ -61,9 +61,9 @@ This behavior held across architectures. We tried adding a separate "definedness
 
 The definedness head failed to generalize, but one experiment showed networks can learn uncertainty under different conditions. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs: the X-rule says output Z equals X, while the Y-rule says output Z equals NOT Y. These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1), and the training set contains equal numbers of examples from each rule. As a result, the model sees (0,0)→0 in some examples and (0,0)→1 in others.
 
-We computed $K = 0.0760$ bits from the task structure before training, which bounds minimum error at 5.1% when forced to make binary predictions. Perfect accuracy is mathematically impossible.
+We computed $K = 0.0760$ bits from the task structure before training, which bounds minimum error at 5.1% when forced to make binary predictions. In other words, perfect accuracy is mathematically impossible.
 
-Training across 10 random seeds, the network learned something appropriate. On the two inputs where rules agree, it achieved 100% accuracy with 100% confidence. On the two contradictory inputs, it output approximately 50% confidence—essentially expressing "both answers appeared equally in training, I cannot choose." The hallucination rate was just 0.4% ± 0.4%.
+Training across 10 random seeds, the network learned something appropriate. On the two inputs where rules agree, it achieved 100% accuracy with 100% confidence. On the two contradictory inputs, it output approximately 50% confidence—essentially expressing "both answers appeared equally in training, I cannot choose." Hallucination rate was just 0.4% ± 0.4%.
 
 This demonstrates that neural networks can learn uncertainty, but only under specific conditions. The contradictions must be explicit in training data—the same input appearing with different labels. This represents aleatoric uncertainty: randomness in the data-generating process itself. The model has direct evidence of the ambiguity and learns to represent it accordingly.
 

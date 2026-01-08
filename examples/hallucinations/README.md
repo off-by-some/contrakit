@@ -22,9 +22,9 @@ Standard softmax architectures are inherently limited. With $r \approx 0$, they 
 
 ## Measuring Task Structure
 
-Before training any network, we can compute a quantity from the task definition that tells us whether consistent behavior is possible. Call it K. When K equals zero, a single coherent strategy exists—one set of rules that works across all training contexts. When K exceeds zero, no such strategy exists. The training contexts contain incompatibilities that no single model can resolve.
+Before training any network, we can compute a quantity from the task definition that tells us whether consistent behavior is possible. We call this quantity $K$. When $K$ equals zero, a single coherent strategy exists—one set of rules that works across all training contexts. When $K$ exceeds zero, however, no such strategy exists. The training contexts contain incompatibilities that no single model can resolve.
 
-This isn't about difficulty or complexity. $K$ measures structural impossibility. For $K = 0.5$ bits, information theory provides a formula: any model working across all contexts must fail on at least 29% of cases when forced to commit. This bound applies to neural networks, decision trees, hand-coded rules, or humans guessing. The impossibility is mathematical.
+This measure reveals something fundamental. It isn't about difficulty or complexity—$K$ quantifies structural impossibility instead. For $K = 0.5$ bits, information theory provides a precise formula: any model working across all contexts must fail on at least 29% of cases when forced to commit. This bound applies equally to neural networks, decision trees, hand-coded rules, or even humans guessing. The impossibility is mathematical.
 
 We can write tasks with specific K values by controlling how contexts relate. Some functions are partial—they have gaps where they're undefined:
 
@@ -45,23 +45,23 @@ print(tomorrow("Monday"))  # "Tuesday"
 print(tomorrow())  # Error: missing required argument
 ```
 
-Neural networks are universal function approximators—they can learn to approximate any function, including partial ones. But standard architectures force them to produce a definite output for every input. Softmax requires a probability distribution over output classes, summing to 1.0. There's no native way to represent "this input is undefined" or "none of these options apply."
+Neural networks are universal function approximators—they can learn to approximate any function, including partial ones. But standard architectures force them to produce a definite output for every input. Softmax requires a probability distribution over output classes, summing to 1.0. As a result, there's no native way to represent "this input is undefined" or "none of these options apply."
 
 This creates a fundamental mismatch. When you train a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another, both examples are correct. But if you ask "What comes after today?" without specifying context, that query has no answer that's correct for both training contexts. The network must produce *something*, so it hallucinates. K quantifies exactly how impossible the situation is.
 
 ## What Happens During Training
 
-We built a simple task: 128 possible inputs, 5 output classes (A, B, C, D, ⊥). We marked 51 inputs as defined—they should map to A, B, C, or D. The remaining 77 were undefined—they should map to ⊥. Training used 51 defined examples plus 3 undefined examples explicitly labeled ⊥. The other 74 undefined cases never appeared in training.
+We built a simple task with 128 possible inputs and 5 output classes (A, B, C, D, ⊥). We marked 51 inputs as defined—they should map to A, B, C, or D. The remaining 77 were undefined—they should map to ⊥. Training used 51 defined examples plus 3 undefined examples explicitly labeled ⊥. The other 74 undefined cases never appeared in training.
 
 The network learned the 51 defined examples perfectly. On those inputs, it achieved 100% accuracy with 98.85% confidence. On the 74 undefined test inputs—ones it had never seen—it fabricated answers 96.1% of the time with 59.54% confidence. That confidence sits between random guessing (20%) and learned certainty (98.85%), suggesting the network blends nearby training patterns rather than abstaining.
 
-This behavior held across architectures. We tried adding a separate "definedness head"—a second output branch trained specifically to detect undefined inputs. Testing across 9 training compositions with 3 random seeds each (54 total runs), the definedness head reduced hallucination by 0.6 percentage points on average, from 89.4% to 88.7%. It achieved 100% ($\pm$0.0%) accuracy on the three undefined training examples but only 4.3% ($\pm$0.6%) on the 74 unseen undefined test cases. The head memorized specific examples rather than learning the concept.
+This behavior held across architectures. We tried adding a separate "definedness head"—a second output branch trained specifically to detect undefined inputs. Testing across 9 training compositions with 3 random seeds each (54 total runs), this definedness head reduced hallucination by 0.6 percentage points on average, from 89.4% to 88.7%. It achieved 100% ($\pm$0.0%) accuracy on the three undefined training examples but only 4.3% ($\pm$0.6%) on the 74 unseen undefined test cases. The head memorized specific examples rather than learning the concept.
 
 ![Model Comparison](experiment_2/model_comparison.png)
 
 ## When Networks Learn Uncertainty
 
-One experiment behaved differently. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs. The X-rule says output Z equals X. The Y-rule says output Z equals NOT Y. These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1). The training set contains equal numbers of examples from each rule. The model sees (0,0)→0 in some examples and (0,0)→1 in others.
+One experiment behaved differently. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs: the X-rule says output Z equals X, while the Y-rule says output Z equals NOT Y. These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1). The training set contains equal numbers of examples from each rule. As a result, the model sees (0,0)→0 in some examples and (0,0)→1 in others.
 
 We computed $K = 0.0760$ bits from the task structure before training. The Total Variation Gap bounds minimum error at 5.1% when forced to make binary predictions—perfect accuracy is mathematically impossible.
 
@@ -75,11 +75,11 @@ Contrast this with epistemic uncertainty: gaps in the model's knowledge. When ne
 
 We varied the balance between defined and undefined training examples from 10% defined to 90% defined, testing 5 compositions with proper train/test splits and multiple random seeds. $K$ stayed constant at $0.5000$ bits across all compositions (verified to 4 decimal places). The task structure never changed. But hallucination rates ranged from 51.9% ($\pm$7.3%) at 10% defined to 98.3% ($\pm$2.1%) at 70% defined.
 
-This is counterintuitive. Usually more training data helps. Here, more defined data makes things worse. The network doesn't learn to partition space into "I know this" and "I don't know this" regions. Instead, it learns a smooth function that interpolates everywhere. 
+This result seems counterintuitive. Usually more training data helps performance. Here, however, more defined data makes things worse. The network doesn't learn to partition space into "I know this" and "I don't know this" regions. Instead, it learns a smooth function that interpolates everywhere. 
 
 With more defined examples, the interpolation becomes more confident in its extrapolations, even into regions where it should abstain. When you have 115 defined examples and 13 undefined ones, optimization overwhelmingly favors correct classification. The loss function sees 115 examples rewarding confident predictions and 3 examples suggesting abstention. Almost all gradient flow pushes toward classification.
 
-The theoretical minimum of 29.3% (from $K = 0.5000$ bits) held in every configuration—we never saw rates below it. But observed rates climbed far higher, ranging from 77% above the minimum (at 10% defined) to 236% above (at 70% defined).
+The theoretical minimum of 29.3% (from $K = 0.5000$ bits) held in every configuration—we never saw rates below it. But observed rates climbed far higher. They ranged from 77% above the minimum (at 10% defined) to 236% above (at 70% defined).
 
 To understand the relationship precisely, we tested 17 compositions with 3 random seeds each—51 total training runs. We fit four mathematical functions (linear, exponential, power law, sigmoid) using proper model selection criteria. All three criteria (AIC, BIC, cross-validation) agreed: sigmoid fit best. It explained 94.4% of variance with strong statistical evidence ($\Delta BIC = 27.3$) and cross-validation $R^2$ of 0.8655.
 
@@ -87,7 +87,7 @@ To understand the relationship precisely, we tested 17 compositions with 3 rando
 
 The sigmoid reveals three phases. From 10% to 30% defined, hallucination jumps roughly 23 percentage points—the steepest region of the curve. From 30% to 70% defined, increases diminish to about 8.5 points across 40 percentage points of training composition. From 70% to 90%, near-saturation appears with only 2.6 additional points. By 30% defined composition, hallucination already reaches approximately 89%. Adding more defined data barely changes the outcome.
 
-This held across random initializations. Testing the same procedure with five different random seeds, all showed strong positive correlation between defined ratio and hallucination: $\rho = 0.860 \pm 0.029$, every p-value below 0.001. The starting points varied (48.3% to 71.6% hallucination at 10% defined), but the directional trend remained consistent. Small violations appeared—one to three points per seed where hallucination briefly decreased—averaging 1.2 percentage points against a 41.6 point total increase. Statistical testing confirmed violations occurred significantly less than expected under random ordering (1 observed versus 6.8 expected, $p < 0.0001$), demonstrating monotonic pressure despite finite-sample noise.
+This held across random initializations. Testing the same procedure with five different random seeds, all showed strong positive correlation between defined ratio and hallucination: $\rho = 0.860 \pm 0.029$, every p-value below 0.001. The starting points varied (48.3% to 71.6% hallucination at 10% defined), but the directional trend remained consistent. Small violations appeared—one to three points per seed where hallucination briefly decreased. These averaged 1.2 percentage points against a 41.6 point total increase. Statistical testing confirmed violations occurred significantly less than expected under random ordering (1 observed versus 6.8 expected, $p < 0.0001$), demonstrating monotonic pressure despite finite-sample noise.
 
 ![Monotonicity Analysis](experiment_6/image.png)
 
@@ -109,7 +109,7 @@ Softmax creates this forcing. Every input must produce a probability distributio
 
 ## The Phase Transition
 
-We systematically varied task contradiction $K$ (0.5 to 1.16 bits) and witness capacity $r$ (0 to 2 bits) across 20 combinations with 5 random seeds each—100 training runs total. Witness capacity measures the architecture's ability to express uncertainty: $r = \log_2$(number of abstention states). Standard softmax provides $r \approx 0$. An architecture with 2 abstention states provides $r = 1$ bit.
+We systematically varied task contradiction $K$ (0.5 to 1.16 bits) and witness capacity $r$ (0 to 2 bits) across 20 combinations with 5 random seeds each—100 training runs total. Witness capacity measures the architecture's ability to express uncertainty, where $r = \log_2$(number of abstention states). Standard softmax provides $r \approx 0$. An architecture with 2 abstention states provides $r = 1$ bit.
 
 ![Error Rate Heatmap](experiment_9/results/error_rate_heatmap.png)
 
@@ -123,7 +123,7 @@ Standard softmax architectures have $r \approx 0$, explaining why we observed 76
 
 ## Two Kinds of Pressure
 
-Structural pressure comes from $K$. When $K = 0.5000$ bits, at least 29% error is guaranteed when models must commit to answers. When $K = 1.10$ bits, at least 53% is guaranteed. This bound applies regardless of architecture, training procedure, or data quantity. The impossibility is mathematical.
+Structural pressure comes from $K$. When $K = 0.5000$ bits, at least 29% error is guaranteed when models must commit to answers. This rises to at least 53% when $K = 1.10$ bits. The bound applies regardless of architecture, training procedure, or data quantity. The impossibility is mathematical.
 
 Architectural pressure comes from requiring commitment when the model is uncertain. The 75-point gap (1% with abstention, 76% forced) on $K=0.70$ bit tasks quantifies this cleanly. The theoretical minimum was 40%. With abstention, the model achieved 1%. Forced to choose, it hit 76%.
 
@@ -133,17 +133,17 @@ Training composition affects distance from the theoretical floor. At 10% defined
 
 ## What We Can and Cannot Control
 
-Task structure is fixed. If different contexts demand incompatible behaviors, K > 0 and some error is inevitable. The theoretical minimum of 1 - 2^(-K) sets a floor no training procedure can break.
+Task structure is fixed. If different contexts demand incompatible behaviors, then $K > 0$ and some error is inevitable. The theoretical minimum of $1 - 2^{(-K)}$ sets a floor no training procedure can break.
 
-Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds. The relation $E + r \geq K$ (where $E$ is error exponent in hypothesis testing, $r$ is witness rate) establishes a trade-off: uncertainty in the task must be paid for either through error or through architectural capacity to express ignorance. You cannot achieve $E + r < K$—it's an impossibility, not merely difficult. 
+Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds. The relation $E + r \geq K$ (where $E$ is error exponent in hypothesis testing, $r$ is witness rate) establishes a fundamental trade-off: uncertainty in the task must be paid for either through error or through architectural capacity to express ignorance. You cannot achieve $E + r < K$—it's an impossibility, not merely difficult. 
 
 For neural networks, we observe this as a phase transition: when $r$ crosses $K$, error rate drops sharply from near 100% to near 0%. Tasks with contradiction $K$ can achieve arbitrarily low hallucination rates when the architecture provides witness capacity $r \geq K$, but cannot when $r < K$.
 
 Training composition affects how far above the floor you land when architectural support is insufficient. The sigmoid relationship shows rapid increases early (10-30% defined), saturation later (70-90% defined). Small composition changes have large effects in the early phase, diminishing effects later.
 
-Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. When models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently because training provided no signal about what "I don't know" looks like in those regions. 
+Confidence scores depend on what kind of uncertainty the model faces. When training explicitly contains contradictions (aleatoric uncertainty), networks learn appropriate 50% confidence. But when models encounter out-of-distribution inputs (epistemic uncertainty), they hallucinate confidently. Training provided no signal about what "I don't know" looks like in those regions. 
 
-The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.ny v
+The finding that hallucinated answers have 59.5% confidence—between random guessing (20%) and learned certainty (98.85%)—suggests confidence scores reflect geometric position in feature space rather than epistemic uncertainty. If this is the case, post-hoc confidence calibration methods like temperature scaling or Platt scaling face fundamental limits. They cannot fix what the architecture cannot represent.
 
 Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 
@@ -153,17 +153,17 @@ These principles aren't limited to synthetic tasks. Testing on handwritten digit
 
 We created two labeling contexts: "parity" (odd=1, even=0) and "roundness" (0,6,8,9=1, others=0). These contexts contradict on 7 out of 10 digit classes, producing K = 0.35 bits and a theoretical minimum worst-case error of 21.5%.
 
-The optimal frame-independent approximation must choose one label per digit. For contradictory digits, any choice satisfies one context and fails the other. If we satisfy Context A completely, we achieve 0% error in Context A but 70% error in Context B because all 7 contradictory digits have the wrong label there. The worst case across both contexts is max(0%, 70%) = 70%. This 70% error was predicted before any training from the task structure alone.
+The optimal frame-independent approximation must choose one label per digit. For contradictory digits, any choice satisfies one context and fails the other. If we satisfy Context A completely, we achieve 0% error in Context A but 70% error in Context B. All 7 contradictory digits have the wrong label there. The worst case across both contexts is max(0%, 70%) = 70%. This 70% error was predicted before any training from the task structure alone.
 
-Training CNNs and evaluating on both contexts confirmed it. Models trained exclusively on Context A labels achieved 1.9% error in Context A and 69.0% ± 0.1% error in Context B—matching the prediction exactly. Models trained exclusively on Context B labels achieved 68.5% ± 0.5% error in Context A and 2.2% error in Context B—close to the same 70% worst-case. Balanced training produced a different strategy: 36.9% error in Context A and 34.0% error in Context B, giving a 37.3% worst-case as the model learned to compromise between both contexts rather than fully satisfying either one.
+Training CNNs and evaluating on both contexts confirmed it. Models trained exclusively on Context A labels achieved 1.9% error in Context A and 69.0% ± 0.1% error in Context B—matching the prediction exactly. Models trained exclusively on Context B labels achieved 68.5% ± 0.5% error in Context A and 2.2% error in Context B—close to the same 70% worst-case. Balanced training produced a different strategy. It gave 36.9% error in Context A and 34.0% error in Context B, resulting in a 37.3% worst-case. The model learned to compromise between both contexts rather than fully satisfying either one.
 
 ![Worst-Case Error Analysis](experiment_10/results/worst_case_error.png)
 
-The U-shaped curve reveals how training composition determines strategy. At the extremes—training exclusively on Context A or Context B—worst-case error hits the predicted 70% because the model masters one context but fails on all contradictory digits in the other. At the center with balanced training, worst-case drops to 37% as the model compromises, partially satisfying both contexts instead of fully satisfying either. 
+The U-shaped curve reveals how training composition determines strategy. At the extremes—training exclusively on Context A or Context B—worst-case error hits the predicted 70%. The model masters one context but fails on all contradictory digits in the other. At the center with balanced training, worst-case drops to 37%. The model compromises, partially satisfying both contexts instead of fully satisfying either. 
 
 The right panel shows why: single-context training produces near-perfect performance in one direction (~2% error) and systematic failure in the other (~69% error), while balanced training splits the difference (~37% and ~34%). The symmetry confirms that 70% isn't a training artifact—it's the optimal frame-independent approximation predicted from task structure.
 
-Like Experiment 4, this achieves the bound rather than merely exceeding it. The 70% error is the optimal frame-independent approximation, computed analytically before training and matched by models that learned one context consistently. Finding that K determines exact error on 64-dimensional visual data confirms the principle isn't about low dimensionality or synthetic construction. Task structure—not model architecture or training dynamics—sets fundamental limits.
+Like Experiment 4, this achieves the bound rather than merely exceeding it. The 70% error is the optimal frame-independent approximation, computed analytically before training and matched by models that learned one context consistently. Finding that $K$ determines exact error on 64-dimensional visual data confirms the principle isn't about low dimensionality or synthetic construction. Task structure—not model architecture or training dynamics—sets fundamental limits.
 
 ## What This Means
 
@@ -177,11 +177,11 @@ Out-of-distribution detection demonstrates this on a standard benchmark. We comp
 
 The witness model outperforms all established OOD detection baselines. All methods use the same WideResNet architecture trained on CIFAR-10. The witness model adds an uncertainty head that learns epistemic uncertainty end-to-end. Post-hoc methods retrofit uncertainty onto classification-optimized features. The 2.6% AUROC improvement demonstrates that architectural capacity for uncertainty representation matters - it cannot be added after training.
 
-The mechanism isn't specific to our toy tasks or synthetic networks. The relationship between training composition and hallucination held across networks ranging from 64-unit feedforward classifiers to llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics. The consistency suggests these are properties of how gradient descent allocates capacity between competing objectives, not accidents of particular architectures.
+The mechanism isn't specific to our toy tasks or synthetic networks. The relationship between training composition and hallucination held across networks ranging from 64-unit feedforward classifiers to llama3.1:8b with billions of parameters. It held across different random seeds, different tasks, and different evaluation metrics. This consistency suggests these are fundamental properties of how gradient descent allocates capacity between competing objectives—not accidents of particular architectures.
 
-Neural networks don't partition input space into "seen" and "unseen" regions. They create continuous representations where similar inputs produce similar outputs. When you train heavily on defined examples, those examples shape the entire feature space through interpolation. Undefined inputs land somewhere in that space and get mapped to nearby defined patterns.
+Neural networks don't partition input space into "seen" and "unseen" regions. Instead, they create continuous representations where similar inputs produce similar outputs. When you train heavily on defined examples, those examples shape the entire feature space through interpolation. Undefined inputs land somewhere in that space and get mapped to nearby defined patterns.
 
-The training objective is to maximize log probability of correct labels on training data. Cross-entropy loss provides maximum likelihood estimation. It finds parameters that best explain what the model saw. It doesn't provide parameters that recognize limitations. Unless you explicitly add a term for "abstain when uncertain" with sufficient weight to compete with classification loss, the optimization pushes toward confident predictions everywhere.
+The training objective is to maximize log probability of correct labels on training data. Cross-entropy loss provides maximum likelihood estimation. It finds parameters that best explain what the model saw, but it doesn't provide parameters that recognize limitations. Unless you explicitly add a term for "abstain when uncertain" with sufficient weight to compete with classification loss, the optimization pushes toward confident predictions everywhere.
 
 ## References
 

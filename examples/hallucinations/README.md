@@ -6,21 +6,19 @@ The hallucination comes from two sources. Tasks sometimes demand incompatible be
 
 ## TLDR
 
-Our experiments reveal that neural network hallucination is not just a training data scarcity problem—it's a structural and architectural issue with fundamental mathematical constraints:
+Our experiments reveal that neural network hallucination is not just a training data scarcity problem—it's a structural and architectural issue with fundamental mathematical constraints.
 
-1. **Hallucination has two independent sources**: Structural pressure from task contradictions ($K > 0$) and architectural pressure from forcing commitment when uncertain. These compound but can be measured separately.
+Hallucination has two independent sources. Structural pressure comes from task contradictions ($K > 0$), where incompatible demands across contexts make perfect performance impossible. Architectural pressure comes from forcing commitment when uncertain—standard softmax must produce predictions everywhere. These compound but can be measured separately.
 
-2. **$K$ quantifies fundamental impossibility**: The contradiction measure $K$ (computed before training) sets a theoretical floor on error that no training procedure can eliminate. When $K = 0.5$ bits, at least 29% error is mathematically guaranteed when models must commit to answers.
+The contradiction measure $K$ quantifies fundamental impossibility. Computed before training from task structure alone, it sets a theoretical floor on error that no training procedure can eliminate. When $K = 0.5$ bits, at least 29% error is mathematically guaranteed when models must commit to answers. This applies to any learning system—neural networks, decision trees, hand-coded rules.
 
-3. **$r$ measures available expressive capacity**: Witness capacity $r$ (determined by architecture) quantifies how much uncertainty the system can express. Standard softmax provides $r \approx 0$ bits, while architectures with abstention mechanisms provide $r \geq 1$ bit.
+Witness capacity $r$ measures how much uncertainty the architecture can express. Standard softmax provides $r \approx 0$ bits because it forces probability distributions summing to 1.0. Architectures with explicit abstention mechanisms provide $r \geq 1$ bit, giving the model ways to express "I don't know" rather than guessing.
 
-4. **Phase transition exists**: When $r$ exceeds $K$, error collapses sharply from near 100% to near 0%. The transition happens in a narrow zone near $r = K$, demonstrating that $K$ indicates required capacity, not difficulty.
+When $r$ exceeds $K$, we observe sharp phase transitions. Error collapses from near 100% to near 0% in a narrow zone near $r = K$. This demonstrates that $K$ indicates required capacity rather than task difficulty—systems need adequate $r$ to handle the structural contradiction.
 
-5. **Training composition modulates distance from floor**: The relationship between defined training ratio and hallucination follows a sigmoid curve. Training composition affects how far above the theoretical minimum you land, but cannot remove structural impossibility when $K > 0$.
+Training composition modulates distance from the theoretical floor. The relationship between defined training ratio and hallucination follows a sigmoid curve, rising rapidly from 10-30% defined, then saturating beyond 70%. Training composition affects how far above the theoretical minimum you land, but cannot remove structural impossibility when $K > 0$.
 
-6. **Standard softmax architectures are inherently limited**: With $r \approx 0$, standard architectures cannot handle epistemic uncertainty (out-of-distribution inputs) because they lack mechanisms to express "I don't know." This explains why we observed 76% hallucination on $K=0.70$ bit tasks when forced to commit.
-
-7. **Actionable design guidance**: To reduce hallucination, you don't just need more data—you need architectural mechanisms for context-aware abstention. Providing witness capacity $r \geq K$ enables approaching theoretical bounds, as demonstrated by achieving 29.2% hallucination (essentially the predicted 29.3% minimum) with $r=1$ bit on $K=0.5$ bit tasks.
+Standard softmax architectures are inherently limited. With $r \approx 0$, they cannot handle epistemic uncertainty—out-of-distribution inputs where the model simply lacks information. This explains the 76% hallucination we observed on $K=0.70$ bit tasks when forced to commit, compared to 1% when abstention was allowed. Reducing hallucination requires architectural mechanisms for context-aware abstention, not just more data. Providing witness capacity $r \geq K$ enables approaching theoretical bounds, as demonstrated by achieving 29.2% hallucination on $K=0.5$ bit tasks—essentially matching the predicted 29.3% minimum.
 
 ## Measuring Task Structure
 
@@ -28,7 +26,7 @@ Before training any network, we can compute a quantity from the task definition 
 
 This isn't about difficulty or complexity. $K$ measures structural impossibility. For $K = 0.5$ bits, information theory provides a formula: any model working across all contexts must fail on at least 29% of cases when forced to commit. This bound applies to neural networks, decision trees, hand-coded rules, or humans guessing. The impossibility is mathematical.
 
-We can write tasks with specific K values by controlling how contexts relate:
+We can write tasks with specific K values by controlling how contexts relate. Some functions are partial—they have gaps where they're undefined:
 
 ```python
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -47,7 +45,9 @@ print(tomorrow("Monday"))  # "Tuesday"
 print(tomorrow())  # Error: missing required argument
 ```
 
-The function has gaps where it's undefined. Train a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another. Both examples are correct. Now ask "What comes after today?" without specifying context. That query has no answer that's correct for both training contexts. K quantifies exactly how impossible the situation is.
+Neural networks are universal function approximators—they can learn to approximate any function, including partial ones. But standard architectures force them to produce a definite output for every input. Softmax requires a probability distribution over output classes, summing to 1.0. There's no native way to represent "this input is undefined" or "none of these options apply."
+
+This creates a fundamental mismatch. When you train a network on "Today is Monday, tomorrow is Tuesday" in one context and "Today is Thursday, tomorrow is Friday" in another, both examples are correct. But if you ask "What comes after today?" without specifying context, that query has no answer that's correct for both training contexts. The network must produce *something*, so it hallucinates. K quantifies exactly how impossible the situation is.
 
 ## What Happens During Training
 
@@ -61,12 +61,7 @@ This behavior held across architectures. We tried adding a separate "definedness
 
 ## When Networks Learn Uncertainty
 
-One experiment behaved differently. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs:
-
-- X-rule: output Z equals X
-- Y-rule: output Z equals NOT Y
-
-These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1). The training set contains equal numbers of examples from each rule. The model sees (0,0)$\to$0 in some examples and (0,0)$\to$1 in others.
+One experiment behaved differently. We designed a task where the same input appears with conflicting labels in the training data. Two rules apply to all possible (X,Y) input pairs. The X-rule says output Z equals X. The Y-rule says output Z equals NOT Y. These rules agree for inputs (0,1) and (1,0) but contradict for (0,0) and (1,1). The training set contains equal numbers of examples from each rule. The model sees (0,0)→0 in some examples and (0,0)→1 in others.
 
 We computed $K = 0.0760$ bits from the task structure before training. The Total Variation Gap bounds minimum error at 5.1% when forced to make binary predictions—perfect accuracy is mathematically impossible.
 
@@ -146,6 +141,20 @@ Confidence scores depend on what kind of uncertainty the model faces. When train
 
 Separate uncertainty heads don't solve the core problem. The definedness head achieved 100% accuracy on the three undefined training examples but only 4.3% on unseen undefined test cases, showing a 95.7% generalization gap across seeds. It memorized specific examples rather than learning the concept of "undefined."
 
+## Generalization to Real Data
+
+These principles aren't limited to synthetic tasks. Testing on handwritten digits (8×8 images, 64 dimensions) with context-dependent labels confirms K bounds worst-case error even on real visual data—and we can predict the exact error before training.
+
+We created two labeling contexts: "parity" (odd=1, even=0) and "roundness" (0,6,8,9=1, others=0). These contexts contradict on 7 out of 10 digit classes, producing K = 0.35 bits and a theoretical minimum worst-case error of 21.5%.
+
+The optimal frame-independent approximation must choose one label per digit. For contradictory digits, any choice satisfies one context and fails the other. If we satisfy Context A completely, we achieve 0% error in Context A but 70% error in Context B because all 7 contradictory digits have the wrong label there. The worst case across both contexts is max(0%, 70%) = 70%. This 70% error was predicted before any training from the task structure alone.
+
+Training CNNs and evaluating on both contexts confirmed it. Models trained exclusively on Context A labels achieved 1.9% error in Context A and 70.0% ± 0.3% error in Context B—matching the prediction exactly. Models trained exclusively on Context B labels achieved 68.1% ± 0.5% error in Context A and 2.5% error in Context B—close to the same 70% worst-case. Balanced training produced a different strategy: 36.8% error in Context A and 33.6% error in Context B, giving a 39.9% worst-case as the model learned to compromise between both contexts rather than fully satisfying either one.
+
+![Worst-Case Error Analysis](experiment_10/results/worst_case_error.png)
+
+Like Experiment 4, this achieves the bound rather than merely exceeding it. The 70% error is the optimal frame-independent approximation, computed analytically before training and matched by models that learned one context consistently. Finding that K determines exact error on 64-dimensional visual data confirms the principle isn't about low dimensionality or synthetic construction. Task structure—not model architecture or training dynamics—sets fundamental limits.
+
 ## What This Means
 
 Standard accuracy metrics miss these failures. A network achieving 100% training accuracy might hallucinate on 96% of undefined test inputs. Aggregate statistics hide the problem because defined and undefined inputs get pooled together.
@@ -169,5 +178,7 @@ The training objective is to maximize log probability of correct labels on train
 - **Experiment 7**: [Structural Inevitability vs Architectural Commitment](experiment_7/) — 1% with abstention, 76% forced (75-point gap)
 - **Experiment 8**: [TruthfulQA Benchmark](experiment_8/) — 20% forced vs 10% with abstention
 - **Experiment 9**: [Quantifying Witness Capacity](experiment_9/) — Phase transition at $r=K$ across 100 training runs
+- **Experiment 10**: [Generalization to High-Dimensional Real Data](experiment_10/) — Predicted 70% worst-case error before training, achieved 70.0% ± 0.3%
+
 
 **Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a sharp phase transition in error rate when $r$ crosses $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.

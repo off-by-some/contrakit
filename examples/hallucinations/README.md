@@ -153,6 +153,8 @@ Training CNNs and evaluating on both contexts confirmed it. Models trained exclu
 
 ![Worst-Case Error Analysis](experiment_10/results/worst_case_error.png)
 
+The U-shaped curve reveals how training composition determines strategy. At the extremes—training exclusively on Context A or Context B—worst-case error hits the predicted 70% because the model masters one context but fails on all contradictory digits in the other. At the center with balanced training, worst-case drops to 40% as the model compromises, partially satisfying both contexts instead of fully satisfying either. The right panel shows why: single-context training produces near-perfect performance in one direction (~2% error) and systematic failure in the other (~70% error), while balanced training splits the difference (~37% and ~34%). The symmetry confirms that 70% isn't a training artifact—it's the optimal frame-independent approximation predicted from task structure.
+
 Like Experiment 4, this achieves the bound rather than merely exceeding it. The 70% error is the optimal frame-independent approximation, computed analytically before training and matched by models that learned one context consistently. Finding that K determines exact error on 64-dimensional visual data confirms the principle isn't about low dimensionality or synthetic construction. Task structure—not model architecture or training dynamics—sets fundamental limits.
 
 ## What This Means

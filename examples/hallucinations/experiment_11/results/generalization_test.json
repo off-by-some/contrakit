@@ -1,0 +1,44 @@
+{
+  "r=0.0": {
+    "r_bits": 0.0,
+    "contradictory": {
+      "abstention_rate": 0.0,
+      "accuracy_on_commits": 0.685
+    },
+    "consistent": {
+      "abstention_rate": 0.0,
+      "accuracy_on_commits": 0.71
+    },
+    "ood": {
+      "abstention_rate": 0.0
+    }
+  },
+  "r=1.0": {
+    "r_bits": 1.0,
+    "contradictory": {
+      "abstention_rate": 0.53,
+      "accuracy_on_commits": 0.6914893617021277
+    },
+    "consistent": {
+      "abstention_rate": 0.51,
+      "accuracy_on_commits": 0.7346938775510204
+    },
+    "ood": {
+      "abstention_rate": 0.075
+    }
+  },
+  "r=2.0": {
+    "r_bits": 2.0,
+    "contradictory": {
+      "abstention_rate": 0.56,
+      "accuracy_on_commits": 0.7159090909090909
+    },
+    "consistent": {
+      "abstention_rate": 0.55,
+      "accuracy_on_commits": 0.7222222222222222
+    },
+    "ood": {
+      "abstention_rate": 0.14
+    }
+  }
+}

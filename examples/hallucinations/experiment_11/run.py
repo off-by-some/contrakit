@@ -1,620 +1,464 @@
 """
-Witness OOD Detection: Realistic Benchmark Comparison
+Test witness capacity for epistemic uncertainty in OOD detection.
 
-Standard benchmark: CIFAR-10 (ID) vs SVHN (OOD)
-Compare against established methods: MSP, ODIN, Energy, Mahalanobis
-
-Key: Show witness consistently outperforms on realistic task.
+Computes structural contradiction K using contrakit, trains with witness capacity r ≥ K,
+and evaluates abstention on contradictory inputs with generalization to OOD detection.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Subset, TensorDataset
 from torchvision import datasets, transforms
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from pathlib import Path
 import json
-from sklearn.metrics import roc_auc_score, roc_curve
-from sklearn.covariance import EmpiricalCovariance
 from tqdm import tqdm
+from contrakit import Observatory
 
 
-class WideResNet(nn.Module):
-    """
-    Stronger backbone for realistic performance.
-    Based on standard OOD detection benchmarks.
-    """
-    def __init__(self, num_classes=10, dropout=0.3):
+EPOCHS = 20
+
+
+def compute_task_contradiction(num_contexts=3):
+    """Compute structural contradiction K using contrakit."""
+    class_names = [f'class_{i}' for i in range(10)]
+    obs = Observatory.create(symbols=class_names)
+    prediction = obs.concept("Prediction")
+
+    lenses = []
+    for ctx_idx in range(num_contexts):
+        context_lens = obs.lens(f"Context_{ctx_idx}")
+        with context_lens:
+            context_output = ctx_idx % 10
+            context_lens.perspectives[prediction] = {prediction.alphabet[context_output]: 1.0}
+        lenses.append(context_lens)
+
+    combined = lenses[0] if len(lenses) == 1 else lenses[0]
+    for lens in lenses[1:]:
+        combined = combined | lens
+
+    behavior = combined.to_behavior()
+    return {
+        'K': behavior.K,
+        'alpha_star': behavior.alpha_star,
+        'required_witness_capacity': behavior.K,
+        'num_contexts': num_contexts
+    }
+
+
+def create_contradictory_cifar10(cifar_data, contradiction_ratio=0.3, seed=42):
+    """Create defined (consistent) and undefined (contradictory) CIFAR-10 examples."""
+    np.random.seed(seed)
+
+    total = len(cifar_data)
+    n_undefined = int(total * contradiction_ratio)
+    n_defined = total - n_undefined
+
+    indices = np.random.permutation(total)
+    defined_idx = indices[:n_defined]
+    undefined_idx = indices[n_defined:]
+
+    defined_data = []
+    for idx in defined_idx:
+        img, label = cifar_data[idx]
+        defined_data.append((img, label, True))  # is_defined = True
+
+    undefined_data = []
+    contradictory_pairs = []
+    label_permutation = np.array([3, 7, 1, 9, 4, 2, 8, 0, 6, 5])
+
+    for idx in undefined_idx:
+        img, original_label = cifar_data[idx]
+        contradictory_label = label_permutation[original_label]
+        undefined_data.append((img, contradictory_label, False))  # is_defined = False
+        contradictory_pairs.append({
+            'img': img,
+            'label_context1': original_label,
+            'label_context2': contradictory_label
+        })
+
+    return defined_data, undefined_data, contradictory_pairs
+
+
+class WitnessNetwork(nn.Module):
+    """Neural network with configurable witness capacity."""
+    def __init__(self, num_classes=10, witness_bits=0.0):
         super().__init__()
-        
-        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
-        self.bn1 = nn.BatchNorm2d(16)
-        
-        # Block 1
-        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, 3, padding=1)
-        self.bn3 = nn.BatchNorm2d(32)
-        
-        # Block 2
-        self.conv4 = nn.Conv2d(32, 64, 3, padding=1)
-        self.bn4 = nn.BatchNorm2d(64)
-        self.conv5 = nn.Conv2d(64, 64, 3, padding=1)
-        self.bn5 = nn.BatchNorm2d(64)
-        
-        # Block 3
-        self.conv6 = nn.Conv2d(64, 128, 3, padding=1)
-        self.bn6 = nn.BatchNorm2d(128)
-        self.conv7 = nn.Conv2d(128, 128, 3, padding=1)
-        self.bn7 = nn.BatchNorm2d(128)
-        
+        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 128, 3, padding=1)
+        self.bn3 = nn.BatchNorm2d(128)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(128, num_classes)
-        
-    def forward(self, x, return_features=False):
-        # Block 1
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(out)))
-        out = F.relu(self.bn3(self.conv3(out)))
-        out = F.max_pool2d(out, 2)
-        
-        # Block 2
-        out = F.relu(self.bn4(self.conv4(out)))
-        out = F.relu(self.bn5(self.conv5(out)))
-        out = F.max_pool2d(out, 2)
-        
-        # Block 3
-        out = F.relu(self.bn6(self.conv6(out)))
-        out = F.relu(self.bn7(self.conv7(out)))
-        out = F.max_pool2d(out, 2)
-        
-        features = self.pool(out).view(out.size(0), -1)
-        logits = self.fc(self.dropout(features))
-        
-        if return_features:
-            return logits, features
-        return logits
+
+        self.num_witness_states = max(1, int(2 ** witness_bits))
+        if self.num_witness_states > 1:
+            self.witness = nn.Sequential(
+                nn.Linear(128, 64),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(64, self.num_witness_states)
+            )
+
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.max_pool2d(x, 2)
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.max_pool2d(x, 2)
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.max_pool2d(x, 2)
+        features = self.pool(x).view(x.size(0), -1)
+
+        logits = self.fc(features)
+        witness_logits = self.witness(features) if hasattr(self, 'witness') and self.witness else None
+        return logits, witness_logits
 
 
-class WitnessWideResNet(nn.Module):
-    """WideResNet with witness head for epistemic uncertainty."""
-    def __init__(self, num_classes=10, dropout=0.3):
-        super().__init__()
-        
-        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
-        self.bn1 = nn.BatchNorm2d(16)
-        
-        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, 3, padding=1)
-        self.bn3 = nn.BatchNorm2d(32)
-        
-        self.conv4 = nn.Conv2d(32, 64, 3, padding=1)
-        self.bn4 = nn.BatchNorm2d(64)
-        self.conv5 = nn.Conv2d(64, 64, 3, padding=1)
-        self.bn5 = nn.BatchNorm2d(64)
-        
-        self.conv6 = nn.Conv2d(64, 128, 3, padding=1)
-        self.bn6 = nn.BatchNorm2d(128)
-        self.conv7 = nn.Conv2d(128, 128, 3, padding=1)
-        self.bn7 = nn.BatchNorm2d(128)
-        
-        self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(128, num_classes)
-        
-        # Witness head: monitors features from all blocks
-        self.witness = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(64, 1)
-        )
-        
-    def forward(self, x, return_features=False):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = F.relu(self.bn2(self.conv2(out)))
-        out = F.relu(self.bn3(self.conv3(out)))
-        out = F.max_pool2d(out, 2)
-        
-        out = F.relu(self.bn4(self.conv4(out)))
-        out = F.relu(self.bn5(self.conv5(out)))
-        out = F.max_pool2d(out, 2)
-        
-        out = F.relu(self.bn6(self.conv6(out)))
-        out = F.relu(self.bn7(self.conv7(out)))
-        out = F.max_pool2d(out, 2)
-        
-        features = self.pool(out).view(out.size(0), -1)
-        logits = self.fc(self.dropout(features))
-        uncertainty = self.witness(features)
-        
-        if return_features:
-            return logits, features, uncertainty
-        return logits, uncertainty
-
-
-def train_model(model, loader, device, epochs, is_witness=False):
-    """Train with optional witness head."""
+def train_on_contradiction(model, defined_data, undefined_data, device, epochs=20):
+    """Train network with defined/undefined examples using witness capacity."""
     model.to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
-    criterion = nn.CrossEntropyLoss()
-    
+
+    all_data = defined_data + undefined_data
+    np.random.shuffle(all_data)
+
+    imgs = torch.stack([x[0] for x in all_data])
+    labels = torch.tensor([x[1] for x in all_data])
+    is_defined = torch.tensor([x[2] for x in all_data])
+
+    dataset = TensorDataset(imgs, labels, is_defined)
+    loader = DataLoader(dataset, batch_size=128, shuffle=True)
+
+    criterion_class = nn.CrossEntropyLoss()
+    criterion_witness = nn.CrossEntropyLoss()
+
     for epoch in range(epochs):
         model.train()
+
+        epoch_loss = 0.0
+        epoch_class_loss = 0.0
+        epoch_witness_loss = 0.0
+        epoch_correct = 0
+        epoch_total_defined = 0
+        num_batches = len(loader)
+
         pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}")
-        
-        for imgs, labels in pbar:
-            imgs, labels = imgs.to(device), labels.to(device)
+        for imgs_batch, labels_batch, is_defined_batch in pbar:
+            imgs_batch = imgs_batch.to(device)
+            labels_batch = labels_batch.to(device)
+            is_defined_batch = is_defined_batch.to(device)
+
             optimizer.zero_grad()
-            
-            if is_witness:
-                logits, uncertainty = model(imgs)
-                loss_class = criterion(logits, labels)
-                
-                # Witness loss: predict entropy from multiple passes
-                with torch.no_grad():
-                    entropies = []
-                    for _ in range(3):
-                        l, _ = model(imgs)
-                        p = F.softmax(l, dim=1)
-                        entropies.append(p)
-                    mean_p = torch.stack(entropies).mean(0)
-                    target_unc = -torch.sum(mean_p * torch.log(mean_p + 1e-8), dim=1) / np.log(10)
-                
-                loss_witness = F.mse_loss(torch.sigmoid(uncertainty.squeeze()), target_unc)
-                loss = loss_class + 0.5 * loss_witness
-            else:
-                logits = model(imgs)
-                loss = criterion(logits, labels)
-            
+            logits, witness_logits = model(imgs_batch)
+
+            defined_mask = is_defined_batch.bool()
+            loss_class = criterion_class(logits[defined_mask], labels_batch[defined_mask]) if defined_mask.any() else torch.tensor(0.0, device=device)
+
+            loss = loss_class
+
+            if witness_logits is not None:
+                witness_targets = is_defined_batch.long() * (model.num_witness_states - 1)
+
+                # With balanced classes (50/50), use equal weighting (following experiment 9)
+                num_classes = model.num_witness_states
+                class_weights = torch.ones(num_classes, device=device)  # Equal weights
+                criterion_weighted = nn.CrossEntropyLoss(weight=class_weights)
+
+                loss_witness = criterion_weighted(witness_logits, witness_targets)
+                loss = loss + 0.5 * loss_witness  # Following experiment 9's weighting
+                epoch_witness_loss += loss_witness.item()
+
             loss.backward()
             optimizer.step()
-            pbar.set_postfix({'loss': f'{loss.item():.3f}'})
-        
+
+            # Track metrics
+            epoch_loss += loss.item()
+            epoch_class_loss += loss_class.item()
+
+            # Calculate accuracy on defined examples
+            if defined_mask.any():
+                predictions = logits[defined_mask].argmax(dim=1)
+                correct = (predictions == labels_batch[defined_mask]).sum().item()
+                epoch_correct += correct
+                epoch_total_defined += defined_mask.sum().item()
+
+            # Update progress bar
+            avg_loss = epoch_loss / (pbar.n + 1)
+            avg_class_loss = epoch_class_loss / (pbar.n + 1)
+            accuracy = epoch_correct / max(1, epoch_total_defined) * 100
+
+            postfix_dict = {
+                'loss': f'{avg_loss:.3f}',
+                'cls_loss': f'{avg_class_loss:.3f}',
+                'acc': f'{accuracy:.1f}%'
+            }
+
+            if witness_logits is not None:
+                avg_witness_loss = epoch_witness_loss / (pbar.n + 1)
+                postfix_dict['wit_loss'] = f'{avg_witness_loss:.3f}'
+
+            pbar.set_postfix(postfix_dict)
+
         scheduler.step()
 
 
-def extract_features(model, loader, device):
-    """Extract features for Mahalanobis."""
+def evaluate_abstention(model, test_data, device):
+    """
+    Evaluate abstention following experiment 9's mathematical approach.
+
+    Witness state 0 = abstain (undefined/contradictory)
+    Witness state > 0 = commit (defined/consistent)
+    """
     model.eval()
-    features_list = []
-    labels_list = []
-    
+
+    all_predictions = []
+    all_labels = []
+    all_abstains = []
+
     with torch.no_grad():
-        for imgs, labels in loader:
-            imgs = imgs.to(device)
-            _, features = model(imgs, return_features=True)
-            features_list.append(features.cpu())
-            labels_list.append(labels)
-    
-    return torch.cat(features_list), torch.cat(labels_list)
+        for item in test_data:
+            img = item[0].unsqueeze(0).to(device) if not isinstance(item, dict) else item['img'].unsqueeze(0).to(device)
+            label = item[1] if not isinstance(item, dict) else item['label_context1']
 
+            logits, witness_logits = model(img)
+            prediction = logits.argmax(dim=1).cpu().item()
 
-def fit_mahalanobis(features, labels, num_classes=10):
-    """Fit class-conditional Gaussian for Mahalanobis distance."""
-    class_means = []
-    class_covs = []
-    
-    for c in range(num_classes):
-        class_features = features[labels == c].numpy()
-        class_means.append(class_features.mean(axis=0))
-        
-        cov_estimator = EmpiricalCovariance()
-        cov_estimator.fit(class_features)
-        class_covs.append(cov_estimator.covariance_)
-    
-    # Tied covariance (average across classes)
-    tied_cov = np.mean(class_covs, axis=0)
-    precision = np.linalg.pinv(tied_cov)
-    
-    return np.array(class_means), precision
+            abstain = False
+            if witness_logits is not None:
+                witness_prediction = torch.argmax(witness_logits, dim=1).cpu().item()
+                abstain = (witness_prediction == 0)
 
+            all_predictions.append(prediction)
+            all_labels.append(label)
+            all_abstains.append(abstain)
 
-# OOD Detection Methods
+    all_predictions = np.array(all_predictions)
+    all_labels = np.array(all_labels)
+    all_abstains = np.array(all_abstains)
 
-def score_msp(model, loader, device):
-    """Maximum Softmax Probability (baseline)."""
-    model.eval()
-    scores = []
-    with torch.no_grad():
-        for imgs, _ in loader:
-            logits = model(imgs.to(device))
-            probs = F.softmax(logits, dim=1)
-            scores.extend((1 - probs.max(dim=1)[0]).cpu().numpy())
-    return np.array(scores)
+    abstention_rate = all_abstains.mean()
+    commits = ~all_abstains
+    accuracy_on_commits = (all_predictions[commits] == all_labels[commits]).mean() if commits.sum() > 0 else 0.0
 
-
-def score_odin(model, loader, device, temperature=1000, epsilon=0.0014):
-    """ODIN: temperature scaling + input perturbation."""
-    model.eval()
-    scores = []
-    
-    for imgs, _ in loader:
-        imgs = imgs.to(device).requires_grad_()
-        
-        logits = model(imgs)
-        scaled_logits = logits / temperature
-        probs = F.softmax(scaled_logits, dim=1)
-        
-        # Input perturbation
-        max_probs, _ = probs.max(dim=1)
-        loss = -max_probs.sum()
-        loss.backward()
-        
-        gradient = imgs.grad.sign()
-        perturbed = imgs - epsilon * gradient
-        
-        with torch.no_grad():
-            logits_pert = model(perturbed)
-            probs_pert = F.softmax(logits_pert / temperature, dim=1)
-            scores.extend((1 - probs_pert.max(dim=1)[0]).cpu().numpy())
-    
-    return np.array(scores)
-
-
-def score_energy(model, loader, device, temperature=1.0):
-    """Energy-based OOD detection."""
-    model.eval()
-    scores = []
-    with torch.no_grad():
-        for imgs, _ in loader:
-            logits = model(imgs.to(device))
-            energy = -temperature * torch.logsumexp(logits / temperature, dim=1)
-            scores.extend(energy.cpu().numpy())
-    return np.array(scores)
-
-
-def score_mahalanobis(model, loader, device, class_means, precision):
-    """Mahalanobis distance in feature space."""
-    model.eval()
-    scores = []
-    
-    with torch.no_grad():
-        for imgs, _ in loader:
-            _, features = model(imgs.to(device), return_features=True)
-            features = features.cpu().numpy()
-            
-            # Minimum Mahalanobis distance to any class
-            for feat in features:
-                dists = []
-                for mean in class_means:
-                    diff = feat - mean
-                    dist = np.sqrt(diff @ precision @ diff.T)
-                    dists.append(dist)
-                scores.append(min(dists))
-    
-    return np.array(scores)
-
-
-def score_witness(model, loader, device, num_passes=10):
-    """Witness: predictive entropy."""
-    model.eval()
-    scores = []
-    
-    with torch.no_grad():
-        for imgs, _ in loader:
-            imgs = imgs.to(device)
-            model.train()  # Keep dropout
-            
-            all_probs = []
-            for _ in range(num_passes):
-                logits, _ = model(imgs)
-                all_probs.append(F.softmax(logits, dim=1))
-            
-            mean_probs = torch.stack(all_probs).mean(0)
-            entropy = -torch.sum(mean_probs * torch.log(mean_probs + 1e-8), dim=1)
-            scores.extend(entropy.cpu().numpy())
-    
-    return np.array(scores)
+    return {
+        'abstention_rate': abstention_rate,
+        'accuracy_on_commits': accuracy_on_commits
+    }
 
 
 def run_experiment():
-    print("="*80)
-    print("WITNESS OOD DETECTION: BENCHMARK COMPARISON")
-    print("="*80)
-    print("\nTask: CIFAR-10 (ID) vs SVHN (OOD)")
-    print("Methods: MSP, ODIN, Energy, Mahalanobis, Witness")
-    print("Goal: Show witness outperforms established baselines\n")
-    
+    """Run experiment testing witness capacity for epistemic uncertainty."""
     results_dir = Path("examples/hallucinations/experiment_11/results")
     results_dir.mkdir(parents=True, exist_ok=True)
-    
+
     cache_dir = Path.home() / ".scrapbook" / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Load data
+
     transform = transforms.Compose([
-        transforms.Resize((32, 32)),
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    
-    print("Loading datasets...")
+
     cifar_train = datasets.CIFAR10(root=str(cache_dir), train=True, download=True, transform=transform)
     cifar_test = datasets.CIFAR10(root=str(cache_dir), train=False, download=True, transform=transform)
     svhn_test = datasets.SVHN(root=str(cache_dir), split='test', download=True, transform=transform)
-    
-    # Subsample for speed
-    train_size, test_size = 10000, 2000
-    train_idx = np.random.RandomState(42).choice(len(cifar_train), train_size, replace=False)
-    id_test_idx = np.random.RandomState(43).choice(len(cifar_test), test_size, replace=False)
-    ood_test_idx = np.random.RandomState(44).choice(len(svhn_test), test_size, replace=False)
-    
-    train_loader = DataLoader(Subset(cifar_train, train_idx), batch_size=128, shuffle=True)
-    id_loader = DataLoader(Subset(cifar_test, id_test_idx), batch_size=128, shuffle=False)
-    ood_loader = DataLoader(Subset(svhn_test, ood_test_idx), batch_size=128, shuffle=False)
-    
-    print(f"  Train: {train_size}, Test: {test_size} ID + {test_size} OOD\n")
-    
+
+    np.random.seed(42)
+    train_idx = np.random.choice(len(cifar_train), 20000, replace=False)
+    test_idx = np.random.choice(len(cifar_test), 2000, replace=False)
+    ood_idx = np.random.choice(len(svhn_test), 2000, replace=False)
+
+    cifar_train_subset = Subset(cifar_train, train_idx)
+    cifar_test_subset = Subset(cifar_test, test_idx)
+    svhn_test_subset = Subset(svhn_test, ood_idx)
+
+    # Compute K
+    task_info = compute_task_contradiction(num_contexts=3)
+    K = task_info['K']
+
+    print(f"Task contradiction: K = {K:.4f} bits")
+    print(f"Witness capacities to test: r = [0.0, {max(1.0, np.ceil(K)):.1f}, {max(1.0, np.ceil(K)) + 1:.1f}] bits")
+    print(f"Theoretical minimum error: E ≥ {1 - 2**(-K):.4f}")
+
+    # Create data with balanced classes (following experiment 9's ambiguous_ratio=0.5)
+    defined_data, undefined_data, contradictory_pairs = create_contradictory_cifar10(
+        cifar_train_subset,
+        contradiction_ratio=0.5  # 50/50 balance for proper witness learning
+    )
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Device: {device}\n")
     
-    # Train models
-    print("Training WideResNet (for MSP, ODIN, Energy, Mahalanobis)...")
-    torch.manual_seed(42)
-    model_standard = WideResNet()
-    train_model(model_standard, train_loader, device, epochs=20, is_witness=False)
-    
-    print("\nTraining Witness WideResNet...")
-    torch.manual_seed(42)
-    model_witness = WitnessWideResNet()
-    train_model(model_witness, train_loader, device, epochs=20, is_witness=True)
-    
-    # Fit Mahalanobis
-    print("\nFitting Mahalanobis statistics...")
-    features, labels = extract_features(model_standard, train_loader, device)
-    class_means, precision = fit_mahalanobis(features, labels)
-    
-    # Evaluate all methods
-    print("\nEvaluating OOD detection methods...")
-    all_scores = {}
+    # Test witness capacities following Theorem 7.4: E + r ≥ K
+    # r = 0: baseline (r < K, should fail)
+    # r = ceil(K): should achieve E + r = K (optimal)
+    # r = ceil(K) + 1: excess capacity (should still work)
+    witness_bits_values = [0.0, max(1.0, np.ceil(K)), max(1.0, np.ceil(K)) + 1.0]
     results = {}
     
-    print("  MSP...")
-    id_scores_msp = score_msp(model_standard, id_loader, device)
-    ood_scores_msp = score_msp(model_standard, ood_loader, device)
-    all_scores['MSP'] = (id_scores_msp, ood_scores_msp)
+    for witness_bits in witness_bits_values:
+        print(f"\nTraining model with r = {witness_bits:.1f} bits witness capacity...")
+        torch.manual_seed(42)
+        model = WitnessNetwork(witness_bits=witness_bits)
+
+        train_on_contradiction(model, defined_data, undefined_data, device, epochs=EPOCHS)  # Shorter training to avoid overfitting
+
+        metrics_contradictory = evaluate_abstention(model, contradictory_pairs[:200], device)
+        cifar_test_list = [(cifar_test_subset[i][0], cifar_test_subset[i][1]) for i in range(min(200, len(cifar_test_subset)))]
+        metrics_consistent = evaluate_abstention(model, cifar_test_list, device)
+        svhn_test_list = [(svhn_test_subset[i][0], svhn_test_subset[i][1]) for i in range(min(200, len(svhn_test_subset)))]
+        metrics_ood = evaluate_abstention(model, svhn_test_list, device)
+
+        # Store accuracy for comparison
+        accuracy = metrics_consistent['accuracy_on_commits']
+
+        results[f'r={witness_bits:.1f}'] = {
+            'r_bits': float(witness_bits),
+            'contradictory': {
+                'abstention_rate': float(metrics_contradictory['abstention_rate']),
+                'accuracy_on_commits': float(metrics_contradictory['accuracy_on_commits'])
+            },
+            'consistent': {
+                'abstention_rate': float(metrics_consistent['abstention_rate']),
+                'accuracy_on_commits': float(metrics_consistent['accuracy_on_commits'])
+            },
+            'ood': {
+                'abstention_rate': float(metrics_ood['abstention_rate'])
+            }
+        }
+
+        # Print per-model summary
+        print(f"\n✓ Model r={witness_bits:.1f} completed:")
+        print(f"  Contradictory: {metrics_contradictory['abstention_rate']*100:.1f}% abstain, "
+              f"{metrics_contradictory['accuracy_on_commits']*100:.1f}% accuracy")
+        print(f"  Consistent: {metrics_consistent['abstention_rate']*100:.1f}% abstain, "
+              f"{metrics_consistent['accuracy_on_commits']*100:.1f}% accuracy")
+        print(f"  OOD (SVHN): {metrics_ood['abstention_rate']*100:.1f}% abstain")
+        print()
     
-    print("  ODIN...")
-    id_scores_odin = score_odin(model_standard, id_loader, device)
-    ood_scores_odin = score_odin(model_standard, ood_loader, device)
-    all_scores['ODIN'] = (id_scores_odin, ood_scores_odin)
-    
-    print("  Energy...")
-    id_scores_energy = score_energy(model_standard, id_loader, device)
-    ood_scores_energy = score_energy(model_standard, ood_loader, device)
-    all_scores['Energy'] = (id_scores_energy, ood_scores_energy)
-    
-    print("  Mahalanobis...")
-    id_scores_maha = score_mahalanobis(model_standard, id_loader, device, class_means, precision)
-    ood_scores_maha = score_mahalanobis(model_standard, ood_loader, device, class_means, precision)
-    all_scores['Mahalanobis'] = (id_scores_maha, ood_scores_maha)
-    
-    print("  Witness...")
-    id_scores_witness = score_witness(model_witness, id_loader, device)
-    ood_scores_witness = score_witness(model_witness, ood_loader, device)
-    all_scores['Witness'] = (id_scores_witness, ood_scores_witness)
-    
-    # Calculate metrics and ROC curves
-    roc_data = {}
-    for method, (id_s, ood_s) in all_scores.items():
-        y_true = np.concatenate([[0]*len(id_s), [1]*len(ood_s)])
-        y_scores = np.concatenate([id_s, ood_s])
-        
-        auroc = roc_auc_score(y_true, y_scores)
-        fpr, tpr, _ = roc_curve(y_true, y_scores)
-        
-        results[method] = {'auroc': auroc}
-        roc_data[method] = (fpr, tpr, auroc)
-    
-    # Create enhanced visualization
-    print("\nCreating enhanced multi-panel visualization...")
-    
-    fig = plt.figure(figsize=(18, 10))
-    gs = GridSpec(2, 3, figure=fig, hspace=0.3, wspace=0.3)
-    
-    # Define consistent colors for each method
-    colors = {
-        'MSP': '#e74c3c',
-        'ODIN': '#f39c12',
-        'Energy': '#9b59b6',
-        'Mahalanobis': '#3498db',
-        'Witness': '#27ae60'
-    }
-    
-    # Panel 1: ROC Curves (top left, spans 2 rows)
-    ax1 = fig.add_subplot(gs[:, 0])
-    for method, (fpr, tpr, auroc) in roc_data.items():
-        lw = 3 if method == 'Witness' else 2
-        alpha = 1.0 if method == 'Witness' else 0.7
-        ax1.plot(fpr, tpr, color=colors[method], lw=lw, alpha=alpha,
-                label=f'{method} (AUC={auroc:.3f})')
-    
-    ax1.plot([0, 1], [0, 1], 'k--', lw=1, alpha=0.3, label='Random')
-    ax1.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
-    ax1.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
-    ax1.set_title('ROC Curves: CIFAR-10 (ID) vs SVHN (OOD)', 
-                 fontsize=14, fontweight='bold', pad=15)
-    ax1.legend(loc='lower right', framealpha=0.95, fontsize=10)
-    ax1.grid(True, alpha=0.3)
-    ax1.set_xlim([-0.02, 1.02])
-    ax1.set_ylim([-0.02, 1.02])
-    
-    # Panel 2: Score Distributions (top middle)
-    ax2 = fig.add_subplot(gs[0, 1])
-    methods_ordered = ['MSP', 'ODIN', 'Energy', 'Mahalanobis', 'Witness']
-    
-    positions = []
-    for i, method in enumerate(methods_ordered):
-        id_s, ood_s = all_scores[method]
-        
-        # Normalize scores to [0, 1] for fair comparison
-        all_s = np.concatenate([id_s, ood_s])
-        id_norm = (id_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
-        ood_norm = (ood_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
-        
-        pos_id = i * 2.5
-        pos_ood = i * 2.5 + 0.8
-        
-        # Violin plots
-        parts_id = ax2.violinplot([id_norm], positions=[pos_id], widths=0.7,
-                                   showmeans=True, showmedians=False)
-        parts_ood = ax2.violinplot([ood_norm], positions=[pos_ood], widths=0.7,
-                                    showmeans=True, showmedians=False)
-        
-        # Color the violins
-        for pc in parts_id['bodies']:
-            pc.set_facecolor('#3498db')
-            pc.set_alpha(0.6)
-            pc.set_edgecolor('black')
-            pc.set_linewidth(1)
-        
-        for pc in parts_ood['bodies']:
-            pc.set_facecolor('#e74c3c')
-            pc.set_alpha(0.6)
-            pc.set_edgecolor('black')
-            pc.set_linewidth(1)
-        
-        positions.extend([pos_id, pos_ood])
-    
-    ax2.set_ylabel('Normalized OOD Score', fontsize=11, fontweight='bold')
-    ax2.set_title('Score Distributions', fontsize=13, fontweight='bold', pad=10)
-    ax2.set_xticks([i * 2.5 + 0.4 for i in range(len(methods_ordered))])
-    ax2.set_xticklabels(methods_ordered, rotation=45, ha='right')
-    ax2.grid(True, alpha=0.3, axis='y')
-    ax2.set_ylim([-0.1, 1.1])
-    
-    # Add legend
-    from matplotlib.patches import Patch
-    legend_elements = [Patch(facecolor='#3498db', alpha=0.6, label='ID (CIFAR-10)'),
-                      Patch(facecolor='#e74c3c', alpha=0.6, label='OOD (SVHN)')]
-    ax2.legend(handles=legend_elements, loc='upper left', fontsize=9)
-    
-    # Panel 3: AUROC Bar Chart (top right)
-    ax3 = fig.add_subplot(gs[0, 2])
-    aurocs = [results[m]['auroc'] for m in methods_ordered]
-    bars = ax3.barh(range(len(methods_ordered)), aurocs, 
-                    color=[colors[m] for m in methods_ordered],
-                    alpha=0.8, edgecolor='black', linewidth=1.5)
-    
-    # Highlight best method
-    best_idx = np.argmax(aurocs)
-    bars[best_idx].set_alpha(1.0)
-    bars[best_idx].set_linewidth(2.5)
-    
-    ax3.set_yticks(range(len(methods_ordered)))
-    ax3.set_yticklabels(methods_ordered, fontsize=11)
-    ax3.set_xlabel('AUROC', fontsize=11, fontweight='bold')
-    ax3.set_title('Detection Performance', fontsize=13, fontweight='bold', pad=10)
-    ax3.set_xlim([0.5, 0.85])
-    ax3.grid(True, alpha=0.3, axis='x')
-    ax3.axvline(0.5, color='gray', linestyle='--', linewidth=1, alpha=0.5)
-    
-    # Add value labels
-    for i, (auroc, bar) in enumerate(zip(aurocs, bars)):
-        weight = 'bold' if i == best_idx else 'normal'
-        ax3.text(auroc + 0.005, i, f'{auroc:.3f}', 
-                va='center', fontsize=10, fontweight=weight)
-    
-    # Panel 4: Separation Quality Metrics (bottom middle)
-    ax4 = fig.add_subplot(gs[1, 1])
-    
-    # Calculate separation metrics for each method
-    separations = []
-    overlaps = []
-    
-    for method in methods_ordered:
-        id_s, ood_s = all_scores[method]
-        
-        # Normalize
-        all_s = np.concatenate([id_s, ood_s])
-        id_norm = (id_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
-        ood_norm = (ood_s - all_s.min()) / (all_s.max() - all_s.min() + 1e-8)
-        
-        # Cohen's d (effect size)
-        pooled_std = np.sqrt((id_norm.std()**2 + ood_norm.std()**2) / 2)
-        cohens_d = abs(ood_norm.mean() - id_norm.mean()) / (pooled_std + 1e-8)
-        separations.append(cohens_d)
-        
-        # Distribution overlap (approximate)
-        hist_id, bins = np.histogram(id_norm, bins=50, range=(0, 1), density=True)
-        hist_ood, _ = np.histogram(ood_norm, bins=bins, density=True)
-        overlap = np.minimum(hist_id, hist_ood).sum() / 50
-        overlaps.append(overlap)
-    
-    x = np.arange(len(methods_ordered))
-    width = 0.35
-    
-    bars1 = ax4.bar(x - width/2, separations, width, label="Cohen's d",
-                   color='#2ecc71', alpha=0.8, edgecolor='black', linewidth=1)
-    bars2 = ax4.bar(x + width/2, overlaps, width, label='Overlap',
-                   color='#e67e22', alpha=0.8, edgecolor='black', linewidth=1)
-    
-    ax4.set_ylabel('Value', fontsize=11, fontweight='bold')
-    ax4.set_title('Separation Metrics', fontsize=13, fontweight='bold', pad=10)
-    ax4.set_xticks(x)
-    ax4.set_xticklabels(methods_ordered, rotation=45, ha='right')
-    ax4.legend(fontsize=9)
-    ax4.grid(True, alpha=0.3, axis='y')
-    
-    # Panel 5: Detection at Fixed FPRs (bottom right)
-    ax5 = fig.add_subplot(gs[1, 2])
-    
-    fpr_targets = [0.01, 0.05, 0.10, 0.20]
-    tpr_at_fprs = {method: [] for method in methods_ordered}
-    
-    for method in methods_ordered:
-        fpr, tpr, _ = roc_data[method]
-        for fpr_target in fpr_targets:
-            # Find TPR at target FPR
-            idx = np.argmin(np.abs(fpr - fpr_target))
-            tpr_at_fprs[method].append(tpr[idx])
-    
-    x = np.arange(len(fpr_targets))
-    width = 0.15
-    
-    for i, method in enumerate(methods_ordered):
-        offset = (i - 2) * width
-        bars = ax5.bar(x + offset, tpr_at_fprs[method], width,
-                      label=method, color=colors[method], alpha=0.8,
-                      edgecolor='black', linewidth=0.8)
-    
-    ax5.set_ylabel('True Positive Rate', fontsize=11, fontweight='bold')
-    ax5.set_xlabel('False Positive Rate', fontsize=11, fontweight='bold')
-    ax5.set_title('TPR at Fixed FPR', fontsize=13, fontweight='bold', pad=10)
-    ax5.set_xticks(x)
-    ax5.set_xticklabels([f'{fpr:.2f}' for fpr in fpr_targets])
-    ax5.legend(fontsize=8, loc='lower right')
-    ax5.grid(True, alpha=0.3, axis='y')
-    ax5.set_ylim([0, 1.0])
-    
-    plt.suptitle('OOD Detection Benchmark: CIFAR-10 vs SVHN', 
-                fontsize=16, fontweight='bold', y=0.98)
-    
-    plt.savefig(results_dir / 'benchmark_comparison.png', dpi=150, bbox_inches='tight')
-    print(f"  Saved: {results_dir / 'benchmark_comparison.png'}")
-    
+    # Print results summary
+    print("\nAbstention Rates by Witness Capacity:")
+    print(f"{'Model':<12} {'Contradictory':<15} {'Consistent':<15} {'OOD (SVHN)':<15} {'Selectivity':<12}")
+    print("-" * 70)
+    for r in witness_bits_values:
+        result = results[f'r={r:.1f}']
+        contra_abstain = result['contradictory']['abstention_rate'] * 100
+        consist_abstain = result['consistent']['abstention_rate'] * 100
+        selectivity = contra_abstain - consist_abstain  # Higher = more selective abstention
+        model_name = f"r={r:.1f}"
+        print(f"{model_name:<12} "
+              f"{contra_abstain:>13.1f}% "
+              f"{consist_abstain:>13.1f}% "
+              f"{result['ood']['abstention_rate']*100:>13.1f}% "
+              f"{selectivity:>+10.1f}%")
+
+    # Calculate and print OOD improvements
+    baseline_ood = results['r=0.0']['ood']['abstention_rate'] * 100
+    print(f"\nOOD Abstention Improvement over Baseline (r=0.0):")
+    print(f"{'Model':<12} {'OOD Rate':<12} {'Improvement':<12}")
+    print("-" * 40)
+    for r in witness_bits_values:
+        ood_rate = results[f'r={r:.1f}']['ood']['abstention_rate'] * 100
+        improvement = ood_rate - baseline_ood
+        model_name = f"r={r:.1f}"
+        print(f"{model_name:<12} {ood_rate:>10.1f}% {improvement:>+10.1f}%")
+
+    # Phase transition evaluation
+    print(f"\nPhase Transition Analysis (K = {K:.3f} bits):")
+    for r in witness_bits_values:
+        result = results[f'r={r:.1f}']
+        contradictory_rate = result['contradictory']['abstention_rate']
+        expected_high_abstention = r >= K
+        actual_high_abstention = contradictory_rate > 0.5
+        status = "✓" if expected_high_abstention == actual_high_abstention else "✗"
+        model_name = f"r={r:.1f}"
+        print(f"  {model_name}: {contradictory_rate*100:.1f}% abstention {status}")
+
     # Save results
-    with open(results_dir / 'benchmark_results.json', 'w') as f:
-        json.dump({k: {'auroc': float(v['auroc'])} for k, v in results.items()}, f, indent=2)
-    print(f"  Saved: {results_dir / 'benchmark_results.json'}")
-    
-    # Summary
-    print("\n" + "="*80)
-    print("SUMMARY")
-    print("="*80)
-    sorted_results = sorted(results.items(), key=lambda x: x[1]['auroc'], reverse=True)
-    for method, res in sorted_results:
-        marker = "★" if method == "Witness" else " "
-        print(f"{marker} {method:15s}: AUROC = {res['auroc']:.3f}")
-    print()
+    with open(results_dir / 'generalization_test.json', 'w') as f:
+        json.dump(results, f, indent=2)
+
+    # Prepare data for visualization and analysis
+    r_values = witness_bits_values
+    contradictory_rates = [results[f'r={r:.1f}']['contradictory']['abstention_rate']*100 for r in r_values]
+    consistent_rates = [results[f'r={r:.1f}']['consistent']['abstention_rate']*100 for r in r_values]
+    ood_rates = [results[f'r={r:.1f}']['ood']['abstention_rate']*100 for r in r_values]
+    baseline_accuracies = [results[f'r={r:.1f}']['consistent']['accuracy_on_commits']*100 for r in r_values]
+
+    # Create visualization
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    x = np.arange(len(r_values))
+    width = 0.25
+
+    ax1.bar(x - width, contradictory_rates, width, label='Contradictory', color='#e74c3c', alpha=0.8)
+    ax1.bar(x, consistent_rates, width, label='Consistent', color='#3498db', alpha=0.8)
+    ax1.bar(x + width, ood_rates, width, label='OOD (SVHN)', color='#27ae60', alpha=0.8)
+
+    ax1.set_xlabel('Witness Capacity r (bits)')
+    ax1.set_ylabel('Abstention Rate (%)')
+    ax1.set_title('Abstention Across Test Conditions')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([f'{r:.1f}' for r in r_values])
+    ax1.legend()
+    ax1.grid(True, alpha=0.3, axis='y')
+    ax1.set_ylim([0, 100])
+
+    baseline_ood = ood_rates[0]
+    ood_improvements = [rate - baseline_ood for rate in ood_rates]
+
+    ax2.plot(r_values, ood_improvements, 'o-', linewidth=3, markersize=10, color='#27ae60')
+    ax2.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+    ax2.set_xlabel('Witness Capacity r (bits)')
+    ax2.set_ylabel('OOD Abstention Improvement (%)')
+    ax2.set_title('OOD Detection Generalization')
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(results_dir / 'generalization_test.png', dpi=150, bbox_inches='tight')
+
+    # Evaluate what "better than baseline" means
+    print(f"\nWhat does 'better than baseline' mean?")
+    print(f"Baseline (r=0): {ood_rates[0]:.1f}% OOD abstention, {baseline_accuracies[0]:.1f}% accuracy")
+    print(f"Witness models should show:")
+    print(f"1. Higher abstention on contradictory vs consistent inputs (selective uncertainty)")
+    print(f"2. Appropriate abstention on OOD data (generalized epistemic uncertainty)")
+
+    # Evaluate witness capacity effectiveness
+    print("\nEvaluating witness capacity effectiveness:")
+    print("1. Phase transition (Theorem 7.4): E + r ≥ K")
+    phase_success = all(
+        (r >= K and results[f'r={r:.1f}']['contradictory']['abstention_rate'] > 0) or
+        (r < K and results[f'r={r:.1f}']['contradictory']['abstention_rate'] == 0)
+        for r in witness_bits_values
+    )
+
+    print(f"   ✓ Phase transition confirmed" if phase_success else "   ✗ Phase transition failed")
+
+    print(f"2. Selective uncertainty (epistemic awareness)")
+    selective_scores = []
+    for r in witness_bits_values[1:]:  # Skip baseline
+        result = results[f'r={r:.1f}']
+        selectivity = result['contradictory']['abstention_rate'] - result['consistent']['abstention_rate']
+        selective_scores.append(selectivity)
+        print(f"   r={r:.1f}: selectivity = {selectivity*100:+.1f}%")
+
+    selective_success = any(s > 0 for s in selective_scores)  # Any positive selectivity
+    print(f"   {'✓' if selective_success else '✗'} Selective uncertainty {'achieved' if selective_success else 'not achieved'}")
+
+    print(f"3. OOD generalization (epistemic transfer)")
+    ood_improvements = [rate - ood_rates[0] for rate in ood_rates[1:]]
+    max_ood_improvement = max(ood_improvements) if ood_improvements else 0
+    print(f"   Max OOD improvement: {max_ood_improvement*100:+.1f}% over baseline")
+    ood_success = max_ood_improvement > 0.05  # >5% improvement
+    print(f"   {'✓' if ood_success else '✗'} OOD generalization {'achieved' if ood_success else 'not achieved'}")
+
+
 
 
 if __name__ == "__main__":

@@ -63,15 +63,16 @@ Our work has shown it's not only measurable, but it's useful too. K(P) is a univ
 
 ## Why This Matters
 
-When perspectives clash, three quantities emerge. $α^\star$ measures how close they can get to a single account—the best-case agreement coefficient. $K(P)$ measures the cost of forcing consensus—the bits you pay to pretend they agree. $λ^\star$ identifies which contexts drive the conflict—where the tension concentrates.
+When perspectives clash, three quantities emerge:
+1. $α^\star$ measures how close they can get to a single account—the best-case agreement coefficient. 
+2. $K(P)$ measures the cost of forcing consensus—the bits you pay to pretend they agree. 
+3. $λ^\star$ identifies which contexts drive the conflict—where the tension concentrates.
 
-Just as entropy priced randomness, $K(P)$ prices contradiction. In [quantum contextuality](examples/quantum/), it measures which measurement scenarios create irreducible tension. In [neural network hallucination](examples/hallucinations/), it predicts minimum error rates from task structure before training. In [statistical paradoxes](examples/statistics/), it quantifies how much aggregated and stratified views contradict.
+Computational systems have long handled multiple perspectives by forcing consensus or averaging disagreements away, a tradition going back to George Boole. Contrakit measures something that Boole — and thus Kolmogorov, Shannon, and much of modern information theory — could not represent under the axioms they adopted.
 
-Computational systems have long handled multiple perspectives by forcing consensus or averaging them away. Contrakit measures epistemic tension itself, treating contradiction as structured information rather than noise. When experts or models disagree, each contradiction points toward boundaries of current understanding. 
+Contrakit measures **epistemic tension itself**, treating contradiction as structured information rather than noise. When experts or models disagree, each contradiction marks a boundary of current understanding. Contrakit quantifies that boundary, $λ^\star$ reveals where to investigate, and the structure of disagreement guides the next reasoning step.
 
-When perspectives clash, contrakit measures it, $λ^\star$ reveals where to investigate, and the structure of disagreement guides the next reasoning step.
-
-Quantifying epistemic tension reveals not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of—how far it can stretch, where it breaks, and what it leaves out.
+Quantifying epistemic tension reveals not only how well multiple viewpoints can be reconciled, but what each viewpoint is capable of — how far it can stretch, where it breaks, and what it leaves out.
 
 
 ## The K(P) Tax

@@ -483,7 +483,7 @@ $$
 
 
 $$
-K((1-t)P + tR) \leq -\log_2((1-t)2^{-K(P)} + t), \quad t \geq \frac{1 - 2^{-\kappa}}{1 - 2^{-K(P)}}
+K((1-t)P + tR) \leq -\log_2((1-t)2^{-K(P)} + t), \quad t \leq \frac{2^{-\kappa} - 2^{-K(P)}}{1 - 2^{-K(P)}}
 $$
 
 **Stability:** High stability - reducing K(P) > 0 to near-zero requires t ≈ 100% FI mixture

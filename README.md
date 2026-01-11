@@ -70,6 +70,18 @@ The apps show high agreement (0.965) with just 0.052 bits of contradiction. Thei
 
 Compare this to a contradiction of 0.7 bits, which would indicate the apps are using fundamentally incompatible data sources—you'd need to treat their predictions as separate time dimensions rather than reconciling them into a single "travel time" estimate.
 
+## Where This Applies
+
+Contrakit can be used anywhere there are multiple valid approaches to the same question that can produce measurable disagreement. We've included examples of the following systems within this repository to demonstrate the versatility:
+
+- **[Quantum systems](examples/quantum/)** let us measure "how quantum" a system really is, from Bell inequality violations (~0.012 bits) to logical paradoxes that classical physics can't explain (~0.132 bits), all in the same quantitative framework.
+
+- **[Neural networks](examples/hallucinations/)** enable predicting hallucination rates before training, with $K(P)$ setting irreducible error floors that persist even with infinite training data on structurally contradictory tasks, while witness capacity $r$ determines if architectures can express epistemic uncertainty.
+
+- **[Byzantine consensus](examples/consensus/)** algorithms become more efficient by measuring which messages actually need verification, reducing communication overhead by up to 100% while staying secure against attacks.
+
+- **[Statistical paradoxes](examples/statistics/)** helps detect Simpson's paradox by quantifying when aggregated data contradicts subgroup patterns, guiding researchers on when additional context variables are needed for valid conclusions.
+
 
 ## How Classical Information Theory Misses This
 
@@ -127,29 +139,7 @@ These aren't abstract numbers. The costs appear in real information processing t
 - **Neural Networks**: Error floors appear at $1 - 2^{-K(P)}$ regardless of training data or architecture
 
 
-## Where This Applies
 
-The measure appears wherever you have multiple valid ways to interpret the same data, and those interpretations resist collapsing into a single story. A quantum measurement shows different outcomes depending on which observable you measure. A neural network faces training examples that demand opposite answers for the same input. Byzantine nodes report conflicting histories of the same events. Statistical datasets reverse their trends when you aggregate versus stratify. The common thread: legitimate perspectives that cannot be unified without additional context:
-
-- **Quantum systems** demonstrate this cleanly. Bell inequalities test correlations between separated particles. Classical physics constrains correlation strength to $S \leq 2$. Quantum mechanics achieves $S = 2\sqrt{2} \approx 2.828$ through entanglement. That violation costs exactly 0.012 bits per measurement if you insist on maintaining a classical explanation.
-
-  The KCBS scenario reveals measurement contextuality through incompatible observables arranged in a pentagon. Classical physics says their expectation values sum to at most 2. Quantum mechanics achieves $\sqrt{5} \approx 2.236$, costing 0.013 bits per measurement—nearly identical to Bell violations despite arising from single-system contextuality rather than two-particle correlations.
-
-  The Mermin-Peres magic square pushes this further: quantum measurements satisfy parity constraints that classical logic declares unsatisfiable. The quantum solution achieves $W = 6$ versus the classical maximum $W = 4$, costing 0.132 bits—roughly ten times higher. Algebraic constraints resist reconciliation more than probabilistic ones.
-
-- **Neural networks** encounter the same impossibility when tasks demand incompatible behaviors across contexts. Answer A in one situation, answer B in another, using identical input features—no single function satisfies both requirements simultaneously.
-
-  We trained networks on tasks with $K(P)$ ranging from 0 to 1.16 bits across 100 experimental configurations. The theoretical minimum error of $1 - 2^{-K(P)}$ held in every case. Training composition affected how far above the minimum you landed but couldn't break through it.
-
-  Standard softmax architectures make this worse by forcing probability distributions that sum to 1.0, leaving no way to express "none of these options apply." We quantified architectural capacity to express uncertainty as witness capacity $r$. When $r < K$, error rates stayed near 100% regardless of training effort. When $r \geq K$, error dropped sharply to near 0%. The transition happens right at $r = K$—showing that $K$ measures required capacity, not task difficulty.
-
-- **Byzantine consensus** protocols face similar tension. Traditional approaches verify everything uniformly, treating all nodes with equal suspicion to guarantee safety. That works but wastes resources checking honest nodes unnecessarily.
-
-  We measure actual disagreement patterns using $K(P)$ and allocate verification using witness vectors $\lambda^*$. Nodes with higher witness mass receive more scrutiny. This maintains safety guarantees while reducing overhead on honest participants.
-
-- **Statistical paradoxes** reveal the same structure. Simpson's paradox reverses relationships when you aggregate across contexts—a treatment effective in every subgroup becomes ineffective overall. The reversal occurs when aggregation hides relevant structure.
-
-  Computing $K(P)$ with the stratifying variable hidden shows positive contradiction between stratified and aggregated views. Adding the variable as an explicit observable eliminates the impossibility—$K(P)$ drops to zero and the paradox resolves. This demonstrates that contradictions often arise from missing context rather than mathematical paradox.
 
 ## The Operational Costs
 

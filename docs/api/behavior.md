@@ -148,13 +148,20 @@ Generate synthetic observation data for testing and validation.
 
 ---
 
-## Drawbacks or Gotchas
+## Assumptions & Requirements
 
-* **Finite alphabets required**: Only works with discrete, finite outcome spaces
+### Mathematical Assumptions
+* **Finite Alphabets**: All observable outcomes and context sets must be finite and discrete
+* **Frame-Independence Baseline**: The frame-independent set (FI) must be nonempty, compact, convex, and product-closed
+* **Asymptotic Convergence**: Operational results require large sample limits (n → ∞) for guaranteed convergence
+* **Domain Specification**: Frame-independent baseline must be externally specified for each application domain
+
+### Technical Limitations
 * **Computational scaling**: Complexity grows exponentially with global assignment space size
 * **Memory intensive**: Large numbers of contexts increase memory requirements
 * **Cache management**: Manual cache invalidation needed after in-place distribution modifications
 * **No continuous support**: Cannot handle continuous random variables or infinite outcome spaces
+* **Finite-blocklength gaps**: Current results are asymptotic; finite-sample bounds remain open
 
 ---
 

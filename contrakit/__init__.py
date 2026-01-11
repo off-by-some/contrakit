@@ -1,4 +1,18 @@
-"""Mathematical Theory of Contradiction - A Python package for exploring contradiction mathematics."""
+"""
+Mathematical Theory of Contradiction - A Python package for exploring contradiction mathematics.
+
+Core Assumptions:
+- Finite alphabets: All observable outcomes and context sets must be finite and discrete
+- Frame-independence properties: FI set must be nonempty, compact, convex, and product-closed
+- Asymptotic regime: Operational theorems require large sample limits for convergence guarantees
+- Source-channel separation: Some communication results assume separable source and channel coding
+
+Scope & Limitations:
+- Works with discrete probability distributions only (no continuous variables)
+- Complexity scales exponentially with outcome space size
+- Results are domain-general once the frame-independent baseline is specified
+- Finite-blocklength refinements remain an open research direction
+"""
 
 import importlib.metadata
 

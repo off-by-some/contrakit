@@ -48,6 +48,12 @@ class Behavior(BaseBehavior, BehaviorAnalysisMixin):
     - Transformations: rename_observables(), permute_outcomes(), coarse_grain()
     - Analysis: worst_case_weights()
     - Sampling: sample_observations(), count_observations()
+
+    Assumptions:
+    - Finite alphabets: All observable outcomes and context sets must be finite
+    - Frame-independence baseline: FI set must be nonempty, compact, convex, product-closed
+    - Asymptotic regime: Operational results require large sample limits for convergence
+    - Domain specification: FI baseline must be externally specified for each application
     - Utilities: is_frame_independent()
 
     Example:

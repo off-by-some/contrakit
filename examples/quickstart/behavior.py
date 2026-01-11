@@ -19,6 +19,12 @@ Key Concepts Demonstrated:
 Behaviors are the fundamental objects for studying contradictions in
 multi-perspective data, enabling quantitative analysis of consistency
 across different measurement contexts.
+
+Technical Assumptions:
+- Finite alphabets: All observable outcomes and context sets must be finite and discrete
+- Frame-independence baseline: FI set must be nonempty, compact, convex, product-closed
+- Asymptotic regime: Operational results require large sample limits for convergence
+- Domain specification: FI baseline must be externally specified for each application
 """
 
 from contrakit.space import Space

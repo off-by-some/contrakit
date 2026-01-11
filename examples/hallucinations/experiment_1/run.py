@@ -35,6 +35,8 @@ Hallucination rates > 0% demonstrate the baseline behavior that definedness
 heads attempt to mitigate in subsequent experiments.
 """
 
+from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass
 import sys
 from pathlib import Path
 
@@ -51,21 +53,23 @@ from utils import (
 from contrakit.constants import DEFAULT_SEED
 
 # ============================================================================
-# EXPERIMENT CONFIGURATION
+# EXPERIMENT CONFIGURATION CONSTANTS
 # ============================================================================
-# This experiment demonstrates hallucination on out-of-distribution inputs.
-# We train on a subset of possible inputs (with labels A/B/C/D) and test on:
-# 1. The SAME inputs (to verify learning occurred)
-# 2. Different inputs that shouldn't have these labels (to demonstrate hallucination)
-#
-# Scientific note: We use embedding-based architecture which memorizes input-output
-# mappings without requiring generalizable patterns. This is intentional - we're
-# testing whether the model abstains on OOD inputs, not whether it generalizes.
-DEFINED_RATIO = 0.4  # Fraction of inputs with defined outputs
-UNDEFINED_SUPERVISION = 0.05  # Fraction of undefined inputs to supervise with ⊥
-USE_DEFINEDNESS_HEAD = False  # Whether to use a separate head for uncertainty
-DEFINEDNESS_THRESHOLD = 0.5  # Threshold for definedness head
-EPOCHS_EXP1 = 100  # Training epochs
+DEFINED_RATIO = 0.4  # Fraction of inputs with defined outputs (A/B/C/D)
+UNDEFINED_SUPERVISION_RATIO = 0.05  # Fraction of undefined inputs supervised with ⊥
+USE_DEFINEDNESS_HEAD = False  # Whether to use separate head for uncertainty
+DEFINEDNESS_THRESHOLD = 0.5  # Threshold for definedness head decisions
+EXPERIMENT_EPOCHS = 100  # Training epochs for this experiment
+NUM_SEEDS_FOR_CONSISTENCY = 5  # Number of seeds to test for consistency
+
+# ============================================================================
+# DATA STRUCTURES
+# ============================================================================
+@dataclass(frozen=True)
+class ExperimentResults:
+    """Results from evaluating a hallucination experiment."""
+    hallucination_rate: float  # Fraction of undefined inputs given structured predictions
+    defined_accuracy: float    # Accuracy on defined inputs (verifies learning)
 
 # Dataset generation functions are now in utils.py
 
@@ -73,40 +77,55 @@ EPOCHS_EXP1 = 100  # Training epochs
 
 # Training function is now in utils.py
 
-def evaluate_model(model, train_data, eval_defined, test_undefined, def_threshold=0.5):
+def evaluate_model(
+    model: Any,
+    train_data: Tuple[Any, Any, Any],
+    eval_defined: Tuple[Any, Any],
+    test_undefined: Tuple[Any, Any],
+    def_threshold: float = DEFINEDNESS_THRESHOLD
+) -> ExperimentResults:
     """
     Evaluate model performance on training, eval (same as training), and OOD inputs.
-    
+
     Args:
-        train_data: Training data tuple
-        eval_defined: Evaluation set (SAME inputs as trained defined inputs)
+        model: Trained neural network model
+        train_data: Training data tuple (inputs, labels, masks)
+        eval_defined: Evaluation set (same inputs as trained defined inputs)
         test_undefined: Out-of-distribution inputs that should map to ⊥
         def_threshold: Threshold for definedness head if used
-        
+
     Returns:
         hallucination_rate: Fraction of OOD inputs given structured labels
         defined_accuracy: Accuracy on training inputs (verifies learning)
     """
+    if not (0.0 <= def_threshold <= 1.0):
+        raise ValueError(f"def_threshold must be between 0 and 1, got {def_threshold}")
+
+    if len(train_data) != 3:
+        raise ValueError("train_data must be a tuple of (inputs, labels, masks)")
+
+    if len(eval_defined) != 2 or len(test_undefined) != 2:
+        raise ValueError("eval_defined and test_undefined must be tuples of (inputs, labels)")
     train_x, train_y, _ = train_data
     eval_defined_x, eval_defined_y = eval_defined
     test_undefined_x, test_undefined_y = test_undefined
 
-    # Evaluate on defined inputs (SAME as training - verifies memorization)
-    preds_defined, conf_defined, _ = evaluate_predictions(
+    # Evaluate on defined inputs (same as training - verifies memorization occurred)
+    predictions_defined, confidence_defined, _ = evaluate_predictions(
         model, eval_defined_x, model.use_definedness_head, def_threshold
     )
-    print_prediction_analysis(preds_defined, eval_defined_y, conf_defined,
+    print_prediction_analysis(predictions_defined, eval_defined_y, confidence_defined,
                             label="DEFINED inputs (training set - should predict A/B/C/D)")
 
-    # Evaluate on undefined inputs (OOD - tests abstention)
-    preds_undefined, conf_undefined, abstention_rate = evaluate_predictions(
+    # Evaluate on undefined inputs (out-of-distribution - tests hallucination)
+    predictions_undefined, confidence_undefined, abstention_rate = evaluate_predictions(
         model, test_undefined_x, model.use_definedness_head, def_threshold
     )
-    print_prediction_analysis(preds_undefined, test_undefined_y, conf_undefined,
+    print_prediction_analysis(predictions_undefined, test_undefined_y, confidence_undefined,
                             abstention_rate, "UNDEFINED inputs (OOD - should predict ⊥)")
 
-    hallucination_rate = calculate_hallucination_rate(preds_undefined)
-    defined_accuracy = np.mean(preds_defined == eval_defined_y)
+    hallucination_rate = calculate_hallucination_rate(predictions_undefined)
+    defined_accuracy = np.mean(predictions_defined == eval_defined_y)
 
     print("\nSUMMARY")
     print("=" * 40)
@@ -115,11 +134,21 @@ def evaluate_model(model, train_data, eval_defined, test_undefined, def_threshol
     if abstention_rate > 0:
         print(f"Abstention Rate: {abstention_rate:.1%}")
 
-    return hallucination_rate, defined_accuracy
+    return ExperimentResults(
+        hallucination_rate=hallucination_rate,
+        defined_accuracy=defined_accuracy
+    )
 
-def run_multiple_seeds(seeds=None):
+def run_multiple_seeds(seeds: Optional[List[int]] = None) -> None:
+    """Run experiment with multiple random seeds to check consistency."""
     if seeds is None:
-        seeds = [DEFAULT_SEED + i for i in range(5)]
+        seeds = [DEFAULT_SEED + i for i in range(NUM_SEEDS_FOR_CONSISTENCY)]
+
+    if not seeds:
+        raise ValueError("At least one seed must be provided")
+
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("All seeds must be unique")
     """Run experiment with multiple random seeds to check consistency."""
     print("\n" + "="*60)
     print("MULTI-SEED TEST: Checking consistency across random seeds")
@@ -139,9 +168,9 @@ def run_multiple_seeds(seeds=None):
         model = HallucinationNet(INPUT_SIZE, HIDDEN_SIZE, len(OUTPUT_CLASSES),
                                USE_DEFINEDNESS_HEAD, use_embedding=True)
 
-        train_model(model, train_data, EPOCHS_EXP1, LEARNING_RATE, BATCH_SIZE, verbose=False)
-        hall_rate, def_acc = evaluate_model(model, train_data, eval_defined, test_undefined,
-                                          DEFINEDNESS_THRESHOLD)
+        train_model(model, train_data, EXPERIMENT_EPOCHS, LEARNING_RATE, BATCH_SIZE, verbose=False)
+        results = evaluate_model(model, train_data, eval_defined, test_undefined, DEFINEDNESS_THRESHOLD)
+        hall_rate, def_acc = results.hallucination_rate, results.defined_accuracy
 
         results.append({
             'seed': seed,
@@ -158,22 +187,38 @@ def run_multiple_seeds(seeds=None):
     print(f"Defined Accuracy:   {np.mean(def_accs):.1%} ± {np.std(def_accs):.1%}")
     print(f"\nHallucination behavior is consistent across different random seeds.")
 
-def main():
-    """Run the baseline hallucination experiment."""
-    print("Neural Network Hallucination Experiment")
-    print("="*50)
+def setup_experiment_data() -> Tuple[Dict[Any, Any], Tuple[Any, Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
+    """
+    Generate and prepare datasets for the hallucination experiment.
 
-    # Generate dataset
-    print(f"\nDATASET SETUP")
+    Returns:
+        function_map: Mapping of inputs to outputs (including ⊥ for undefined)
+        train_data: Tuple of (inputs, labels, masks) for training
+        eval_defined: Tuple of (inputs, labels) for evaluation on defined inputs
+        test_undefined: Tuple of (inputs, labels) for testing on undefined inputs
+    """
+    function_map, _ = generate_partial_function(
+        INPUT_SIZE, OUTPUT_CLASSES, DEFINED_RATIO, UNDEFINED_SUPERVISION_RATIO,
+        DEFAULT_SEED, use_structured_task=False
+    )
+
+    train_data, eval_defined, test_undefined = create_datasets(function_map, INPUT_SIZE)
+    return function_map, train_data, eval_defined, test_undefined
+
+
+def print_dataset_info(function_map: Dict[Any, Any]) -> None:
+    """
+    Print detailed information about the experiment dataset composition.
+
+    Args:
+        function_map: Dictionary mapping inputs to their defined outputs or ⊥
+    """
+    print(f"DATASET SETUP")
     print("-" * 30)
     print(f"Input range: 0 to {INPUT_SIZE-1}")
     print(f"Defined inputs: {DEFINED_RATIO:.0%}")
-    print(f"⊥ supervision: {UNDEFINED_SUPERVISION:.0%} of undefined inputs")
+    print(f"⊥ supervision: {UNDEFINED_SUPERVISION_RATIO:.0%} of undefined inputs")
     print(f"Output classes: {OUTPUT_CLASSES}")
-
-    function_map, _ = generate_partial_function(
-        INPUT_SIZE, OUTPUT_CLASSES, DEFINED_RATIO, UNDEFINED_SUPERVISION, DEFAULT_SEED, use_structured_task=False
-    )
 
     n_defined = len([x for x, y in function_map.items() if y != '⊥'])
     n_undefined_labeled = len([x for x, y in function_map.items() if y == '⊥'])
@@ -184,16 +229,28 @@ def main():
     print(f"  Undefined inputs labeled with ⊥: {n_undefined_labeled}")
     print(f"  Undefined inputs unlabeled (OOD test set): {n_undefined_unlabeled}")
 
-    # Create datasets
-    train_data, eval_defined, test_undefined = create_datasets(function_map, INPUT_SIZE)
 
-    # Initialize model
-    print(f"\nMODEL ARCHITECTURE")
-    print("-" * 30)
+def initialize_model() -> Any:
+    """
+    Initialize the HallucinationNet model with experiment configuration.
+
+    Returns:
+        Configured neural network model ready for training
+    """
     torch.manual_seed(DEFAULT_SEED)
-    model = HallucinationNet(INPUT_SIZE, HIDDEN_SIZE, len(OUTPUT_CLASSES),
+    return HallucinationNet(INPUT_SIZE, HIDDEN_SIZE, len(OUTPUT_CLASSES),
                            USE_DEFINEDNESS_HEAD, use_embedding=True)
 
+
+def print_model_info(model: Any) -> None:
+    """
+    Print detailed information about the model architecture and configuration.
+
+    Args:
+        model: The initialized neural network model
+    """
+    print(f"MODEL ARCHITECTURE")
+    print("-" * 30)
     print(f"Input embedding: {INPUT_SIZE} → {HIDDEN_SIZE}")
     print(f"Hidden layer 1: {HIDDEN_SIZE} → {HIDDEN_SIZE}")
     print(f"Hidden layer 2: {HIDDEN_SIZE} → {HIDDEN_SIZE}")
@@ -201,18 +258,51 @@ def main():
     if USE_DEFINEDNESS_HEAD:
         print(f"Definedness head: {HIDDEN_SIZE} → 1 (threshold = {DEFINEDNESS_THRESHOLD})")
 
-    # Train
-    print(f"\nTRAINING")
-    print("-" * 30)
-    train_model(model, train_data, EPOCHS_EXP1, LEARNING_RATE, BATCH_SIZE)
 
-    # Evaluate
-    print(f"\nEVALUATION")
-    print("-" * 30)
-    hallucination_rate, defined_acc = evaluate_model(
-        model, train_data, eval_defined, test_undefined, DEFINEDNESS_THRESHOLD
-    )
+def train_experiment_model(model: Any, train_data: Tuple[Any, Any, Any]) -> None:
+    """
+    Train the model on the experiment dataset.
 
+    Args:
+        model: Neural network model to train
+        train_data: Tuple of (inputs, labels, masks) for training
+    """
+    print(f"TRAINING")
+    print("-" * 30)
+    train_model(model, train_data, EXPERIMENT_EPOCHS, LEARNING_RATE, BATCH_SIZE)
+
+
+def evaluate_experiment_model(
+    model: Any,
+    train_data: Tuple[Any, Any, Any],
+    eval_defined: Tuple[Any, Any],
+    test_undefined: Tuple[Any, Any]
+) -> ExperimentResults:
+    """
+    Evaluate the trained model on all test sets and return key metrics.
+
+    Args:
+        model: Trained neural network model
+        train_data: Original training data (for reference)
+        eval_defined: Evaluation set with defined inputs
+        test_undefined: Test set with undefined inputs
+
+    Returns:
+        Tuple of (hallucination_rate, defined_accuracy)
+    """
+    print(f"EVALUATION")
+    print("-" * 30)
+    return evaluate_model(model, train_data, eval_defined, test_undefined, DEFINEDNESS_THRESHOLD)
+
+
+def print_experiment_results(hallucination_rate: float, defined_acc: float) -> None:
+    """
+    Print the final experiment results and conclusions.
+
+    Args:
+        hallucination_rate: Fraction of undefined inputs that received structured predictions
+        defined_acc: Accuracy on defined inputs (verifies learning occurred)
+    """
     print("\nRESULTS")
     print("-" * 30)
     print(f"Accuracy on defined inputs: {defined_acc:.1%}")
@@ -222,6 +312,29 @@ def main():
         print("Model uses definedness head to reduce hallucinations.")
     else:
         print("Standard model hallucinates on undefined inputs.")
+
+
+def main() -> None:
+    """Run the baseline hallucination experiment."""
+    print("Neural Network Hallucination Experiment")
+    print("="*50)
+
+    # Generate dataset
+    function_map, train_data, eval_defined, test_undefined = setup_experiment_data()
+    print_dataset_info(function_map)
+
+    # Initialize and describe model
+    model = initialize_model()
+    print_model_info(model)
+
+    # Train model
+    train_experiment_model(model, train_data)
+
+    # Evaluate model
+    results = evaluate_experiment_model(model, train_data, eval_defined, test_undefined)
+
+    # Print results
+    print_experiment_results(results.hallucination_rate, results.defined_accuracy)
 
 
 if __name__ == "__main__":

@@ -43,6 +43,12 @@ The module implements a layered architecture with clear separation of concerns:
 **Mathematical Foundations**:
 Let $\mathcal{X}=\{X_1,\dots,X_n\}$ be concepts with finite alphabets $\mathcal{O}_{X_i}$. Contexts $c \subseteq \mathcal{X}$ have outcome spaces $\mathcal{O}_c:=\prod_{X\in c}\mathcal{O}_X$. Perspective assignments provide pmfs $p_c \in \Delta(\mathcal{O}_c)$, yielding behaviors $P=\{p_c : c\in\mathcal{C}\}$. Lenses extend this to tagged spaces $\mathcal{X}\cup\{L\}$ with projection back to base space.
 
+**Assumptions**:
+- Finite alphabets: All observable outcomes and context sets must be finite and discrete
+- Frame-independence baseline: FI set must be nonempty, compact, convex, product-closed
+- Asymptotic regime: Operational results require large sample limits for convergence
+- Domain specification: FI baseline must be externally specified for each application
+
 ---
 
 ## Key Classes and Functions

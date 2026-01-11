@@ -19,23 +19,6 @@ When multiple experts give conflicting advice about the same problem, most syste
 **Contrakit takes a different approach:** it measures exactly how much those perspectives actually contradict—in bits.
 
 
-## What is Contrakit?
-
-Most tools treat disagreement as error—something to iron out until every model or expert agrees. But not all clashes are noise. Some are structural: valid perspectives that simply refuse to collapse into one account. **Contrakit is the first Python toolkit to measure that irreducible tension**, and to treat it as information—just as Shannon treated randomness. 
-
-Our work has shown it's not only measurable, but it's useful too. 
-
-
-## But What Does it Do, Practically?
-
-K(P) is a universal yardstick that quantifies structural disagreement — wherever it appears. We've applied contrakit across wildly different fields and found surprisingly consistent behavior:
-
-* In quantum systems, $K(P)$ measures "how quantum" a system is—whether you're looking at Bell inequalities, KCBS polytopes, or magic squares, the measure stays consistent and comparable ([quantum examples](examples/quantum/)). 
-* In neural networks, $K(P)$ computed from task structure alone predicts minimum hallucination rates before any training happens ([hallucination experiments](examples/hallucinations/)). 
-* In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)), even in cases MI returns 0.
-* In consensus algorithms, You can use it to measure how much real disagreement/conflict exists, and only spend extra checking effort exactly where the trouble actually is. ([consensus examples](examples/consensus/))
-
-
 
 ## Quickstart
 **Install:**
@@ -64,6 +47,19 @@ print("K(P):  ", round(behavior.contradiction_bits, 3), "bits")  # 0.051 bits (l
 witness = behavior.least_favorable_lambda()
 print("lambda*:", witness)  # ~0.5 each expert (balanced conflict)
 ```
+
+
+## What is Contrakit?
+
+Most tools treat disagreement as error—something to iron out until every model or expert agrees. But not all clashes are noise. Some are structural: valid perspectives that simply refuse to collapse into one account. **Contrakit is the first Python toolkit to measure that irreducible tension**, and to treat it as information—just as Shannon treated randomness. 
+
+Our work has shown it's not only measurable, but it's useful too. K(P) is a universal yardstick that quantifies structural disagreement — wherever it appears. We've applied contrakit across wildly different fields and found surprisingly consistent behavior:
+
+* In quantum systems, $K(P)$ measures "how quantum" a system is—whether you're looking at Bell inequalities, KCBS polytopes, or magic squares, the measure stays consistent and comparable ([quantum examples](examples/quantum/)). 
+* In neural networks, $K(P)$ computed from task structure alone predicts minimum hallucination rates before any training happens ([hallucination experiments](examples/hallucinations/)). 
+* In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)), even in cases MI returns 0.
+* In consensus algorithms, you can use it to measure how much real disagreement/conflict exists, and only spend extra checking effort exactly where the trouble actually is. ([consensus examples](examples/consensus/))
+
 
 ## Why This Matters
 

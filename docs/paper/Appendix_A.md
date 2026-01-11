@@ -706,18 +706,18 @@ Finite alphabets; $F=\mathrm{BC}$ (Def. A.2.1); $\mathrm{FI}$ convex and compact
 
 **Proof.**
 
-For any distributions $p,q$, one has the inequality $\mathrm{BC}(p,q)\le 1-\mathrm{TV}(p,q)$ (standard Pinsker-type bound).
+For any distributions $p,q$, one has the inequality $\mathrm{TV}(p,q)\ge 1-\mathrm{BC}(p,q)$ (standard Pinsker-type bound).
 
 Thus for each context $c$ and any $Q\in\mathrm{FI}$,
 
 $$
-\mathrm{BC}(p_c,q_c)\ \le\ 1-\mathrm{TV}(p_c,q_c).
+\mathrm{TV}(p_c,q_c)\ \ge\ 1-\mathrm{BC}(p_c,q_c).
 $$
 
-Taking the minimum over $c$ and then the maximum over $Q$,
+Taking the maximum over $c$ and then the infimum over $Q$,
 
 $$
-\alpha^\star(P)\ =\ \max_{Q\in\mathrm{FI}}\ \min_c \mathrm{BC}(p_c,q_c)\ \le\ 1-\inf_{Q\in\mathrm{FI}}\ \max_c \mathrm{TV}(p_c,q_c)\ =\ 1-d_{\mathrm{TV}}(P,\mathrm{FI}).
+d_{\mathrm{TV}}(P,\mathrm{FI})\ =\ \inf_{Q\in\mathrm{FI}}\ \max_c \mathrm{TV}(p_c,q_c)\ \ge\ \inf_{Q\in\mathrm{FI}}\ \max_c (1-\mathrm{BC}(p_c,q_c))\ =\ 1-\sup_{Q\in\mathrm{FI}}\ \min_c \mathrm{BC}(p_c,q_c)\ =\ 1-\alpha^\star(P).
 $$
 
 Rearranging yields

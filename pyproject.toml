@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "contrakit"
-version = "0.0.2"
+version = "0.0.3"
 description = "Epistemic modeling toolkit for quantifying information costs when valid perspectives disagree"
 authors = ["Cassidy Bridges <cassidybridges@gmail.com>"]
 readme = "README.md"

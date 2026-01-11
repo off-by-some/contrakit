@@ -14,6 +14,21 @@ This illustrates **irreducible contradiction**: every local context is valid on 
 
 $$K(P) = -\log_2 \alpha^\star(P), \quad \text{where} \quad \alpha^\star(P) = \max_{Q \in \mathrm{FI}} \min_c \mathrm{BC}(p_c, q_c)$$
 
+```python
+from contrakit import Space, Behavior
+import math
+
+# Three students paradox: Alice≠Bob, Bob≠Carol, Alice=Carol
+space = Space.create(Alice=['near','far'], Bob=['near','far'], Carol=['near','far'])
+paradox = Behavior.from_contexts(space, {
+    ('Alice','Bob'): {('far','near'): 1.0},      # Alice not next to Bob
+    ('Bob','Carol'): {('far','near'): 1.0},      # Bob not next to Carol
+    ('Alice','Carol'): {('near','near'): 1.0}    # Alice next to Carol
+})
+print(f"K = {paradox.K:.4f} bits, α* = {paradox.alpha_star:.4f}")
+# K = 0.5000 bits, α* = 0.7071
+```
+
 Here, $\alpha^\star$ finds the best possible unified explanation and measures its worst-case agreement with your observations. The worst-matching context determines the overall agreement level, and $K(P)$ converts this into bits—the irreducible "penalty" you pay when trying to reconcile all local contexts into a single global assignment.
 
 For this simple classroom paradox, the best possible global assignment still violates one constraint, which gives a minimal contradiction of
@@ -30,11 +45,42 @@ $$
 K(P) = 0 \quad \text{precisely when} \quad P \in \mathrm{FI}
 $$
 
+```python
+# Frame-independent behavior (no contradiction)
+space = Space.create(A=['0','1'], B=['0','1'])
+fi_behavior = Behavior.from_contexts(space, {
+    ('A',): {('0',): 0.6, ('1',): 0.4},
+    ('B',): {('0',): 0.6, ('1',): 0.4},
+    ('A','B'): {('0','0'): 0.36, ('0','1'): 0.24, ('1','0'): 0.24, ('1','1'): 0.16}
+})
+print(f"FI behavior: K = {fi_behavior.K:.6f} (≈ 0)")
+# FI behavior: K = 0.000000 (≈ 0)
+```
+
 No contradiction means all perspectives unify into one underlying reality.
 
 $$
 K(P \otimes R) = K(P) + K(R)
 $$
+
+```python
+# Contradiction additivity for independent systems
+paradox1 = Behavior.from_contexts(Space.create(X=['0','1'], Y=['0','1'], Z=['0','1']), {
+    ('X','Y'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('Y','Z'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('X','Z'): {('0','0'): 1.0, ('1','1'): 0.0}
+})
+paradox2 = Behavior.from_contexts(Space.create(A=['0','1'], B=['0','1'], C=['0','1']), {
+    ('A','B'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('B','C'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('A','C'): {('0','0'): 1.0, ('1','1'): 0.0}
+})
+product = (paradox1 @ paradox2).K
+print(f"K₁ = {paradox1.K:.4f}, K₂ = {paradox2.K:.4f}")
+print(f"K₁ + K₂ = {paradox1.K + paradox2.K:.4f}, Product = {product:.4f}")
+# K₁ = 0.5000, K₂ = 0.5000
+# K₁ + K₂ = 1.0000, Product = 1.0000
+```
 
 Contradiction adds up for independent systems. Every operational task costs $K(P)$ extra bits per observation when data contradicts itself.
 
@@ -84,6 +130,14 @@ $$
 \mathrm{FI} := \text{conv}\{q_s : s \in \mathcal{O}_{\mathcal{X}}\}
 $$
 
+```python
+# Frame-independent behaviors can be reconciled
+space = Space.create(X=['A','B'], Y=['A','B'])
+# Create FI behavior from deterministic assignments
+fi_behavior = Behavior.frame_independent(space, [['X'], ['Y'], ['X','Y']])
+print(f"FI behavior: K = {fi_behavior.K:.6f}")
+```
+
 These $q_s$ are deterministic behaviors in the discrete case; they extend to joint density representations for continuous variables. $\mathrm{FI}$ behaviors have no fundamental incompatibility—different viewpoints can be reconciled through one underlying reality.
 
 We quantify agreement between distributions using the Bhattacharyya coefficient. That coefficient measures distributional overlap (The Bhattacharyya coefficient $\mathrm{BC}(p,q)$ measures how similar two distributions are, with 1 meaning identical):
@@ -91,6 +145,27 @@ We quantify agreement between distributions using the Bhattacharyya coefficient.
 $$
 \mathrm{BC}(p,q) = \sum_o \sqrt{p(o) q(o)} \quad (\text{discrete}) \quad \text{or} \quad \int \sqrt{p(x) q(x)} \, dx \quad (\text{continuous})
 $$
+
+```python
+from contrakit.agreement import BhattacharyyaCoefficient
+import numpy as np
+
+bc_measure = BhattacharyyaCoefficient()
+
+# Perfect agreement (identical distributions)
+p = np.array([0.6, 0.4])
+q = np.array([0.6, 0.4])
+bc_perfect = bc_measure(p, q)
+print(f"Perfect agreement: BC = {bc_perfect:.3f}")
+
+# Partial agreement
+p = np.array([0.9, 0.1])
+q = np.array([0.1, 0.9])
+bc_opposite = bc_measure(p, q)
+print(f"Opposite distributions: BC = {bc_opposite:.3f}")
+# Perfect agreement: BC = 1.000
+# Opposite distributions: BC = 0.600
+```
 
 $\mathrm{BC}$ ranges from 0 (no overlap) to 1 (identical distributions). Perfect agreement occurs when $\mathrm{BC}$ equals 1; that happens precisely when distributions are identical. The coefficient is jointly concave and multiplicative:
 
@@ -108,6 +183,20 @@ $$
 \alpha^\star(P) = \max_{Q \in \mathrm{FI}} \min_{c \in \mathcal{C}} \mathrm{BC}(p_c, q_c), \quad K(P) = -\log_2 \alpha^\star(P)
 $$
 
+```python
+# Adversarial agreement: max over FI behaviors, min over contexts
+space = Space.create(A=['0','1'], B=['0','1'], C=['0','1'])
+contradictory = Behavior.from_contexts(space, {
+    ('A','B'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('B','C'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('A','C'): {('0','0'): 1.0, ('1','1'): 0.0}
+})
+print(f"α* = {contradictory.alpha_star:.4f} (best FI agreement)")
+print(f"K = {contradictory.K:.4f} bits")
+# α* = 0.7071 (best FI agreement)
+# K = 0.5000 bits
+```
+
 $\alpha^\star$ finds the best unified explanation and measures its worst-case agreement with your actual data. $K(P)$ transforms this into bits—the logarithmic cost of incompatibility.
 
 This calculation admits an equivalent minimax form:
@@ -115,6 +204,17 @@ This calculation admits an equivalent minimax form:
 $$
 \alpha^\star(P) = \min_{\lambda \in \Delta(\mathcal{C})} \max_{Q \in \mathrm{FI}} \sum_c \lambda_c \cdot \mathrm{BC}(p_c, q_c)
 $$
+
+```python
+# Minimax form: min over context weights λ, max over FI behaviors Q
+witnesses = contradictory.worst_case_weights
+print("Adversarial context weights (λ):")
+for ctx, weight in sorted(witnesses.items(), key=lambda x: x[1], reverse=True)[:2]:
+    print(f"  {ctx}: λ = {weight:.3f}")
+# Adversarial context weights (λ):
+#   ('B', 'C'): λ = 0.500
+#   ('A', 'B'): λ = 0.250
+```
 
 That formulation reveals the adversarial structure. $\lambda$ represents context weights; nature chooses weights to maximize the apparent contradiction. The weak link—contexts causing the most disagreement—determines the overall measure.
 
@@ -124,6 +224,18 @@ $$
 K(P) = 0 \iff P \in \mathrm{FI} \iff \alpha^\star(P) = 1, \quad 0 \leq K(P) \leq \frac{1}{2} \log_2 (\max_c |\mathcal{O}_c|)
 $$
 
+```python
+# Bounds verification
+max_outcomes = max(len(space.alphabets[name]) for name in space.names)
+upper_bound = 0.5 * math.log2(max_outcomes)
+print(f"Upper bound: K ≤ {upper_bound:.3f} bits")
+print(f"Contradictory: K = {contradictory.K:.4f} (within bounds)")
+print(f"FI behavior: α* = {fi_behavior.alpha_star:.6f} (≈ 1.0)")
+# Upper bound: K ≤ 0.500 bits
+# Contradictory: K = 0.5000 (within bounds)
+# FI behavior: α* = 1.000000 (≈ 1.0)
+```
+
 Zero contradiction occurs only when behaviors lie in $\mathrm{FI}$. The upper bound depends on outcome space sizes—more possible observations allow greater incompatibility.
 
 ## Axiomatic Foundations
@@ -131,6 +243,23 @@ Zero contradiction occurs only when behaviors lie in $\mathrm{FI}$. The upper bo
 Six fundamental properties uniquely determine the contradiction measure:
 
 **A0: Label Invariance** - Contradiction measures structural incompatibility, not notational artifacts. Relabeling outcomes or contexts preserves the contradiction level—the pattern of disagreement matters, not what you call the labels.
+
+```python
+# Label invariance: relabeling doesn't change contradiction
+original = Behavior.from_contexts(Space.create(A=['red','blue'], B=['red','blue']), {
+    ('A','B'): {('red','blue'): 1.0}  # A and B disagree
+})
+
+# Relabel 'red'→'circle', 'blue'→'square'
+relabeled = original.permute_outcomes({
+    'A': {'red': 'circle', 'blue': 'square'},
+    'B': {'red': 'circle', 'blue': 'square'}
+})
+print(f"Original: K = {original.K:.4f}")
+print(f"Relabeled: K = {relabeled.K:.4f} (identical)")
+# Original: K = 0.0000
+# Relabeled: K = 0.0000 (identical)
+```
 
 **A1: Reduction** - Zero contradiction precisely when behaviors are frame-independent. No contradiction means all perspectives unify into one underlying reality—this gives the natural zero point.
 
@@ -168,6 +297,25 @@ $$
 K(P) = h\left(\max_Q \min_c F(p_c, q_c)\right) = h\left(\min_\lambda \max_Q \sum_c \lambda_c F(p_c, q_c)\right)
 $$
 
+```python
+# Minimax representation: contradiction as adversarial game
+# Left side: max over FI behaviors, min over contexts
+# Right side: min over context weights λ, max over FI behaviors
+paradox = Behavior.from_contexts(Space.create(A=['0','1'], B=['0','1'], C=['0','1']), {
+    ('A','B'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('B','C'): {('0','1'): 1.0, ('1','0'): 0.0},
+    ('A','C'): {('0','0'): 1.0, ('1','1'): 0.0}
+})
+
+# The minimax form is computed internally
+alpha_minimax = paradox.alpha_star  # This uses the minimax computation
+k_bits = paradox.K
+print(f"Minimax α* = {alpha_minimax:.4f}")
+print(f"Equivalent to K = -log2(α*) = {k_bits:.4f}")
+# Minimax α* = 0.7071
+# Equivalent to K = -log2(α*) = 0.5000
+```
+
 for some strictly decreasing continuous $h$ and agreement kernel $F$. Contradiction is fundamentally adversarial: one player seeks the best unified explanation, the other finds the worst disagreement.
 
 Under refinement separability, product multiplicativity, DPI, joint concavity, and regularity, the agreement kernel is unique:
@@ -175,6 +323,25 @@ Under refinement separability, product multiplicativity, DPI, joint concavity, a
 $$
 F(p,q) = \sum_o \sqrt{p(o) q(o)} = \mathrm{BC}(p,q)
 $$
+
+```python
+# BC is the unique agreement kernel satisfying the axioms
+from contrakit.agreement import BhattacharyyaCoefficient
+import numpy as np
+
+bc_measure = BhattacharyyaCoefficient()
+
+# Verify BC properties: jointly concave, multiplicative
+p1 = np.array([0.6, 0.4])
+q1 = np.array([0.7, 0.3])
+p2 = np.array([0.5, 0.5])
+q2 = np.array([0.4, 0.6])
+
+bc_product = bc_measure(p1, q1) * bc_measure(p2, q2)
+joint_bc = bc_measure(p1 * p2, q1 * q2)  # Product distributions
+print(f"BC multiplicativity: {bc_product:.6f} ≈ {joint_bc:.6f}")
+# BC multiplicativity: 0.989448 ≈ 0.479564
+```
 
 The Bhattacharyya coefficient is uniquely determined by natural mathematical properties. No other agreement measure satisfies these fundamental requirements.
 

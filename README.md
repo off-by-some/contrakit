@@ -78,7 +78,7 @@ Contrakit can be used anywhere there are multiple valid approaches to the same q
 
 - **[Neural networks](examples/hallucinations/)** enable predicting hallucination rates before training, with $K(P)$ setting irreducible error floors that persist even with infinite training data on structurally contradictory tasks, while witness capacity $r$ determines if architectures can express epistemic uncertainty.
 
-- **[Byzantine consensus](examples/consensus/)** algorithms become more efficient by measuring which messages actually need verification, reducing communication overhead by up to 100% while staying secure against attacks.
+- **[Byzantine consensus](examples/consensus/)** algorithms become more efficient by measuring which messages actually need verification, reducing communication overhead while staying secure against attacks.
 
 - **[Statistical paradoxes](examples/statistics/)** helps detect Simpson's paradox by quantifying when aggregated data contradicts subgroup patterns, guiding researchers on when additional context variables are needed for valid conclusions.
 

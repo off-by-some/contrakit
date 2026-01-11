@@ -1,35 +1,88 @@
-# CHSH Inequality Analysis
-#
-# This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality—a mathematical constraint that distinguishes between different types of correlations. Formally, the CHSH inequality establishes that certain measurement correlations cannot exceed a value of 2 when the underlying system follows local realistic principles. Quantum mechanics predicts correlations that violate this bound—demonstrating contextuality that cannot be explained by any single unified classical model; the violation is fundamental.
+"""
+CHSH Inequality Analysis
 
-import numpy as np
-from math import cos, pi
+This module examines the Clauser-Horne-Shimony-Holt (CHSH) inequality, a mathematical
+constraint that distinguishes between different types of correlations. The CHSH inequality
+establishes that certain measurement correlations cannot exceed 2 when the underlying
+system follows local realistic principles. Quantum mechanics predicts correlations that
+violate this bound, demonstrating contextuality that cannot be explained by any single
+unified classical model.
+"""
+
 import itertools
+import warnings
+from math import cos, pi
+from typing import Dict, List, Tuple
+
 import matplotlib
 import matplotlib.pyplot as plt
-import warnings
-
-# Import the mathematical theory of contradiction library
-from contrakit import Space, Behavior
-from contrakit.constants import DEFAULT_SEED
-
-# Import QuTiP for quantum mechanical calculations
+import numpy as np
 import qutip as qt
 
-# Import common utilities
+from contrakit import Space, Behavior
+from contrakit.constants import DEFAULT_SEED
 from examples.quantum.utils import (
-    pretty_witness, save_figure, display_figure,
-    print_section_header, print_subsection_header, create_analysis_header,
-    extract_behavior_properties, format_behavior_verdict, print_behavior_analysis,
-    sanitize_pmf, print_boundary_analysis
+    create_analysis_header,
+    display_figure,
+    extract_behavior_properties,
+    format_behavior_verdict,
+    pretty_witness,
+    print_behavior_analysis,
+    print_boundary_analysis,
+    print_section_header,
+    print_subsection_header,
+    sanitize_pmf,
+    save_figure,
 )
 
 matplotlib.use("Agg")
 warnings.filterwarnings("ignore", category=UserWarning, module="cvxpy")
 
 
-# Define the possible measurement outcomes for each party
-OUTCOMES = [(+1, +1), (+1, -1), (-1, +1), (-1, -1)]
+# Configuration constants
+# ----------------------
+MEASUREMENT_OUTCOMES = [(+1, +1), (+1, -1), (-1, +1), (-1, -1)]
+
+# Numerical tolerances for various computations
+DEFAULT_NO_SIGNALLING_TOLERANCE = 1e-9
+CLASSICAL_BOUND_TOLERANCE = 1e-12
+CONTEXTUALITY_ZERO_TOLERANCE = 1e-9
+DUALITY_GAP_TOLERANCE = 1e-12
+
+# Visualization parameters
+FIGURE_SIZE_LARGE = (16, 8)
+FIGURE_SIZE_MEDIUM = (12, 6)
+SCATTER_SIZE_DEFAULT = 50
+SCATTER_SIZE_HIGHLIGHT = 200
+SCATTER_SIZE_LOG = 150
+BAR_WIDTH_DEFAULT = 0.6
+BAR_WIDTH_NARROW = 0.4
+
+# Color scheme for visualizations
+COLOR_CLASSICAL = 'green'
+COLOR_QUANTUM = 'red'
+COLOR_BOUNDARY = 'red'
+COLOR_NON_VIOLATING_REGION = 'lightgreen'
+COLOR_VIOLATING_REGION = 'lightcoral'
+
+# Angle configurations for different scenarios
+ANGLE_CLASSICAL_ALICE = [0.0, 0.0]  # Alice: 0° for both measurements
+ANGLE_CLASSICAL_BOB = [pi/4, pi/4]   # Bob: 45° for both measurements
+ANGLE_QUANTUM_ALICE = [0.0, pi/2]    # Alice: 0° and 90°
+ANGLE_QUANTUM_BOB = [pi/4, -pi/4]    # Bob: +45° and -45°
+
+# Parametric sweep parameters
+PARAMETRIC_ANGLE_START = pi/2      # 90°
+PARAMETRIC_ANGLE_END = -pi/4       # -45°
+PARAMETRIC_NUM_POINTS = 50
+
+# Plot limits and scaling
+LOG_SCALE_EPSILON = 1e-9
+Y_LIMIT_SCALE_FACTOR = 1.25
+Y_LIMIT_MIN = 0.015
+
+# Define the possible measurement outcomes for each party (kept for backward compatibility)
+OUTCOMES = MEASUREMENT_OUTCOMES
 
 # Pre-defined CHSH measurement space and mapping (constant for all configurations)
 CHSH_SPACE = Space.create(
@@ -51,7 +104,7 @@ CHSH_MEASUREMENT_COMBINATIONS = {
 # CHSH calculation functions
 # -----------------------------
 
-def chsh_value(E00, E01, E10, E11):
+def chsh_value(E00: float, E01: float, E10: float, E11: float) -> float:
     """
     Calculate the CHSH inequality value using the standard combination of signs.
 
@@ -69,7 +122,7 @@ def chsh_value(E00, E01, E10, E11):
     """
     return abs(E00 + E01 + E10 - E11)
 
-def chsh_maximum(E00, E01, E10, E11):
+def chsh_maximum(E00: float, E01: float, E10: float, E11: float) -> float:
     """
     Calculate the maximum CHSH inequality value over all valid sign combinations.
 
@@ -97,7 +150,7 @@ def chsh_maximum(E00, E01, E10, E11):
     return maximum_value
 
 
-def create_behavior_from_correlations(correlations_dict):
+def create_behavior_from_correlations(correlations_dict: Dict[str, Dict[Tuple[int, int], float]]) -> 'Behavior':
     """
     Construct a Behavior object from CHSH experimental data.
 
@@ -133,7 +186,7 @@ def create_behavior_from_correlations(correlations_dict):
 # Quantum state preparation and measurement simulation
 # -----------------------------
 
-def create_singlet_state():
+def create_singlet_state() -> 'qt.Qobj':
     """
     Prepare the quantum singlet state |ψ⁻⟩ = (|01⟩ - |10⟩)/√2.
 
@@ -153,7 +206,7 @@ def create_singlet_state():
     psi = (qt.tensor(up, down) - qt.tensor(down, up)).unit()
     return qt.ket2dm(psi)
 
-def create_spin_measurement(angle):
+def create_spin_measurement(angle: float) -> 'qt.Qobj':
     """
     Construct a spin measurement operator for a given orientation angle.
 
@@ -195,7 +248,7 @@ def create_measurement_projectors(angle):
 
     return projector_plus, projector_minus
 
-def compute_joint_probabilities(angle_a, angle_b, state=None):
+def compute_joint_probabilities(angle_a: float, angle_b: float, state: 'qt.Qobj' = None) -> Dict[Tuple[int, int], float]:
     """
     Compute joint probabilities for measurements at given angles.
 
@@ -230,7 +283,7 @@ def compute_joint_probabilities(angle_a, angle_b, state=None):
     # Convert to Python floats for consistency
     return {outcome: float(prob) for outcome, prob in probabilities.items()}
 
-def compute_correlation(probabilities):
+def compute_correlation(probabilities: Dict[Tuple[int, int], float]) -> float:
     """
     Calculate the correlation coefficient from joint probabilities.
 
@@ -248,7 +301,33 @@ def compute_correlation(probabilities):
     """
     return sum(a * b * probabilities[(a, b)] for a in (+1, -1) for b in (+1, -1))
 
-def create_contexts_from_angles(angle_a0, angle_a1, angle_b0, angle_b1):
+def compute_correlations_from_angles(angle_a0: float, angle_a1: float, angle_b0: float, angle_b1: float) -> Tuple[float, float, float, float]:
+    """
+    Compute CHSH correlations for given measurement angles.
+
+    For quantum measurements at angles θ_A and θ_B, the correlation is ⟨A(θ_A) ⊗ B(θ_B)⟩ = cos(θ_A - θ_B).
+
+    Parameters
+    ----------
+    angle_a0, angle_a1 : float
+        Alice's two measurement angles
+    angle_b0, angle_b1 : float
+        Bob's two measurement angles
+
+    Returns
+    -------
+    tuple
+        (E00, E01, E10, E11) correlation coefficients
+    """
+    corr_00 = cos(angle_a0 - angle_b0)
+    corr_01 = cos(angle_a0 - angle_b1)
+    corr_10 = cos(angle_a1 - angle_b0)
+    corr_11 = cos(angle_a1 - angle_b1)
+
+    return corr_00, corr_01, corr_10, corr_11
+
+
+def create_contexts_from_angles(angle_a0: float, angle_a1: float, angle_b0: float, angle_b1: float) -> Tuple[Dict[str, Dict[Tuple[int, int], float]], Tuple[float, float, float, float]]:
     """
     Create all four measurement contexts from the measurement angles.
 
@@ -277,17 +356,13 @@ def create_contexts_from_angles(angle_a0, angle_a1, angle_b0, angle_b1):
     prob_11 = compute_joint_probabilities(angle_a1, angle_b1, state)
 
     # Calculate correlations
-    corr_00 = compute_correlation(prob_00)
-    corr_01 = compute_correlation(prob_01)
-    corr_10 = compute_correlation(prob_10)
-    corr_11 = compute_correlation(prob_11)
+    correlations = (compute_correlation(prob_00), compute_correlation(prob_01),
+                   compute_correlation(prob_10), compute_correlation(prob_11))
 
     contexts = {
         "00": prob_00, "01": prob_01,
         "10": prob_10, "11": prob_11
     }
-
-    correlations = (corr_00, corr_01, corr_10, corr_11)
 
     return contexts, correlations
 
@@ -365,7 +440,101 @@ def chsh_from_contexts(contexts):
     chsh_value = chsh_maximum(E00, E01, E10, E11)
     return chsh_value, (E00, E01, E10, E11)
 
-def check_no_signalling(contexts, tol=1e-9):
+def analyze_chsh_configuration(alice_angles: List[float], bob_angles: List[float], config_name: str, description: str) -> Tuple[Dict[str, Dict[Tuple[int, int], float]], float, 'Behavior', float]:
+    """
+    Analyze a single CHSH measurement configuration.
+
+    Parameters
+    ----------
+    alice_angles : List[float]
+        Alice's measurement angles in radians
+    bob_angles : List[float]
+        Bob's measurement angles in radians
+    config_name : str
+        Name of the configuration for display
+    description : str
+        Description of the configuration
+
+    Returns
+    -------
+    Tuple[Dict[str, Dict[Tuple[int, int], float]], float, Behavior, float]
+        Contexts dictionary, CHSH value, behavior object, and contextuality measure
+    """
+    # Create contexts from angles
+    contexts, correlations = create_contexts_from_angles(
+        alice_angles[0], alice_angles[1], bob_angles[0], bob_angles[1]
+    )
+
+    # Calculate CHSH value
+    chsh_value = chsh_maximum(*correlations)
+
+    # Create behavior object
+    behavior = create_behavior_from_correlations(contexts)
+
+    # Extract contextuality measure
+    contextuality = float(behavior.contradiction_bits)
+
+    return contexts, chsh_value, behavior, contextuality
+
+
+def print_configuration_analysis(contexts, chsh_value, behavior, contextuality, correlations):
+    """
+    Print detailed analysis for a CHSH configuration.
+
+    Parameters
+    ----------
+    contexts : dict
+        Probability mass functions for each measurement context
+    chsh_value : float
+        Calculated CHSH value
+    behavior : Behavior
+        Behavior object containing the experimental data
+    contextuality : float
+        Contextuality measure in bits
+    correlations : tuple
+        Correlation coefficients (E00, E01, E10, E11)
+    """
+    # Facts
+    print("Facts:")
+    is_no_signalling, max_deviation = check_no_signalling(contexts)
+    print(f"  No-signalling: {'PASS' if is_no_signalling else 'FAIL'} (max deviation {max_deviation:.2e})")
+    print(f"  E(00), E(01), E(10), E(11): [{correlations[0]:+.6f}, {correlations[1]:+.6f}, {correlations[2]:+.6f}, {correlations[3]:+.6f}]")
+
+    # Verdict
+    props = extract_behavior_properties(behavior)
+    props['witness_value'] = chsh_value
+
+    print(format_behavior_verdict(props))
+    print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
+    print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < {CLASSICAL_BOUND_TOLERANCE})")
+
+    # Why (witness & geometry) - only for quantum configurations
+    if chsh_value > 2:
+        print("  [PASS] S > 2 ⇒ K(P) > 0")
+        print("Why (witness & geometry):")
+
+        lambda_star = behavior.least_favorable_lambda()
+        context_scores = behavior.per_context_scores(mu="optimal")
+        equalization_gap = float(np.ptp(context_scores))
+
+        if lambda_star is not None:
+            pretty_witness(lambda_star, context_scores, tol=DEFAULT_NO_SIGNALLING_TOLERANCE)
+            print(f"  Equalization gap: {equalization_gap:.3e}  (optimality certificate)")
+            print(f"  Interpretation: Even the best FI model overlaps at most {props['alpha_star']:.6f} on average ⇒ {props['contradiction_bits']:.6f} bits of incompatibility.")
+        else:
+            print("  No witness available.")
+
+    # Interpretation
+    print("Interpretation:")
+    if chsh_value <= 2 + CLASSICAL_BOUND_TOLERANCE:
+        print("  Within the classical region, a single frame explains all contexts; K ≈ 0. Put differently, nothing is hiding—no information cost is required.")
+    elif chsh_value > 2:
+        print("  Beyond the classical region, no single frame suffices; K quantifies the minimal inconsistency.")
+
+    print()
+
+
+def check_no_signalling(contexts, tol=DEFAULT_NO_SIGNALLING_TOLERANCE):
     """
     Verify that the contexts satisfy no-signalling constraints.
 
@@ -415,6 +584,199 @@ def check_no_signalling(contexts, tol=1e-9):
 
     return is_no_signalling, max_discrepancy
 
+
+def perform_parametric_analysis() -> Tuple['np.ndarray', List[float], List[float]]:
+    """
+    Perform parametric sweep over measurement angles and return results.
+
+    Returns
+    -------
+    tuple
+        (measurement_angles, chsh_values, contradiction_values)
+    """
+    measurement_angles_range = np.linspace(PARAMETRIC_ANGLE_START, PARAMETRIC_ANGLE_END, PARAMETRIC_NUM_POINTS)
+    chsh_sweep_values = []
+    contradiction_sweep_values = []
+
+    print("Computing CHSH values and contextuality measures for different angles...")
+    print("Formally, we sweep the measurement parameter to verify the invariant holds continuously.")
+    print("This is to establish the boundary behavior. What becomes unavoidable: the transition is smooth.")
+    print()
+
+    for measurement_angle in measurement_angles_range:
+        # Fixed measurement configuration with one varying parameter
+        alice_angle_0, alice_angle_1 = 0.0, pi/2      # Alice: 0° and 90°
+        bob_angle_0, bob_angle_1 = pi/4, measurement_angle  # Bob: 45° and variable
+
+        # Compute correlation coefficients for this measurement configuration
+        correlations = compute_correlations_from_angles(alice_angle_0, alice_angle_1, bob_angle_0, bob_angle_1)
+
+        # Generate probability distributions for each measurement context
+        measurement_contexts = {
+            label: create_probabilities_from_correlation(corr)
+            for label, corr in zip(["00", "01", "10", "11"], correlations)
+        }
+
+        # Calculate CHSH value and contextuality measure
+        S = chsh_maximum(*correlations)
+
+        # Quantitative analysis using our mathematical framework
+        experimental_behavior = create_behavior_from_correlations(measurement_contexts)
+        contextuality_measure = float(experimental_behavior.contradiction_bits)
+
+        chsh_sweep_values.append(S)
+        contradiction_sweep_values.append(contextuality_measure)
+
+    return measurement_angles_range, chsh_sweep_values, contradiction_sweep_values
+
+
+def create_chsh_visualization(measurement_angles: 'np.ndarray', chsh_values: List[float], contradiction_values: List[float],
+                            config1_chsh: float, config1_contextuality: float, config2_chsh: float, config2_contextuality: float) -> str:
+    """
+    Create comprehensive visualization of CHSH analysis results.
+
+    Parameters
+    ----------
+    measurement_angles : array-like
+        Array of measurement angles used in parametric sweep
+    chsh_values : array-like
+        CHSH values from parametric sweep
+    contradiction_values : array-like
+        Contextuality values from parametric sweep
+    config1_chsh : float
+        CHSH value for classical configuration
+    config1_contextuality : float
+        Contextuality for classical configuration
+    config2_chsh : float
+        CHSH value for quantum configuration
+    config2_contextuality : float
+        Contextuality for quantum configuration
+    """
+    # Create comprehensive visualization
+    fig = plt.figure(figsize=FIGURE_SIZE_LARGE)
+    ax1 = plt.subplot2grid((2, 3), (0, 0), colspan=2)
+
+    # Plot parametric sweep results
+    scatter_plot = ax1.scatter(chsh_values, contradiction_values, c=measurement_angles*180/pi, cmap='viridis',
+                              alpha=0.7, s=SCATTER_SIZE_DEFAULT, label='Parametric sweep results')
+
+    # Add reference boundaries
+    ax1.axvline(x=2, color=COLOR_BOUNDARY, linewidth=3, linestyle='-', alpha=0.8, label='Local realism boundary (S = 2)')
+    ax1.axhline(y=0, color=COLOR_BOUNDARY, linewidth=3, linestyle='-', alpha=0.8)
+
+    # Highlight reference configurations
+    ax1.scatter([config1_chsh], [config1_contextuality], color=COLOR_CLASSICAL, s=SCATTER_SIZE_HIGHLIGHT, marker='s',
+                edgecolors='black', linewidth=2, label='Non-violating configuration', zorder=10)
+    ax1.scatter([config2_chsh], [config2_contextuality], color=COLOR_QUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='o',
+                edgecolors='black', linewidth=2, label='Violating configuration', zorder=10)
+
+    # Annotate the violating configuration with key parameters
+    ax1.annotate(f'α* ≈ {config2_contextuality:.5f}\nK(P) ≈ {config2_contextuality:.4f} bits\n(Tsirelson bound)',
+                 xy=(config2_chsh, config2_contextuality), xytext=(config2_chsh + 0.15, config2_contextuality + 0.003),
+                 arrowprops=dict(arrowstyle='->', color='darkred', lw=1.5),
+                 fontsize=9, ha='left', va='bottom',
+                 bbox=dict(boxstyle="round,pad=0.3", facecolor='white', edgecolor='darkred', alpha=0.9))
+
+    # Set axis limits dynamically based on the parametric data
+    max_contextuality_data = float(max(contradiction_values) if contradiction_values else 0.0)
+    y_limit_ax1 = max(Y_LIMIT_MIN, Y_LIMIT_SCALE_FACTOR * max(max_contextuality_data, config2_contextuality))
+    ax1.set_ylim(0.0, y_limit_ax1)
+
+    ax1.text(1.7, y_limit_ax1 * 0.7, 'Non-violating\nConfig\nK(P) = 0', fontsize=11, fontweight='bold',
+             ha='center', va='center', bbox=dict(boxstyle="round,pad=0.3", facecolor=COLOR_NON_VIOLATING_REGION, alpha=0.7))
+    ax1.text(2.3, y_limit_ax1 * 0.7, 'Violating\nConfig\nK(P) > 0', fontsize=11, fontweight='bold',
+             ha='center', va='center', bbox=dict(boxstyle="round,pad=0.3", facecolor=COLOR_VIOLATING_REGION, alpha=0.7))
+
+    ax1.set_xlabel('CHSH Value (S)', fontsize=14)
+    ax1.set_ylabel('Contradiction Measure K(P) [bits]', fontsize=14)
+    ax1.set_title('From Threshold (S) to Quantity (K): CHSH Landscape', fontsize=16, fontweight='bold')
+    ax1.legend(fontsize=12, loc='upper left', title='Invariant: If S ≤ 2 then K=0;\nIf S > 2 then K > 0')
+    ax1.grid(True, alpha=0.3)
+    ax1.set_xlim(0.8, 3.0)
+
+    colorbar = plt.colorbar(scatter_plot, ax=ax1, shrink=0.8)
+    colorbar.set_label('Measurement Angle θ₂ [degrees]', fontsize=12)
+
+    ax2 = plt.subplot2grid((2, 3), (0, 2))
+    ax2_twin = ax2.twinx()
+
+    # Create comparative bar chart
+    ax2.bar([0], [config1_chsh], width=BAR_WIDTH_DEFAULT, label='CHSH Value', color=COLOR_CLASSICAL, alpha=0.7, edgecolor='black')
+    ax2.bar([1], [config2_chsh], width=BAR_WIDTH_DEFAULT, color=COLOR_QUANTUM, alpha=0.7, edgecolor='black')
+    ax2_twin.bar([0], [config1_contextuality], width=BAR_WIDTH_NARROW, label='Contradiction K(P)', color=COLOR_NON_VIOLATING_REGION, alpha=0.9, edgecolor='black')
+    ax2_twin.bar([1], [config2_contextuality], width=BAR_WIDTH_NARROW, color=COLOR_VIOLATING_REGION, alpha=0.9, edgecolor='black')
+
+    # Set axis ranges appropriately
+    ax2.set_ylim(0, 3.5)
+    ax2_twin.set_ylim(0, max(0.016, config2_contextuality * 1.2))
+
+    # Add reference boundaries
+    ax2.axhline(y=2, color=COLOR_BOUNDARY, linestyle='--', linewidth=2, alpha=0.8, label='Local realism bound')
+    ax2_twin.axhline(y=0, color=COLOR_BOUNDARY, linestyle='--', linewidth=2, alpha=0.8)
+
+    ax2.set_ylabel('CHSH Value (S)', fontsize=12, color='darkgreen')
+    ax2_twin.set_ylabel('Contradiction K(P) [bits]', fontsize=12, color='purple')
+    ax2.set_title('Configuration Comparison', fontsize=13, fontweight='bold', pad=15)
+    ax2.set_xticks([0, 1])
+    ax2.set_xticklabels(['Non-violating\nSetup', 'Violating\nSetup'], fontsize=11)
+
+    # Label the bar values
+    ax2.text(0, config1_chsh + 0.08, f'{config1_chsh:.2f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
+    ax2.text(1, config2_chsh + 0.08, f'{config2_chsh:.2f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
+
+    # Label the contextuality values
+    config1_label = "≈ 0" if abs(config1_contextuality) < 0.001 else f'{config1_contextuality:.3f}'
+    config2_label = "≈ 0" if abs(config2_contextuality) < 0.001 else f'{config2_contextuality:.3f}'
+
+    ax2_twin.text(0, 0.002, config1_label, ha='center', va='center', fontweight='bold', color='white', fontsize=10,
+                  bbox=dict(boxstyle="round,pad=0.2", facecolor='darkgreen', alpha=0.8))
+    ax2_twin.text(1, 0.002, config2_label, ha='center', va='center', fontweight='bold', color='white', fontsize=10,
+                  bbox=dict(boxstyle="round,pad=0.2", facecolor='darkred', alpha=0.8))
+
+    # Bottom plot: Log-scale view of the relationship
+    ax3 = plt.subplot2grid((2, 3), (1, 0), colspan=3)
+
+    # Prepare data for logarithmic plotting (avoid log(0) issues)
+    epsilon = LOG_SCALE_EPSILON  # Small regularization value
+    contextuality_array = np.asarray(contradiction_values, dtype=float)
+    contextuality_plot = np.maximum(contextuality_array, epsilon)
+
+    scatter_bottom = ax3.scatter(chsh_values, contextuality_plot, c=measurement_angles*180/pi, cmap='viridis',
+                                alpha=0.7, s=SCATTER_SIZE_LOG, label='Parametric sweep data')
+
+    # Highlight reference configurations on logarithmic scale
+    ax3.scatter([config1_chsh], [max(config1_contextuality, epsilon)], color=COLOR_CLASSICAL, s=SCATTER_SIZE_LOG, marker='s',
+               edgecolors='black', linewidth=2, label='Non-violating configuration', zorder=10)
+    ax3.scatter([config2_chsh], [max(config2_contextuality, epsilon)], color=COLOR_QUANTUM, s=SCATTER_SIZE_LOG, marker='o',
+               edgecolors='black', linewidth=2, label='Violating configuration', zorder=10)
+
+    # Use logarithmic scale for better visualization of the dynamic range
+    ax3.set_yscale('log')
+    max_contextuality_plot = float(max(contextuality_plot.max(initial=epsilon), max(config2_contextuality, epsilon)))
+    ax3.set_ylim(epsilon, max(1e-1, max_contextuality_plot * 10.0))
+
+    # Add theoretical boundary
+    ax3.axvline(x=2, color=COLOR_BOUNDARY, linestyle='--', linewidth=2, alpha=0.8, label='Local realism boundary')
+
+    ax3.set_xlabel('CHSH Value (S)', fontsize=14)
+    ax3.set_ylabel('Contradiction K(P) [bits] (log scale)', fontsize=14)
+    ax3.set_title('Contradiction Growth Across Measurement Configurations', fontsize=14, fontweight='bold')
+
+    # Add explanatory region labels
+    ax3.text(1.5, 1e-8, 'Non-violating\nRegion\nK(P) ≈ 0', fontsize=11, ha='center', va='center',
+             bbox=dict(boxstyle="round,pad=0.3", facecolor=COLOR_NON_VIOLATING_REGION, alpha=0.8))
+    ax3.text(2.6, max_contextuality_plot * 0.1, f'Violating\nRegion\nK(P) ≈ {config2_contextuality:.3f}', fontsize=11, ha='center', va='center',
+             bbox=dict(boxstyle="round,pad=0.3", facecolor=COLOR_VIOLATING_REGION, alpha=0.8))
+
+    ax3.legend(fontsize=11, loc='upper left')
+    ax3.grid(True, alpha=0.3, which='both')
+
+    plt.subplots_adjust(top=0.92, bottom=0.12, left=0.08, right=0.95, hspace=0.35, wspace=0.25)
+
+    # Save the visualization
+    output_path = save_figure('bell_chsh_analysis.png')
+    return output_path
+
 create_analysis_header(
     "CHSH Inequality Analysis",
     description="This analysis examines the Clauser-Horne-Shimony-Holt (CHSH) inequality—a mathematical constraint that distinguishes between different types of correlations. Formally, the CHSH inequality establishes that certain measurement correlations cannot exceed a value of 2 when the underlying system follows local realistic principles. Quantum mechanics predicts correlations that violate this bound—demonstrating contextuality that cannot be explained by any single unified classical model; the violation reveals fundamental incompatibility.",
@@ -429,121 +791,39 @@ create_analysis_header(
 
 print_section_header("Configuration 1: Classical Region (S ≤ 2)")
 
-# Setup: Both Alice and Bob repeat the same measurement
-alice_angles_config1 = [0.0, 0.0]  # Alice: 0° for both measurement choices
-bob_angles_config1 = [pi/4, pi/4]   # Bob: 45° for both measurement choices
+# Analyze classical configuration
+config1_contexts, chsh_config1, config1_behavior, config1_contextuality = analyze_chsh_configuration(
+    ANGLE_CLASSICAL_ALICE, ANGLE_CLASSICAL_BOB, "Classical", "Both Alice and Bob repeat the same measurement"
+)
 
-# Compute correlation coefficients for each measurement combination
-correlation_00_config1 = -cos(alice_angles_config1[0] - bob_angles_config1[0])
-correlation_01_config1 = -cos(alice_angles_config1[0] - bob_angles_config1[1])
-correlation_10_config1 = -cos(alice_angles_config1[1] - bob_angles_config1[0])
-correlation_11_config1 = -cos(alice_angles_config1[1] - bob_angles_config1[1])
+# Extract correlations for display
+_, correlations_config1 = create_contexts_from_angles(
+    ANGLE_CLASSICAL_ALICE[0], ANGLE_CLASSICAL_ALICE[1],
+    ANGLE_CLASSICAL_BOB[0], ANGLE_CLASSICAL_BOB[1]
+)
 
-# Generate probability mass functions for each measurement configuration
-config1_contexts = {
-    "00": create_probabilities_from_correlation(correlation_00_config1),
-    "01": create_probabilities_from_correlation(correlation_01_config1),
-    "10": create_probabilities_from_correlation(correlation_10_config1),
-    "11": create_probabilities_from_correlation(correlation_11_config1),
-}
-
-chsh_config1 = chsh_maximum(correlation_00_config1, correlation_01_config1,
-                            correlation_10_config1, correlation_11_config1)
-
-# Facts
-print("Facts:")
-print("We show the empirical results. Consider the correlations.")
-is_no_signalling, max_deviation = check_no_signalling(config1_contexts)
-print(f"  No-signalling: {'PASS' if is_no_signalling else 'FAIL'} (max deviation {max_deviation:.2e})")
-print(f"  E(00), E(01), E(10), E(11): [{correlation_00_config1:+.6f}, {correlation_01_config1:+.6f}, {correlation_10_config1:+.6f}, {correlation_11_config1:+.6f}]")
-
-# Verdict
-config1_behavior = create_behavior_from_correlations(config1_contexts)
-props1 = extract_behavior_properties(config1_behavior)
-props1['witness_value'] = chsh_config1
-
-print(format_behavior_verdict(props1))
-print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
-print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
-print("  [PASS] S ≤ 2 ⇒ K(P) = 0 (within 1e-9)")
-
-# Why
-print("Why:")
-print("  FI certificate: projection onto the FI polytope (convex hull of deterministic global strategies) has zero residual.")
-
-# Interpretation
-print("Interpretation:")
-if chsh_config1 <= 2 + 1e-12:
-    print("  Within the classical region, a single frame explains all contexts; K ≈ 0. Put differently, nothing is hiding—no information cost is required.")
-
-print()
+print_configuration_analysis(config1_contexts, chsh_config1, config1_behavior, config1_contextuality, correlations_config1)
 
 print_section_header("Configuration 2: Quantum Region (2 < S ≤ 2√2)")
 
-# Optimal measurement angles for maximum quantum violation
-alice_angles_config2 = [0.0, pi/2]        # Alice: 0° and 90°
-bob_angles_config2 = [pi/4, -pi/4]        # Bob: +45° and -45°
+# Analyze quantum configuration
+config2_contexts, chsh_config2, config2_behavior, contextuality_config2 = analyze_chsh_configuration(
+    ANGLE_QUANTUM_ALICE, ANGLE_QUANTUM_BOB, "Quantum", "Optimal measurement angles for maximum quantum violation"
+)
 
-# Compute quantum correlation coefficients for each configuration
-correlation_00_config2 = -cos(alice_angles_config2[0] - bob_angles_config2[0])
-correlation_01_config2 = -cos(alice_angles_config2[0] - bob_angles_config2[1])
-correlation_10_config2 = -cos(alice_angles_config2[1] - bob_angles_config2[0])
-correlation_11_config2 = -cos(alice_angles_config2[1] - bob_angles_config2[1])
+# Extract correlations for display
+_, correlations_config2 = create_contexts_from_angles(
+    ANGLE_QUANTUM_ALICE[0], ANGLE_QUANTUM_ALICE[1],
+    ANGLE_QUANTUM_BOB[0], ANGLE_QUANTUM_BOB[1]
+)
 
-# Generate probability mass functions for quantum predictions
-config2_contexts = {
-    "00": create_probabilities_from_correlation(correlation_00_config2),
-    "01": create_probabilities_from_correlation(correlation_01_config2),
-    "10": create_probabilities_from_correlation(correlation_10_config2),
-    "11": create_probabilities_from_correlation(correlation_11_config2),
-}
-
-chsh_config2 = chsh_maximum(correlation_00_config2, correlation_01_config2,
-                            correlation_10_config2, correlation_11_config2)
-
-# Facts
-print("Facts:")
-is_no_signalling_q, max_deviation_q = check_no_signalling(config2_contexts)
-print(f"  No-signalling: {'PASS' if is_no_signalling_q else 'FAIL'} (max deviation {max_deviation_q:.2e})")
-print(f"  E(00), E(01), E(10), E(11): [{correlation_00_config2:+.6f}, {correlation_01_config2:+.6f}, {correlation_10_config2:+.6f}, {correlation_11_config2:+.6f}]")
-
-# Verdict
-config2_behavior = create_behavior_from_correlations(config2_contexts)
-contextuality_config2 = config2_behavior.contradiction_bits
-props2 = extract_behavior_properties(config2_behavior)
-props2['witness_value'] = chsh_config2
-
-print(format_behavior_verdict(props2))
-print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
-print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
-if chsh_config2 > 2:
-    print("  [PASS] S > 2 ⇒ K(P) > 0")
-
-# Why (witness & geometry)
-print("Why (witness & geometry):")
-lambda_star = config2_behavior.least_favorable_lambda()
-context_scores = config2_behavior.per_context_scores(mu="optimal")
-equalization_gap = float(np.ptp(context_scores))
-
-if lambda_star is not None:
-    pretty_witness(lambda_star, context_scores, tol=1e-9)
-    print(f"  Equalization gap: {equalization_gap:.3e}  (optimality certificate)")
-    print(f"  Interpretation: Even the best FI model overlaps at most {props2['alpha_star']:.6f} on average ⇒ {props2['contradiction_bits']:.6f} bits of incompatibility.")
-else:
-    print("  No witness available.")
-
-# Interpretation
-print("Interpretation:")
-if chsh_config2 > 2:
-    print("  Beyond the classical region, no single frame suffices; K quantifies the minimal inconsistency.")
-
-print()
+print_configuration_analysis(config2_contexts, chsh_config2, config2_behavior, contextuality_config2, correlations_config2)
 
 print_section_header("Invariant checks")
 print()
-print(f"[PASS] S ≤ 2  ⇒  K ≈ 0  (|K| < 1e-9)")
+print(f"[PASS] S ≤ 2  ⇒  K ≈ 0  (|K| < {CONTEXTUALITY_ZERO_TOLERANCE})")
 print(f"[PASS] S > 2    ⇒  K > 0")
-print(f"[PASS] Duality gap ≤ 1e-12")
+print(f"[PASS] Duality gap ≤ {DUALITY_GAP_TOLERANCE}")
 print()
 
 print("Summary:")
@@ -561,177 +841,22 @@ print("Varying measurement angles to verify the invariant: S ≤ 2 ⇒ K=0; S > 
 print("Having established the discrete cases, we now examine the continuous transition; this is to demonstrate the invariant across the boundary.")
 print()
 
-# Parametric analysis: Vary Bob's second measurement angle while keeping others fixed
-measurement_angles_range = np.linspace(pi/2, -pi/4, 50)  # From 90° to -45°
-chsh_sweep_values = []
-contradiction_sweep_values = []
+# Perform parametric analysis
+measurement_angles_range, chsh_sweep_values, contradiction_sweep_values = perform_parametric_analysis()
 
-print("Computing CHSH values and contextuality measures for different angles...")
-print("Formally, we sweep the measurement parameter to verify the invariant holds continuously.")
-print("This is to establish the boundary behavior. What becomes unavoidable: the transition is smooth.")
-
-for measurement_angle in measurement_angles_range:
-    # Fixed measurement configuration with one varying parameter
-    alice_angle_0, alice_angle_1 = 0.0, pi/2      # Alice: 0° and 90°
-    bob_angle_0, bob_angle_1 = pi/4, measurement_angle  # Bob: 45° and variable
-
-    # Compute correlation coefficients for this measurement configuration
-    correlation_00 = -cos(alice_angle_0 - bob_angle_0)
-    correlation_01 = -cos(alice_angle_0 - bob_angle_1)
-    correlation_10 = -cos(alice_angle_1 - bob_angle_0)
-    correlation_11 = -cos(alice_angle_1 - bob_angle_1)
-
-    # Generate probability distributions for each measurement context
-    measurement_contexts = {
-        "00": create_probabilities_from_correlation(correlation_00),
-        "01": create_probabilities_from_correlation(correlation_01),
-        "10": create_probabilities_from_correlation(correlation_10),
-        "11": create_probabilities_from_correlation(correlation_11),
-    }
-
-    # Calculate CHSH value and contextuality measure
-    S = chsh_maximum(correlation_00, correlation_01, correlation_10, correlation_11)
-
-    # Quantitative analysis using our mathematical framework
-    experimental_behavior = create_behavior_from_correlations(measurement_contexts)
-    contextuality_measure = float(experimental_behavior.contradiction_bits)
-
-    chsh_sweep_values.append(S)
-    contradiction_sweep_values.append(contextuality_measure)
-
-# Prepare reference values for visualization
+# Create visualization
 config1_contextuality = 0.0  # Non-violating configuration should have K(P) = 0
 config2_contextuality = contextuality_config2  # Use computed violating configuration value
 
-# Create comprehensive visualization
-fig = plt.figure(figsize=(16, 8))
-ax1 = plt.subplot2grid((2, 3), (0, 0), colspan=2)
-
-# Plot parametric sweep results
-scatter_plot = ax1.scatter(chsh_sweep_values, contradiction_sweep_values, c=measurement_angles_range*180/pi, cmap='viridis',
-                          alpha=0.7, s=50, label='Parametric sweep results')
-
-# Add reference boundaries
-ax1.axvline(x=2, color='red', linewidth=3, linestyle='-', alpha=0.8, label='Local realism boundary (S = 2)')
-ax1.axhline(y=0, color='red', linewidth=3, linestyle='-', alpha=0.8)
-
-# Highlight reference configurations
-ax1.scatter([chsh_config1], [config1_contextuality], color='green', s=200, marker='s',
-            edgecolors='black', linewidth=2, label='Non-violating configuration', zorder=10)
-ax1.scatter([chsh_config2], [config2_contextuality], color='red', s=200, marker='o',
-            edgecolors='black', linewidth=2, label='Violating configuration', zorder=10)
-
-# Annotate the violating configuration with key parameters
-ax1.annotate(f'α* ≈ {props2["alpha_star"]:.5f}\nK(P) ≈ {props2["contradiction_bits"]:.4f} bits\n(Tsirelson bound)',
-             xy=(chsh_config2, config2_contextuality), xytext=(chsh_config2 + 0.15, config2_contextuality + 0.003),
-             arrowprops=dict(arrowstyle='->', color='darkred', lw=1.5),
-             fontsize=9, ha='left', va='bottom',
-             bbox=dict(boxstyle="round,pad=0.3", facecolor='white', edgecolor='darkred', alpha=0.9))
-
-# Set axis limits dynamically based on the parametric data
-max_contextuality_data = float(max(contradiction_sweep_values) if contradiction_sweep_values else 0.0)
-y_limit_ax1 = max(0.015, 1.25 * max(max_contextuality_data, config2_contextuality))
-ax1.set_ylim(0.0, y_limit_ax1)
-
-ax1.text(1.7, y_limit_ax1 * 0.7, 'Non-violating\nConfig\nK(P) = 0', fontsize=11, fontweight='bold',
-         ha='center', va='center', bbox=dict(boxstyle="round,pad=0.3", facecolor='lightgreen', alpha=0.7))
-ax1.text(2.3, y_limit_ax1 * 0.7, 'Violating\nConfig\nK(P) > 0', fontsize=11, fontweight='bold',
-         ha='center', va='center', bbox=dict(boxstyle="round,pad=0.3", facecolor='lightcoral', alpha=0.7))
-
-ax1.set_xlabel('CHSH Value (S)', fontsize=14)
-ax1.set_ylabel('Contradiction Measure K(P) [bits]', fontsize=14)
-ax1.set_title('From Threshold (S) to Quantity (K): CHSH Landscape', fontsize=16, fontweight='bold')
-ax1.legend(fontsize=12, loc='upper left', title='Invariant: If S ≤ 2 then K=0;\nIf S > 2 then K > 0')
-ax1.grid(True, alpha=0.3)
-ax1.set_xlim(0.8, 3.0)
-
-colorbar = plt.colorbar(scatter_plot, ax=ax1, shrink=0.8)
-colorbar.set_label('Measurement Angle θ₂ [degrees]', fontsize=12)
-
-ax2 = plt.subplot2grid((2, 3), (0, 2))
-ax2_twin = ax2.twinx()
-
-# Create comparative bar chart
-ax2.bar([0], [chsh_config1], width=0.6, label='CHSH Value', color='green', alpha=0.7, edgecolor='black')
-ax2.bar([1], [chsh_config2], width=0.6, color='red', alpha=0.7, edgecolor='black')
-ax2_twin.bar([0], [config1_contextuality], width=0.4, label='Contradiction K(P)', color='lightgreen', alpha=0.9, edgecolor='black')
-ax2_twin.bar([1], [config2_contextuality], width=0.4, color='pink', alpha=0.9, edgecolor='black')
-
-# Set axis ranges appropriately
-ax2.set_ylim(0, 3.5)
-ax2_twin.set_ylim(0, max(0.016, config2_contextuality * 1.2))
-
-# Add reference boundaries
-ax2.axhline(y=2, color='red', linestyle='--', linewidth=2, alpha=0.8, label='Local realism bound')
-ax2_twin.axhline(y=0, color='red', linestyle='--', linewidth=2, alpha=0.8)
-
-ax2.set_ylabel('CHSH Value (S)', fontsize=12, color='darkgreen')
-ax2_twin.set_ylabel('Contradiction K(P) [bits]', fontsize=12, color='purple')
-ax2.set_title('Configuration Comparison', fontsize=13, fontweight='bold', pad=15)
-ax2.set_xticks([0, 1])
-ax2.set_xticklabels(['Non-violating\nSetup', 'Violating\nSetup'], fontsize=11)
-
-# Label the bar values
-ax2.text(0, chsh_config1 + 0.08, f'{chsh_config1:.2f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
-ax2.text(1, chsh_config2 + 0.08, f'{chsh_config2:.2f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
-
-# Label the contextuality values
-config1_label = "≈ 0" if abs(config1_contextuality) < 0.001 else f'{config1_contextuality:.3f}'
-config2_label = "≈ 0" if abs(config2_contextuality) < 0.001 else f'{config2_contextuality:.3f}'
-
-ax2_twin.text(0, 0.002, config1_label, ha='center', va='center', fontweight='bold', color='white', fontsize=10,
-              bbox=dict(boxstyle="round,pad=0.2", facecolor='darkgreen', alpha=0.8))
-ax2_twin.text(1, 0.002, config2_label, ha='center', va='center', fontweight='bold', color='white', fontsize=10,
-              bbox=dict(boxstyle="round,pad=0.2", facecolor='darkred', alpha=0.8))
-
-# Bottom plot: Log-scale view of the relationship
-ax3 = plt.subplot2grid((2, 3), (1, 0), colspan=3)
-
-# Prepare data for logarithmic plotting (avoid log(0) issues)
-epsilon = 1e-9  # Small regularization value
-contextuality_array = np.asarray(contradiction_sweep_values, dtype=float)
-contextuality_plot = np.maximum(contextuality_array, epsilon)
-
-scatter_bottom = ax3.scatter(chsh_sweep_values, contextuality_plot, c=measurement_angles_range*180/pi, cmap='viridis',
-                            alpha=0.7, s=30, label='Parametric sweep data')
-
-# Highlight reference configurations on logarithmic scale
-ax3.scatter([chsh_config1], [max(config1_contextuality, epsilon)], color='green', s=150, marker='s',
-           edgecolors='black', linewidth=2, label='Non-violating configuration', zorder=10)
-ax3.scatter([chsh_config2], [max(config2_contextuality, epsilon)], color='red', s=150, marker='o',
-           edgecolors='black', linewidth=2, label='Violating configuration', zorder=10)
-
-# Use logarithmic scale for better visualization of the dynamic range
-ax3.set_yscale('log')
-max_contextuality_plot = float(max(contextuality_plot.max(initial=epsilon), max(config2_contextuality, epsilon)))
-ax3.set_ylim(epsilon, max(1e-1, max_contextuality_plot * 10.0))
-
-# Add theoretical boundary
-ax3.axvline(x=2, color='red', linestyle='--', linewidth=2, alpha=0.8, label='Local realism boundary')
-
-ax3.set_xlabel('CHSH Value (S)', fontsize=14)
-ax3.set_ylabel('Contradiction K(P) [bits] (log scale)', fontsize=14)
-ax3.set_title('Contradiction Growth Across Measurement Configurations', fontsize=14, fontweight='bold')
-
-# Add explanatory region labels
-ax3.text(1.5, 1e-8, 'Non-violating\nRegion\nK(P) ≈ 0', fontsize=11, ha='center', va='center',
-         bbox=dict(boxstyle="round,pad=0.3", facecolor='lightgreen', alpha=0.8))
-ax3.text(2.6, max_contextuality_plot * 0.1, f'Violating\nRegion\nK(P) ≈ {config2_contextuality:.3f}', fontsize=11, ha='center', va='center',
-         bbox=dict(boxstyle="round,pad=0.3", facecolor='lightcoral', alpha=0.8))
-
-ax3.legend(fontsize=11, loc='upper left')
-ax3.grid(True, alpha=0.3, which='both')
-
-plt.subplots_adjust(top=0.92, bottom=0.12, left=0.08, right=0.95, hspace=0.35, wspace=0.25)
-
-# Save the visualization
-output_path = save_figure('bell_chsh_analysis.png')
+output_path = create_chsh_visualization(
+    measurement_angles_range, chsh_sweep_values, contradiction_sweep_values,
+    chsh_config1, config1_contextuality, chsh_config2, config2_contextuality
+)
 
 # Verify the invariant across the sweep
 print_boundary_analysis(chsh_sweep_values, contradiction_sweep_values, 2.0, "S", "K(P)")
-print("Verification: For all sampled angles with S ≤ 2, K(P) < 1e-9; for S > 2, K(P) > 0.")
+print(f"Verification: For all sampled angles with S ≤ 2, K(P) < {CONTEXTUALITY_ZERO_TOLERANCE}; for S > 2, K(P) > 0.")
 print("This confirms the invariant. Nothing is hiding in the boundary behavior.")
-
 
 display_figure()
 

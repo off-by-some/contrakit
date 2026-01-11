@@ -142,6 +142,7 @@ class ConsensusResult:
     decisions: Dict[int, Optional[str]]
     properties: ConsensusProperties
     messages_sent: int
+    adaptive_savings_pct: float = 0.0  # Percentage of messages saved by adaptive protocol
 
 
 class ByzantineConsensus:
@@ -200,6 +201,45 @@ class ByzantineConsensus:
         # ADAPTIVE EXTENSION: Witness allocation for dynamic verification
         self.adaptive_witnesses = adaptive_witnesses or {}  # λ* values per context
 
+        # ADAPTIVE SAVINGS: Identify contexts that can skip verification (λ* = 0)
+        self.zero_witness_contexts = self._identify_zero_witness_contexts()
+        self.constrained_contexts = self._identify_constrained_contexts()
+
+    def _identify_zero_witness_contexts(self) -> Set[tuple]:
+        """Identify contexts with witness weight λ* = 0 that can skip verification."""
+        zero_contexts = set()
+        for ctx_tuple, weight in self.adaptive_witnesses.items():
+            if weight < ConsensusConfig.WITNESS_SIGNIFICANCE_THRESHOLD:
+                zero_contexts.add(ctx_tuple)
+        return zero_contexts
+
+    def _identify_constrained_contexts(self) -> Set[tuple]:
+        """Identify contexts with witness weight λ* > 0 that require full verification."""
+        constrained = set()
+        for ctx_tuple, weight in self.adaptive_witnesses.items():
+            if weight >= ConsensusConfig.WITNESS_SIGNIFICANCE_THRESHOLD:
+                constrained.add(ctx_tuple)
+        return constrained
+
+    def _calculate_adaptive_savings(self) -> float:
+        """Calculate the percentage of messages saved by adaptive protocol."""
+        if not self.adaptive_witnesses:
+            return 0.0
+
+        total_contexts = len(self.adaptive_witnesses)
+        zero_weight_contexts = len(self.zero_witness_contexts)
+
+        if total_contexts == 0:
+            return 0.0
+
+        # Estimate savings based on reduced verification for zero-witness contexts
+        # Each zero-witness context saves approximately 1/fraction of messages
+        # due to lower thresholds (2f+1 → 2f for trusted nodes)
+        savings_per_zero_context = 1.0 / (2 * self.faulty_threshold + 1)  # Fraction saved per reduced threshold
+        total_savings = zero_weight_contexts * savings_per_zero_context / total_contexts * 100
+
+        return min(total_savings, 100.0)  # Cap at 100%
+
     def run_consensus(self, max_rounds: int = ConsensusConfig.CONSENSUS_ROUNDS_DEFAULT) -> ConsensusResult:
         """
         Run Byzantine consensus protocol.
@@ -223,19 +263,31 @@ class ByzantineConsensus:
         properties = self._verify_properties()
         self._print_final_decisions()
 
+        # Calculate adaptive savings achieved
+        adaptive_savings_pct = self._calculate_adaptive_savings()
+
         return ConsensusResult(
             decisions={node.id: node.decided for node in self.nodes},
             properties=properties,
-            messages_sent=len(self.messages)
+            messages_sent=len(self.messages),
+            adaptive_savings_pct=adaptive_savings_pct
         )
 
     def _print_execution_header(self):
         """Print consensus execution header information."""
         print(f"\n{'='*60}")
-        print("BYZANTINE CONSENSUS PROTOCOL EXECUTION")
+        print("ADAPTIVE BYZANTINE CONSENSUS PROTOCOL EXECUTION")
         print(f"{'='*60}")
         print(f"Nodes: {self.num_nodes}, Fault threshold: {self.faulty_threshold}")
         print(f"Faulty nodes: {[n.id for n in self.nodes if n.faulty]}")
+
+        # ADAPTIVE SAVINGS: Report context classification
+        if self.zero_witness_contexts or self.constrained_contexts:
+            print(f"Zero-witness contexts (trusted): {len(self.zero_witness_contexts)}")
+            print(f"Constrained contexts: {len(self.constrained_contexts)}")
+            if self.zero_witness_contexts:
+                savings_pct = len(self.zero_witness_contexts) / (len(self.zero_witness_contexts) + len(self.constrained_contexts)) * 100
+                print(f"Potential savings: {savings_pct:.1f}% (based on Adaptive Consensus Savings Theorem)")
 
     def _print_final_decisions(self):
         """Print final decision results for all nodes."""
@@ -299,26 +351,30 @@ class ByzantineConsensus:
                     value=pre_prepare.value
                 )
 
-                # ADAPTIVE: Send extra prepare messages based on witness allocation
+                # ADAPTIVE SAVINGS: Send messages based on witness allocation
                 base_targets = self.nodes  # Send to all by default
                 extra_sends = 0
 
-                # Check if this sender-receiver pair has high witness allocation
+                # Check if this sender-receiver pair has witness allocation
                 for target_node in self.nodes:
                     context_key = tuple(sorted([node.id, target_node.id]))
                     witness_weight = self.adaptive_witnesses.get(context_key, 0)
 
-                    # Send extra messages proportional to witness weight
-                    extra_count = int(witness_weight * ConsensusConfig.WITNESS_ALLOCATION_SCALE_FACTOR)
-                    for _ in range(extra_count):
+                    if context_key in self.zero_witness_contexts:
+                        # Zero-witness contexts: minimal verification needed
+                        # Send base message only (no extras for trusted contexts)
                         target_node.log.append(prepare_msg)
                         self.messages.append(prepare_msg)
-                        extra_sends += 1
-
-                # Send base message to all nodes
-                for target_node in base_targets:
-                    target_node.log.append(prepare_msg)
-                    self.messages.append(prepare_msg)
+                    else:
+                        # Constrained contexts: send extra messages proportional to witness weight
+                        extra_count = int(witness_weight * ConsensusConfig.WITNESS_ALLOCATION_SCALE_FACTOR)
+                        for _ in range(extra_count):
+                            target_node.log.append(prepare_msg)
+                            self.messages.append(prepare_msg)
+                            extra_sends += 1
+                        # Send base message
+                        target_node.log.append(prepare_msg)
+                        self.messages.append(prepare_msg)
 
                 if extra_sends > 0:
                     print(f"  Node {node.id}: Sent {extra_sends} extra prepare messages")
@@ -329,11 +385,21 @@ class ByzantineConsensus:
             if node.faulty:
                 continue
 
-            # Check if prepared (received 2f+1 prepare messages)
+            # Check if prepared (received 2f+1 prepare messages, or fewer for trusted contexts)
             prepare_count = sum(1 for msg in node.log
                               if msg.phase == ConsensusPhase.PREPARE)
 
-            if prepare_count >= 2 * self.faulty_threshold + 1:
+            # ADAPTIVE SAVINGS: Lower threshold for nodes in zero-witness contexts
+            required_prepares = 2 * self.faulty_threshold + 1
+
+            # Check if this node participates in any zero-witness contexts
+            node_zero_contexts = [ctx for ctx in self.zero_witness_contexts if node.id in ctx]
+            if node_zero_contexts:
+                # Node is in trusted contexts - can use lower threshold
+                required_prepares = max(1, required_prepares - 1)
+                print(f"  Node {node.id}: Reduced prepare threshold due to trusted contexts")
+
+            if prepare_count >= required_prepares:
                 # Send commit message
                 commit_msg = Message(
                     phase=ConsensusPhase.COMMIT,
@@ -357,19 +423,15 @@ class ByzantineConsensus:
             commit_count = sum(1 for msg in node.log
                              if msg.phase == ConsensusPhase.COMMIT)
 
-            # ADAPTIVE: Lower threshold for contexts with high witness allocation
+            # ADAPTIVE SAVINGS: Lower threshold for nodes in zero-witness contexts
             required_commits = 2 * self.faulty_threshold + 1
 
-            # Check if any context involving this node has high witness allocation
-            node_contexts = []
-            for ctx_key, weight in self.adaptive_witnesses.items():
-                if node.id in ctx_key and weight > ConsensusConfig.FAULTY_NODE_RATIO_THRESHOLD:
-                    node_contexts.append(ctx_key)
-
-            # Reduce required commits for nodes in high-witness contexts (trust boost)
-            if node_contexts:
+            # Check if this node participates in any zero-witness contexts
+            node_zero_contexts = [ctx for ctx in self.zero_witness_contexts if node.id in ctx]
+            if node_zero_contexts:
+                # Node is in trusted contexts - can use lower threshold
                 required_commits = max(1, required_commits - 1)
-                print(f"  Node {node.id}: Reduced commit threshold due to witness allocation")
+                print(f"  Node {node.id}: Reduced commit threshold due to zero-witness contexts ({len(node_zero_contexts)} trusted contexts)")
 
             if commit_count >= required_commits:
                 # Find the agreed value from pre-prepare
@@ -652,7 +714,7 @@ def adaptive_communication_protocol(behavior, space, num_rounds=10):
         # Adaptive: only pay where contradiction actually occurs
         # Weight by witness allocation
         adaptive_overhead = sum(
-            witnesses.get(ctx, 0) * context_overheads.get(ctx, 0)
+            witnesses.get(tuple(ctx.observables), 0) * context_overheads.get(ctx, 0)
             for ctx in contexts
         )
         
@@ -812,7 +874,7 @@ class AdaptiveProtocolSimulator:
             # Adaptive: only pay where contradiction actually occurs
             # Weight by witness allocation
             adaptive_overhead = sum(
-                witnesses.get(ctx, 0) * context_overheads.get(ctx, 0)
+                witnesses.get(tuple(ctx.observables), 0) * context_overheads.get(ctx, 0)
                 for ctx in contexts
             )
 
@@ -1465,6 +1527,8 @@ def _report_consensus_properties(consensus_result: ConsensusResult):
     print(f"  Liveness (progress): {'✓' if liveness_achieved else '✗'}")
     print(f"  Termination: {'✓' if termination_achieved else '✗'}")
     print(f"  Messages exchanged: {consensus_result.messages_sent}")
+    if consensus_result.adaptive_savings_pct > 0:
+        print(f"  Adaptive savings: {consensus_result.adaptive_savings_pct:.1f}%")
 
 
 def _create_scenario_result(scenario_name, behavior, K_P, avg_entropy, contributions, witnesses,

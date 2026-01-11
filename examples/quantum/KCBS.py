@@ -2,27 +2,77 @@
 #
 # This demonstration explores the Klyachko-Can-Binicioglu-Shumovsky (KCBS) inequality—which tests quantum contextuality using five dichotomic observables arranged in a pentagonal compatibility graph. Formally, KCBS reveals state-dependent contextuality and can demonstrate quantum violations even with qutrit systems; the structure is fundamentally different from CHSH.
 
-import numpy as np
-from math import sqrt, cos, sin, pi
+from math import cos, pi, sin, sqrt
+from typing import Dict, List, Tuple
+
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
-import matplotlib.patches as mpatches
+import numpy as np
 
-# Import our mathematical theory of contradiction library
 from contrakit import Space, Behavior, FrameIndependence
 from contrakit.constants import FIGURES_DIR, DEFAULT_SEED
-
-# Import common utilities
 from examples.quantum.utils import (
-    pretty_witness, save_figure, display_figure,
-    print_section_header, print_subsection_header, create_analysis_header,
-    extract_behavior_properties, format_behavior_verdict, print_behavior_analysis,
-    sanitize_pmf, print_boundary_analysis
+    create_analysis_header,
+    display_figure,
+    extract_behavior_properties,
+    format_behavior_verdict,
+    pretty_witness,
+    print_behavior_analysis,
+    print_boundary_analysis,
+    print_section_header,
+    print_subsection_header,
+    sanitize_pmf,
+    save_figure,
 )
+
+# Constants
+# ---------
 
 # KCBS theoretical bounds
 CLASSICAL_BOUND = 2.0
 QUANTUM_MAXIMUM = sqrt(5)  # ≈ 2.236
+
+# Expectation values for different configurations
+CLASSICAL_EXPECTATION = 2.0 / 5.0  # = 0.4, maximum classical value
+QUANTUM_EXPECTATION = 1.0 / sqrt(5)  # ≈ 0.447, optimal quantum value
+SUPERQUANTUM_EXPECTATION = 0.5  # Hypothetical value beyond quantum limit
+
+# Parametric analysis parameters
+PARAMETRIC_EXP_MIN = 0.0
+PARAMETRIC_EXP_MAX = 0.5
+PARAMETRIC_NUM_POINTS = 100
+
+# Numerical tolerances
+WITNESS_TOLERANCE = 1e-9
+LOG_SCALE_EPSILON = 1e-10
+DUALITY_GAP_TOLERANCE = 1e-12
+
+# Visualization parameters
+FIGURE_SIZE_LARGE = (20, 12)
+SCATTER_SIZE_DEFAULT = 30
+SCATTER_SIZE_HIGHLIGHT = 200
+SCATTER_SIZE_MEDIUM = 150
+SCATTER_SIZE_SMALL = 100
+SCATTER_SIZE_LOG = 25
+BAR_WIDTH_DEFAULT = 0.6
+BAR_WIDTH_NARROW = 0.3
+LINE_WIDTH_DEFAULT = 3
+LINE_WIDTH_REFERENCE = 2
+
+# Colors for different configurations
+COLOR_CLASSICAL = 'green'
+COLOR_QUANTUM = 'red'
+COLOR_SUPERQUANTUM = 'purple'
+COLOR_BOUNDARY_CLASSICAL = 'red'
+COLOR_BOUNDARY_QUANTUM = 'blue'
+COLOR_NON_CONTEXTUAL_REGION = 'lightgreen'
+COLOR_CONTEXTUAL_REGION = 'lightcoral'
+
+# Plot limits and scaling
+Y_LIMIT_SCALE_FACTOR = 1.1
+Y_LIMIT_SCALE_FACTOR_TWIN = 1.2
+BAR_CHART_Y_MAX = 3
 
 
 # =============================================================================
@@ -63,7 +113,7 @@ KCBS_CONTEXTS = [
     ("E5", "E1"),  # E5 and E1 can be measured together
 ]
 
-def create_kcbs_pmf(expectation_value):
+def create_kcbs_pmf(expectation_value: float) -> Dict[Tuple[int, int], float]:
     """
     Create probability mass function for a pair of exclusive observables.
 
@@ -91,11 +141,11 @@ def create_kcbs_pmf(expectation_value):
     
     return pmf
 
-def kcbs_sum_from_expectation(expectation_value):
+def kcbs_sum_from_expectation(expectation_value: float) -> float:
     """Calculate the KCBS sum Σᵢ ⟨Eᵢ⟩ given a common expectation value."""
     return 5 * expectation_value
 
-def create_kcbs_behavior(expectation_value):
+def create_kcbs_behavior(expectation_value: float) -> 'Behavior':
     """
     Create a Behavior object for KCBS with given expectation value.
 
@@ -113,7 +163,283 @@ def create_kcbs_behavior(expectation_value):
     contexts_data = {context: pmf for context in KCBS_CONTEXTS}
     return Behavior.from_contexts(KCBS_SPACE, contexts_data)
 
-def analyze_kcbs_configuration(expectation_value, label):
+def perform_parametric_analysis() -> Tuple['np.ndarray', List[float], List[float], List[float]]:
+    """
+    Perform parametric sweep over expectation values and return results.
+
+    Returns
+    -------
+    Tuple[np.ndarray, List[float], List[float], List[float]]
+        expectation_range, kcbs_values, contradiction_values, alpha_values
+    """
+    expectation_range = np.linspace(PARAMETRIC_EXP_MIN, PARAMETRIC_EXP_MAX, PARAMETRIC_NUM_POINTS)
+    kcbs_values = []
+    contradiction_values = []
+    alpha_values = []
+
+    print("Computing KCBS sums and contextuality measures across parameter space...")
+
+    for exp_val in expectation_range:
+        if exp_val == 0:  # Handle edge case
+            kcbs_val = 0.0
+            contradiction_bits = 0.0
+            alpha_star = 0.0
+        else:
+            results = analyze_kcbs_configuration(exp_val, f"Parametric {exp_val:.3f}")
+            kcbs_val = results['kcbs_sum']
+            contradiction_bits = results['contradiction_bits']
+            alpha_star = results['alpha_star']
+
+        kcbs_values.append(kcbs_val)
+        contradiction_values.append(contradiction_bits)
+        alpha_values.append(alpha_star)
+
+    # Convert to numpy arrays for plotting
+    return (np.array(expectation_range), np.array(kcbs_values),
+            np.array(contradiction_values), np.array(alpha_values))
+
+
+def create_kcbs_visualization(expectation_range: 'np.ndarray', kcbs_values: List[float],
+                            contradiction_values: List[float], alpha_values: List[float],
+                            classical_results: Dict, quantum_results: Dict,
+                            superquantum_results: Dict) -> str:
+    """
+    Create comprehensive KCBS visualization.
+
+    Parameters
+    ----------
+    expectation_range : np.ndarray
+        Array of expectation values
+    kcbs_values : List[float]
+        KCBS sums for each expectation value
+    contradiction_values : List[float]
+        Contextuality measures for each expectation value
+    alpha_values : List[float]
+        Alpha star values for each expectation value
+    classical_results : Dict
+        Results for classical configuration
+    quantum_results : Dict
+        Results for quantum configuration
+    superquantum_results : Dict
+        Results for superquantum configuration
+
+    Returns
+    -------
+    str
+        Path to saved figure
+    """
+    print("Creating KCBS visualization...")
+
+    # Setup the figure with multiple subplots
+    fig = plt.figure(figsize=FIGURE_SIZE_LARGE)
+
+    # Main relationship plot: KCBS vs Contradiction
+    ax1 = plt.subplot2grid((3, 4), (0, 0), colspan=2, rowspan=2)
+
+    # Create color map based on expectation values
+    scatter = ax1.scatter(kcbs_values, contradiction_values,
+                         c=expectation_range, cmap='plasma',
+                         s=SCATTER_SIZE_DEFAULT, alpha=0.8, edgecolors='none')
+
+    # Add theoretical boundaries
+    ax1.axvline(x=CLASSICAL_BOUND, color=COLOR_BOUNDARY_CLASSICAL, linewidth=LINE_WIDTH_DEFAULT, linestyle='-',
+                alpha=0.8, label='Classical bound (NC ≤ 2)')
+    ax1.axvline(x=QUANTUM_MAXIMUM, color=COLOR_BOUNDARY_QUANTUM, linewidth=LINE_WIDTH_REFERENCE, linestyle='--',
+                alpha=0.8, label=f'Quantum maximum (√5 ≈ {QUANTUM_MAXIMUM:.3f})')
+
+    # Highlight key configurations
+    ax1.scatter([classical_results['kcbs_sum']], [classical_results['contradiction_bits']],
+                color=COLOR_CLASSICAL, s=SCATTER_SIZE_HIGHLIGHT, marker='s', edgecolors='black', linewidth=2,
+                label='Classical optimal', zorder=10)
+    ax1.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']],
+                color=COLOR_QUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='o', edgecolors='black', linewidth=2,
+                label='Quantum optimal', zorder=10)
+    ax1.scatter([superquantum_results['kcbs_sum']], [superquantum_results['contradiction_bits']],
+                color=COLOR_SUPERQUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='^', edgecolors='black', linewidth=2,
+                label='Super-quantum', zorder=10)
+
+    # Annotations for key points
+    ax1.annotate(f'Quantum Optimum\nK(P) ≈ {quantum_results["contradiction_bits"]:.4f} bits\n⟨E⟩ = 1/√5',
+                 xy=(quantum_results['kcbs_sum'], quantum_results['contradiction_bits']),
+                 xytext=(quantum_results['kcbs_sum'] + 0.15, quantum_results['contradiction_bits'] + 0.002),
+                 arrowprops=dict(arrowstyle='->', color='darkred', lw=1.5),
+                 fontsize=10, ha='left', va='bottom',
+                 bbox=dict(boxstyle="round,pad=0.3", facecolor='white', edgecolor='darkred', alpha=0.9))
+
+    ax1.set_xlabel('KCBS Sum (Σᵢ ⟨Eᵢ⟩)', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('Contradiction Measure K(P) [bits]', fontsize=14, fontweight='bold')
+    ax1.set_title('KCBS Violation vs Quantum Contextuality', fontsize=16, fontweight='bold')
+    ax1.legend(fontsize=11, loc='upper left')
+    ax1.grid(True, alpha=0.3)
+
+    # Set dynamic limits
+    ax1.set_xlim(0, 2.8)
+    max_contradiction = max(contradiction_values) if contradiction_values else 0.0
+    ax1.set_ylim(0, max_contradiction * Y_LIMIT_SCALE_FACTOR)
+
+    # Add region labels
+    ax1.text(1.0, max_contradiction * 0.8, 'Classical\nRegion\nK(P) ≈ 0',
+             fontsize=12, fontweight='bold', ha='center', va='center',
+             bbox=dict(boxstyle="round,pad=0.4", facecolor=COLOR_NON_CONTEXTUAL_REGION, alpha=0.7))
+    ax1.text(2.4, max_contradiction * 0.5, 'Quantum\nContextual\nRegion\nK(P) > 0',
+             fontsize=12, fontweight='bold', ha='center', va='center',
+             bbox=dict(boxstyle="round,pad=0.4", facecolor=COLOR_CONTEXTUAL_REGION, alpha=0.7))
+
+    # Add colorbar
+    colorbar = plt.colorbar(scatter, ax=ax1, shrink=0.8)
+    colorbar.set_label('Expectation Value ⟨Eᵢ⟩', fontsize=12)
+
+    # Pentagon visualization
+    ax2 = plt.subplot2grid((3, 4), (0, 2))
+
+    # Draw pentagon representing the compatibility structure
+    pentagon = RegularPolygon((0.5, 0.5), 5, radius=0.3,
+                             facecolor='lightblue', edgecolor='blue',
+                             linewidth=2, alpha=0.3)
+    ax2.add_patch(pentagon)
+
+    # Add observable labels at pentagon vertices
+    angles = np.linspace(0, 2*pi, 6)[:-1] + pi/2  # Start from top
+    for i, angle in enumerate(angles):
+        x = 0.5 + 0.35 * cos(angle)
+        y = 0.5 + 0.35 * sin(angle)
+        ax2.text(x, y, f'E{i+1}', fontsize=14, fontweight='bold',
+                 ha='center', va='center',
+                 bbox=dict(boxstyle="circle,pad=0.3", facecolor='white',
+                          edgecolor='blue', linewidth=2))
+
+    # Draw compatibility edges
+    for i in range(5):
+        angle1 = angles[i]
+        angle2 = angles[(i+1) % 5]
+        x1, y1 = 0.5 + 0.3 * cos(angle1), 0.5 + 0.3 * sin(angle1)
+        x2, y2 = 0.5 + 0.3 * cos(angle2), 0.5 + 0.3 * sin(angle2)
+        ax2.plot([x1, x2], [y1, y2], 'b-', linewidth=3, alpha=0.7)
+
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(0, 1)
+    ax2.set_aspect('equal')
+    ax2.set_title('KCBS Pentagon Structure', fontsize=14, fontweight='bold')
+    ax2.text(0.5, 0.05, 'Adjacent observables\nare compatible',
+             ha='center', va='bottom', fontsize=10,
+             bbox=dict(boxstyle="round,pad=0.3", facecolor='yellow', alpha=0.7))
+    ax2.axis('off')
+
+    # Configuration comparison bar chart
+    ax3 = plt.subplot2grid((3, 4), (0, 3))
+
+    configs = ['Classical', 'Quantum', 'Super-QM']
+    kcbs_vals = [classical_results['kcbs_sum'],
+                 quantum_results['kcbs_sum'],
+                 superquantum_results['kcbs_sum']]
+    contradiction_vals = [classical_results['contradiction_bits'],
+                         quantum_results['contradiction_bits'],
+                         superquantum_results['contradiction_bits']]
+
+    # Create twin axis for contradiction values
+    ax3_twin = ax3.twinx()
+
+    # Bar plots
+    bars1 = ax3.bar(range(3), kcbs_vals, width=BAR_WIDTH_DEFAULT, alpha=0.7,
+                    color=[COLOR_CLASSICAL, COLOR_QUANTUM, COLOR_SUPERQUANTUM],
+                    edgecolor='black', linewidth=1.5, label='KCBS Sum')
+    bars2 = ax3_twin.bar([i+0.35 for i in range(3)], contradiction_vals, width=BAR_WIDTH_NARROW,
+                         alpha=0.9, color=[COLOR_NON_CONTEXTUAL_REGION, COLOR_CONTEXTUAL_REGION, COLOR_CONTEXTUAL_REGION],
+                         edgecolor='black', linewidth=1, label='Contradiction K(P)')
+
+    # Add reference lines
+    ax3.axhline(y=CLASSICAL_BOUND, color=COLOR_BOUNDARY_CLASSICAL, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.8)
+    ax3.axhline(y=QUANTUM_MAXIMUM, color=COLOR_BOUNDARY_QUANTUM, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.8)
+
+    ax3.set_ylabel('KCBS Sum', fontsize=12, color='darkgreen', fontweight='bold')
+    ax3_twin.set_ylabel('Contradiction [bits]', fontsize=12, color='purple', fontweight='bold')
+    ax3.set_title('Configuration\nComparison', fontsize=13, fontweight='bold')
+    ax3.set_xticks(range(3))
+    ax3.set_xticklabels(configs, rotation=45, fontsize=10)
+    ax3.set_ylim(0, BAR_CHART_Y_MAX)
+    ax3_twin.set_ylim(0, max(contradiction_vals) * Y_LIMIT_SCALE_FACTOR_TWIN)
+
+    # Value labels on bars
+    for i, (kcbs_val, contr_val) in enumerate(zip(kcbs_vals, contradiction_vals)):
+        ax3.text(i, kcbs_val + 0.05, f'{kcbs_val:.3f}', ha='center', va='bottom',
+                 fontweight='bold', fontsize=10)
+        contr_label = "≈ 0" if contr_val < 0.0001 else f'{contr_val:.3f}'
+        ax3_twin.text(i+0.35, contr_val + max(contradiction_vals)*0.05, contr_label,
+                      ha='center', va='bottom', fontweight='bold', fontsize=9)
+
+    # Expectation value evolution
+    ax4 = plt.subplot2grid((3, 4), (1, 2), colspan=2)
+
+    line1 = ax4.plot(expectation_range, kcbs_values, 'b-', linewidth=LINE_WIDTH_DEFAULT,
+                     label='KCBS Sum', alpha=0.8)
+    ax4_twin = ax4.twinx()
+    line2 = ax4_twin.plot(expectation_range, contradiction_values, 'r-', linewidth=LINE_WIDTH_DEFAULT,
+                          label='Contradiction K(P)', alpha=0.8)
+
+    # Mark key points
+    ax4.scatter([CLASSICAL_EXPECTATION], [classical_results['kcbs_sum']],
+                color=COLOR_CLASSICAL, s=SCATTER_SIZE_MEDIUM, marker='s', zorder=10)
+    ax4.scatter([QUANTUM_EXPECTATION], [quantum_results['kcbs_sum']],
+                color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', zorder=10)
+    ax4_twin.scatter([QUANTUM_EXPECTATION], [quantum_results['contradiction_bits']],
+                     color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', zorder=10)
+
+    # Reference lines
+    ax4.axhline(y=CLASSICAL_BOUND, color=COLOR_BOUNDARY_CLASSICAL, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.6)
+    ax4.axhline(y=QUANTUM_MAXIMUM, color=COLOR_BOUNDARY_QUANTUM, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.6)
+    ax4.axvline(x=QUANTUM_EXPECTATION, color='orange', linestyle=':', linewidth=LINE_WIDTH_REFERENCE, alpha=0.6)
+
+    ax4.set_xlabel('Expectation Value ⟨Eᵢ⟩', fontsize=12, fontweight='bold')
+    ax4.set_ylabel('KCBS Sum', fontsize=12, color='blue', fontweight='bold')
+    ax4_twin.set_ylabel('Contradiction [bits]', fontsize=12, color='red', fontweight='bold')
+    ax4.set_title('Parameter Evolution', fontsize=14, fontweight='bold')
+    ax4.grid(True, alpha=0.3)
+    ax4.set_xlim(PARAMETRIC_EXP_MIN, PARAMETRIC_EXP_MAX)
+
+    # Alpha parameter evolution
+    ax5 = plt.subplot2grid((3, 4), (2, 0), colspan=2)
+
+    ax5.plot(expectation_range, alpha_values, 'purple', linewidth=LINE_WIDTH_DEFAULT, alpha=0.8)
+    ax5.scatter([QUANTUM_EXPECTATION], [quantum_results['alpha_star']],
+               color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', zorder=10)
+    ax5.axvline(x=QUANTUM_EXPECTATION, color='orange', linestyle=':', linewidth=LINE_WIDTH_REFERENCE, alpha=0.6)
+
+    ax5.set_xlabel('Expectation Value ⟨Eᵢ⟩', fontsize=12, fontweight='bold')
+    ax5.set_ylabel('Optimal α*', fontsize=12, fontweight='bold')
+    ax5.set_title('Optimization Parameter Evolution', fontsize=14, fontweight='bold')
+    ax5.grid(True, alpha=0.3)
+    ax5.set_xlim(PARAMETRIC_EXP_MIN, PARAMETRIC_EXP_MAX)
+
+    # Phase space view (log scale)
+    ax6 = plt.subplot2grid((3, 4), (2, 2), colspan=2)
+
+    # Avoid log(0) issues
+    contradiction_plot = np.maximum(contradiction_values, LOG_SCALE_EPSILON)
+    scatter_log = ax6.scatter(kcbs_values, contradiction_plot,
+                             c=expectation_range, cmap='plasma',
+                             s=SCATTER_SIZE_LOG, alpha=0.8)
+
+    ax6.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']],
+               color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', edgecolors='black', linewidth=2, zorder=10)
+
+    ax6.set_yscale('log')
+    ax6.axvline(x=CLASSICAL_BOUND, color=COLOR_BOUNDARY_CLASSICAL, linewidth=LINE_WIDTH_REFERENCE, alpha=0.8)
+    ax6.axvline(x=QUANTUM_MAXIMUM, color=COLOR_BOUNDARY_QUANTUM, linewidth=LINE_WIDTH_REFERENCE, linestyle='--', alpha=0.8)
+
+    ax6.set_xlabel('KCBS Sum', fontsize=12, fontweight='bold')
+    ax6.set_ylabel('Contradiction K(P) [bits] (log)', fontsize=12, fontweight='bold')
+    ax6.set_title('Phase Space View', fontsize=14, fontweight='bold')
+    ax6.grid(True, alpha=0.3, which='both')
+    ax6.set_xlim(0, 2.8)
+
+    plt.tight_layout(pad=2.0)
+
+    # Save the visualization
+    output_path = save_figure('kcbs_contextuality_analysis.png')
+    return output_path
+
+
+def analyze_kcbs_configuration(expectation_value: float, label: str) -> Dict:
     """
     Perform analysis of a KCBS configuration.
 
@@ -161,7 +487,7 @@ print("Setting all expectation values to maximize classical sum while respecting
 print("In short, we only need to distribute the maximum possible values across the pentagon; nothing is hiding.")
 
 # Classical optimal: each observable has maximum expectation value of 2/5
-classical_expectation = 2.0 / 5.0  # = 0.4
+classical_expectation = CLASSICAL_EXPECTATION
 classical_results = analyze_kcbs_configuration(classical_expectation, "Classical optimal")
 
 print("Analysis results:")
@@ -181,7 +507,7 @@ props1 = {
 }
 print(format_behavior_verdict(props1, witness_symbol="Σ⟨E⟩"))
 print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
-print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
+print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < {DUALITY_GAP_TOLERANCE})")
 if classical_results['violates_classical']:
     print("  [PASS] Σ⟨E⟩ > 2 ⇒ K(P) > 0")
 else:
@@ -192,7 +518,7 @@ print("Using quantum optimal expectation value that maximally violates KCBS.")
 print("Formally, this achieves the Tsirelson-like bound for the pentagonal structure; the violation is fundamental.")
 
 # Quantum optimal: expectation value that achieves maximum violation
-quantum_expectation = 1.0 / sqrt(5)  # ≈ 0.447
+quantum_expectation = QUANTUM_EXPECTATION
 quantum_results = analyze_kcbs_configuration(quantum_expectation, "Quantum optimal")
 
 print("Analysis results:")
@@ -213,7 +539,7 @@ props2 = {
 }
 print(format_behavior_verdict(props2, witness_symbol="Σ⟨E⟩"))
 print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
-print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
+print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < {DUALITY_GAP_TOLERANCE})")
 if quantum_results['violates_classical']:
     print("  [PASS] Σ⟨E⟩ > 2 ⇒ K(P) > 0")
 else:
@@ -222,13 +548,13 @@ else:
 # Add witness information for non-frame-independent configurations
 if not quantum_results['frame_independent'] and quantum_results['lambda_star'] is not None:
     print("  Witness information:")
-    pretty_witness(quantum_results['lambda_star'], quantum_results['context_scores'], tol=1e-9)
+    pretty_witness(quantum_results['lambda_star'], quantum_results['context_scores'], tol=WITNESS_TOLERANCE)
 
 print_subsection_header("Configuration 3: Super-Quantum (Hypothetical) Setup")
 print("Exploring expectation values beyond quantum mechanics for comparison.")
 
 # Super-quantum: higher expectation value (unphysical in standard QM)
-superquantum_expectation = 0.5
+superquantum_expectation = SUPERQUANTUM_EXPECTATION
 superquantum_results = analyze_kcbs_configuration(superquantum_expectation, "Super-quantum")
 
 print("Analysis results:")
@@ -247,7 +573,7 @@ props3 = {
 }
 print(format_behavior_verdict(props3, witness_symbol="Σ⟨E⟩"))
 print(f"  Operational: K bits ≈ minimal side-information about context needed to reconcile the data with a single frame.")
-print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
+print(f"  [PASS] α* = 2^(-K)  (|K + log2(α*)| < {DUALITY_GAP_TOLERANCE})")
 if superquantum_results['violates_classical']:
     print("  [PASS] Σ⟨E⟩ > 2 ⇒ K(P) > 0")
 else:
@@ -256,7 +582,7 @@ else:
 # Add witness information for non-frame-independent configurations
 if not superquantum_results['frame_independent'] and superquantum_results['lambda_star'] is not None:
     print("  Witness information:")
-    pretty_witness(superquantum_results['lambda_star'], superquantum_results['context_scores'], tol=1e-9)
+    pretty_witness(superquantum_results['lambda_star'], superquantum_results['context_scores'], tol=WITNESS_TOLERANCE)
 
 # -----------------------------
 # Parametric Analysis
@@ -267,34 +593,8 @@ print("Systematically varying expectation values to explore the relationship")
 print("between KCBS violation and contextuality quantification.")
 print()
 
-# Create parametric sweep
-expectation_range = np.linspace(0.0, 0.5, 100)
-kcbs_values = []
-contradiction_values = []
-alpha_values = []
-
-print("Computing KCBS sums and contextuality measures across parameter space...")
-
-for exp_val in expectation_range:
-    if exp_val == 0:  # Handle edge case
-        kcbs_val = 0.0
-        contradiction_bits = 0.0
-        alpha_star = 0.0
-    else:
-        results = analyze_kcbs_configuration(exp_val, f"Parametric {exp_val:.3f}")
-        kcbs_val = results['kcbs_sum']
-        contradiction_bits = results['contradiction_bits']
-        alpha_star = results['alpha_star']
-    
-    kcbs_values.append(kcbs_val)
-    contradiction_values.append(contradiction_bits)
-    alpha_values.append(alpha_star)
-
-# Convert to numpy arrays for plotting
-expectation_range = np.array(expectation_range)
-kcbs_values = np.array(kcbs_values)
-contradiction_values = np.array(contradiction_values)
-alpha_values = np.array(alpha_values)
+# Perform parametric analysis
+expectation_range, kcbs_values, contradiction_values, alpha_values = perform_parametric_analysis()
 
 # -----------------------------
 # Create Visualization
@@ -303,31 +603,31 @@ alpha_values = np.array(alpha_values)
 print(f"Creating KCBS visualization...")
 
 # Setup the figure with multiple subplots
-fig = plt.figure(figsize=(20, 12))
+fig = plt.figure(figsize=FIGURE_SIZE_LARGE)
 
 # Main relationship plot: KCBS vs Contradiction
 ax1 = plt.subplot2grid((3, 4), (0, 0), colspan=2, rowspan=2)
 
 # Create color map based on expectation values
-scatter = ax1.scatter(kcbs_values, contradiction_values, 
-                     c=expectation_range, cmap='plasma', 
-                     s=30, alpha=0.8, edgecolors='none')
+scatter = ax1.scatter(kcbs_values, contradiction_values,
+                     c=expectation_range, cmap='plasma',
+                     s=SCATTER_SIZE_DEFAULT, alpha=0.8, edgecolors='none')
 
 # Add theoretical boundaries
-ax1.axvline(x=CLASSICAL_BOUND, color='red', linewidth=3, linestyle='-', 
+ax1.axvline(x=CLASSICAL_BOUND, color=COLOR_BOUNDARY_CLASSICAL, linewidth=LINE_WIDTH_DEFAULT, linestyle='-',
             alpha=0.8, label='Classical bound (NC ≤ 2)')
-ax1.axvline(x=QUANTUM_MAXIMUM, color='blue', linewidth=2, linestyle='--', 
+ax1.axvline(x=QUANTUM_MAXIMUM, color=COLOR_BOUNDARY_QUANTUM, linewidth=LINE_WIDTH_REFERENCE, linestyle='--',
             alpha=0.8, label=f'Quantum maximum (√5 ≈ {QUANTUM_MAXIMUM:.3f})')
 
 # Highlight key configurations
-ax1.scatter([classical_results['kcbs_sum']], [classical_results['contradiction_bits']], 
-            color='green', s=200, marker='s', edgecolors='black', linewidth=2, 
+ax1.scatter([classical_results['kcbs_sum']], [classical_results['contradiction_bits']],
+            color=COLOR_CLASSICAL, s=SCATTER_SIZE_HIGHLIGHT, marker='s', edgecolors='black', linewidth=2,
             label='Classical optimal', zorder=10)
-ax1.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']], 
-            color='red', s=200, marker='o', edgecolors='black', linewidth=2, 
+ax1.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']],
+            color=COLOR_QUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='o', edgecolors='black', linewidth=2,
             label='Quantum optimal', zorder=10)
-ax1.scatter([superquantum_results['kcbs_sum']], [superquantum_results['contradiction_bits']], 
-            color='purple', s=200, marker='^', edgecolors='black', linewidth=2, 
+ax1.scatter([superquantum_results['kcbs_sum']], [superquantum_results['contradiction_bits']],
+            color=COLOR_SUPERQUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='^', edgecolors='black', linewidth=2,
             label='Super-quantum', zorder=10)
 
 # Annotations for key points
@@ -344,15 +644,15 @@ ax1.set_title('KCBS Violation vs Quantum Contextuality', fontsize=16, fontweight
 ax1.legend(fontsize=11, loc='upper left')
 ax1.grid(True, alpha=0.3)
 ax1.set_xlim(0, 2.8)
-ax1.set_ylim(0, max(contradiction_values) * 1.1)
+ax1.set_ylim(0, max(contradiction_values) * Y_LIMIT_SCALE_FACTOR)
 
 # Add region labels
-ax1.text(1.0, max(contradiction_values) * 0.8, 'Classical\nRegion\nK(P) ≈ 0', 
+ax1.text(1.0, max(contradiction_values) * 0.8, 'Classical\nRegion\nK(P) ≈ 0',
          fontsize=12, fontweight='bold', ha='center', va='center',
-         bbox=dict(boxstyle="round,pad=0.4", facecolor='lightgreen', alpha=0.7))
-ax1.text(2.4, max(contradiction_values) * 0.5, 'Quantum\nContextual\nRegion\nK(P) > 0', 
+         bbox=dict(boxstyle="round,pad=0.4", facecolor=COLOR_NON_CONTEXTUAL_REGION, alpha=0.7))
+ax1.text(2.4, max(contradiction_values) * 0.5, 'Quantum\nContextual\nRegion\nK(P) > 0',
          fontsize=12, fontweight='bold', ha='center', va='center',
-         bbox=dict(boxstyle="round,pad=0.4", facecolor='lightcoral', alpha=0.7))
+         bbox=dict(boxstyle="round,pad=0.4", facecolor=COLOR_CONTEXTUAL_REGION, alpha=0.7))
 
 # Add colorbar
 colorbar = plt.colorbar(scatter, ax=ax1, shrink=0.8)
@@ -409,11 +709,11 @@ contradiction_vals = [classical_results['contradiction_bits'],
 ax3_twin = ax3.twinx()
 
 # Bar plots
-bars1 = ax3.bar(range(3), kcbs_vals, width=0.6, alpha=0.7, 
-                color=['green', 'red', 'purple'], 
+bars1 = ax3.bar(range(3), kcbs_vals, width=BAR_WIDTH_DEFAULT, alpha=0.7,
+                color=[COLOR_CLASSICAL, COLOR_QUANTUM, COLOR_SUPERQUANTUM],
                 edgecolor='black', linewidth=1.5, label='KCBS Sum')
-bars2 = ax3_twin.bar([i+0.35 for i in range(3)], contradiction_vals, width=0.3, 
-                     alpha=0.9, color=['lightgreen', 'pink', 'plum'],
+bars2 = ax3_twin.bar([i+0.35 for i in range(3)], contradiction_vals, width=BAR_WIDTH_NARROW,
+                     alpha=0.9, color=[COLOR_NON_CONTEXTUAL_REGION, COLOR_CONTEXTUAL_REGION, COLOR_CONTEXTUAL_REGION],
                      edgecolor='black', linewidth=1, label='Contradiction K(P)')
 
 # Add reference lines
@@ -425,8 +725,8 @@ ax3_twin.set_ylabel('Contradiction [bits]', fontsize=12, color='purple', fontwei
 ax3.set_title('Configuration\nComparison', fontsize=13, fontweight='bold')
 ax3.set_xticks(range(3))
 ax3.set_xticklabels(configs, rotation=45, fontsize=10)
-ax3.set_ylim(0, 3)
-ax3_twin.set_ylim(0, max(contradiction_vals) * 1.2)
+ax3.set_ylim(0, BAR_CHART_Y_MAX)
+ax3_twin.set_ylim(0, max(contradiction_vals) * Y_LIMIT_SCALE_FACTOR_TWIN)
 
 # Value labels on bars
 for i, (kcbs_val, contr_val) in enumerate(zip(kcbs_vals, contradiction_vals)):
@@ -446,10 +746,10 @@ line2 = ax4_twin.plot(expectation_range, contradiction_values, 'r-', linewidth=3
                       label='Contradiction K(P)', alpha=0.8)
 
 # Mark key points
-ax4.scatter([classical_expectation], [classical_results['kcbs_sum']], 
-            color='green', s=100, marker='s', zorder=10)
-ax4.scatter([quantum_expectation], [quantum_results['kcbs_sum']], 
-            color='red', s=100, marker='o', zorder=10)
+ax4.scatter([classical_expectation], [classical_results['kcbs_sum']],
+            color=COLOR_CLASSICAL, s=SCATTER_SIZE_MEDIUM, marker='s', zorder=10)
+ax4.scatter([quantum_expectation], [quantum_results['kcbs_sum']],
+            color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', zorder=10)
 ax4_twin.scatter([quantum_expectation], [quantum_results['contradiction_bits']], 
                  color='darkred', s=100, marker='o', zorder=10)
 
@@ -469,8 +769,8 @@ ax4.set_xlim(0, 0.5)
 ax5 = plt.subplot2grid((3, 4), (2, 0), colspan=2)
 
 ax5.plot(expectation_range, alpha_values, 'purple', linewidth=3, alpha=0.8)
-ax5.scatter([quantum_expectation], [quantum_results['alpha_star']], 
-           color='red', s=100, marker='o', zorder=10)
+ax5.scatter([quantum_expectation], [quantum_results['alpha_star']],
+           color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', zorder=10)
 ax5.axvline(x=quantum_expectation, color='orange', linestyle=':', linewidth=2, alpha=0.6)
 
 ax5.set_xlabel('Expectation Value ⟨Eᵢ⟩', fontsize=12, fontweight='bold')
@@ -483,13 +783,13 @@ ax5.set_xlim(0, 0.5)
 ax6 = plt.subplot2grid((3, 4), (2, 2), colspan=2)
 
 # Avoid log(0) issues
-contradiction_plot = np.maximum(contradiction_values, 1e-10)
-scatter_log = ax6.scatter(kcbs_values, contradiction_plot, 
-                         c=expectation_range, cmap='plasma', 
-                         s=25, alpha=0.8)
+contradiction_plot = np.maximum(contradiction_values, LOG_SCALE_EPSILON)
+scatter_log = ax6.scatter(kcbs_values, contradiction_plot,
+                         c=expectation_range, cmap='plasma',
+                         s=SCATTER_SIZE_LOG, alpha=0.8)
 
-ax6.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']], 
-           color='red', s=150, marker='o', edgecolors='black', linewidth=2, zorder=10)
+ax6.scatter([quantum_results['kcbs_sum']], [quantum_results['contradiction_bits']],
+           color=COLOR_QUANTUM, s=SCATTER_SIZE_MEDIUM, marker='o', edgecolors='black', linewidth=2, zorder=10)
 
 ax6.set_yscale('log')
 ax6.axvline(x=CLASSICAL_BOUND, color='red', linewidth=2, alpha=0.8)

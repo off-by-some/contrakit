@@ -2,27 +2,94 @@
 #
 # This analysis explores the Mermin-Peres magic square—a powerful demonstration of state-independent perspectival contradiction. Formally, unlike the CHSH inequality which requires specific quantum states, the magic square reveals contradiction through purely algebraic constraints on measurement outcomes. In quantum systems, this contradiction manifests as contextuality; the independence from state is remarkable.
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+from typing import Dict, List, Tuple
 
-# Import the mathematical theory of contradiction library
 from contrakit import Space, Behavior, FrameIndependence
 from contrakit.constants import FIGURES_DIR, DEFAULT_SEED
-
-# Import common utilities
 from examples.quantum.utils import (
-    pretty_witness, save_figure, display_figure,
-    print_section_header, print_subsection_header, create_analysis_header,
-    extract_behavior_properties, format_behavior_verdict, print_behavior_analysis,
-    sanitize_pmf, print_boundary_analysis
+    create_analysis_header,
+    display_figure,
+    extract_behavior_properties,
+    format_behavior_verdict,
+    pretty_witness,
+    print_behavior_analysis,
+    print_boundary_analysis,
+    print_section_header,
+    print_subsection_header,
+    sanitize_pmf,
+    save_figure,
 )
+
+# Constants
+# ---------
+
+# Magic square theoretical bounds
+CLASSICAL_BOUND = 2.0
+QUANTUM_MAXIMUM = 6.0  # Maximum witness value achievable in quantum mechanics
+
+# Expected witness values for verification
+EXPECTED_QUANTUM_WITNESS = 6.0
+EXPECTED_CLASSICAL_WITNESS = 4.0
+
+# Parity values for magic square constraints
+POSITIVE_PARITY = +1
+NEGATIVE_PARITY = -1
+
+# Numerical tolerances
+DEFAULT_NO_SIGNALLING_TOLERANCE = 1e-12
+WITNESS_TOLERANCE = 1e-9
+ANALYTIC_CROSS_CHECK_TOLERANCE = 1e-10
+DUALITY_GAP_TOLERANCE = 1e-12
+
+# Visualization parameters
+FIGURE_SIZE_LARGE = (20, 14)
+FIGURE_SIZE_MEDIUM = (15, 10)
+GRID_SIZE = 3
+CELL_SIZE = 1
+SCATTER_SIZE_DEFAULT = 100
+SCATTER_SIZE_HIGHLIGHT = 300
+SCATTER_SIZE_MEDIUM = 200
+BAR_WIDTH_DEFAULT = 0.6
+LINE_WIDTH_DEFAULT = 4
+LINE_WIDTH_REFERENCE = 3
+LINE_WIDTH_THIN = 2
+
+# Parametric analysis parameters
+PERTURBATION_LEVELS_COUNT = 30
+BOUNDARY_ANALYSIS_COUNT = 50
+WHITE_NOISE_LEVELS_COUNT = 20
+
+# Color schemes
+COLORS_GRID = ['#E3F2FD', '#FFEBEE', '#E8F5E8', '#FFF3E0', '#F3E5F5', '#E0F2F1']
+COLOR_CLASSICAL = '#FF7F7F'
+COLOR_QUANTUM = '#7FB3D3'
+COLOR_CONTRADICTION_CLASSICAL = '#FFB3B3'
+COLOR_CONTRADICTION_QUANTUM = '#B3D9FF'
+COLOR_BOUNDARY_CLASSICAL = 'gray'
+COLOR_BOUNDARY_QUANTUM = 'blue'
+COLOR_PERTURBATION = 'red'
+
+# Plot limits and scaling
+Y_LIMIT_SCALE_FACTOR = 1.2
+Y_LIMIT_MAX_CLASSICAL = 7
+Y_LIMIT_BOTTOM_DEFAULT = -0.005
+X_LIMIT_LEFT_DEFAULT = 1.5
+X_LIMIT_RIGHT_DEFAULT = 6.5
+
+# Magic square grid layout
+MAGIC_SQUARE_OFFSET_X = 1.35
+MAGIC_SQUARE_OFFSET_Y = 0.8
+MAGIC_SQUARE_ARROW_LENGTH = 0.2
+MAGIC_SQUARE_TEXT_OFFSET = 0.4
 
 # =============================================================================
 # Core Magic Square Functions
 # =============================================================================
 
-def create_parity_distribution(target_parity: int):
+def create_parity_distribution(target_parity: int) -> Dict[Tuple[int, int, int], float]:
     """
     Create a uniform probability distribution over measurement triples with specified parity.
 
@@ -56,7 +123,7 @@ def create_parity_distribution(target_parity: int):
         
     return pmf
 
-def compute_triple_product_expectation(pmf: dict) -> float:
+def compute_triple_product_expectation(pmf: Dict[Tuple[int, int, int], float]) -> float:
     """
     Calculate the expected value of the triple product A×B×C.
 
@@ -65,7 +132,7 @@ def compute_triple_product_expectation(pmf: dict) -> float:
     """
     return sum(a*b*c * p for (a,b,c), p in pmf.items())
 
-def verify_no_signalling_constraint(contexts, tolerance=1e-12):
+def verify_no_signalling_constraint(contexts: Dict[Tuple[str, ...], Dict[Tuple[int, int, int], float]], tolerance: float = DEFAULT_NO_SIGNALLING_TOLERANCE) -> None:
     """
     Verify that all probability distributions satisfy the no-signalling constraint.
 
@@ -108,7 +175,7 @@ def verify_no_signalling_constraint(contexts, tolerance=1e-12):
                 diff = abs(marg_row[v] - marg_col[v])
                 assert diff <= tolerance, f"No-signalling violation at {cell}: row={marg_row[v]:.6f}, col={marg_col[v]:.6f}"
 
-def create_measurement_space():
+def create_measurement_space() -> 'Space':
     """
     Create the measurement space for the 3×3 magic square experiment.
 
@@ -128,7 +195,7 @@ def create_measurement_space():
         R3C1=[-1,+1], R3C2=[-1,+1], R3C3=[-1,+1],
     )
 
-def create_quantum_predictions():
+def create_quantum_predictions() -> Tuple['Space', Dict[Tuple[str, ...], Dict[Tuple[int, int, int], float]], 'Behavior']:
     """
     Construct the quantum mechanical predictions for the magic square experiment.
 
@@ -171,7 +238,7 @@ def create_quantum_predictions():
     behavior = Behavior.from_contexts(space, contexts)
     return space, contexts, behavior
 
-def create_classical_predictions():
+def create_classical_predictions() -> Tuple['Space', Dict[Tuple[str, ...], Dict[Tuple[int, int, int], float]], 'Behavior']:
     """
     Construct a classical (non-contextual) model for the magic square experiment.
 
@@ -214,7 +281,7 @@ def create_classical_predictions():
     behavior = Behavior.from_contexts(space, contexts)
     return space, contexts, behavior
 
-def compute_contradiction_witness(contexts):
+def compute_contradiction_witness(contexts: Dict[Tuple[str, ...], Dict[Tuple[int, int, int], float]]) -> Tuple[float, Tuple[float, float, float, float, float, float]]:
     """
     Calculate the contextuality witness for the magic square experiment.
 
@@ -255,6 +322,88 @@ def compute_contradiction_witness(contexts):
     
     witness = R1 + R2 + R3 + C1 + C2 - C3
     return witness, (R1, R2, R3, C1, C2, C3)
+
+def perform_parametric_analysis() -> Tuple['np.ndarray', List[float], List[float]]:
+    """
+    Perform parametric analysis of magic square perturbations.
+
+    Returns
+    -------
+    Tuple[np.ndarray, List[float], List[float]]
+        perturbation_levels, witness_values, contradiction_values
+    """
+    perturbation_levels = np.linspace(0, 1.0, PERTURBATION_LEVELS_COUNT)
+    witness_values = []
+    contradiction_values = []
+
+    for eps in perturbation_levels:
+        _, ctxs_eps, beh_eps = create_perturbed_predictions(eps, mode="classical")
+        w_eps, _ = compute_contradiction_witness(ctxs_eps)
+        witness_values.append(w_eps)
+        contradiction_values.append(beh_eps.contradiction_bits)
+
+        # Check no-signalling consistency for perturbed behavior
+        verify_no_signalling_constraint(ctxs_eps)
+
+        # Analytic cross-check: for mode="classical", W(ε) = 6 - 2ε
+        expected_w = EXPECTED_QUANTUM_WITNESS - 2*eps
+        assert np.isclose(w_eps, expected_w, atol=ANALYTIC_CROSS_CHECK_TOLERANCE), f"Expected W({eps}) = {expected_w}, got {w_eps}"
+
+    print("✓ All perturbation levels satisfy consistency checks")
+    return perturbation_levels, witness_values, contradiction_values
+
+
+def analyze_behavior_detailed(behavior: 'Behavior', label: str) -> Dict:
+    """
+    Perform detailed analysis of a behavior object.
+
+    Parameters
+    ----------
+    behavior : Behavior
+        The behavior to analyze
+    label : str
+        Descriptive label for the behavior
+
+    Returns
+    -------
+    Dict
+        Analysis results including witness, contradiction measures, etc.
+    """
+    alpha = behavior.alpha_star
+    contradiction = behavior.contradiction_bits
+    fi = FrameIndependence.check(behavior)
+    lambda_star = behavior.least_favorable_lambda()
+    context_scores = behavior.per_context_scores(mu="optimal")
+
+    return {
+        'alpha': alpha,
+        'contradiction': contradiction,
+        'frame_independent': fi.is_fi,
+        'lambda_star': lambda_star,
+        'context_scores': context_scores,
+        'label': label
+    }
+
+
+def print_behavior_analysis(results: Dict, witness_value: float):
+    """
+    Print detailed analysis results for a behavior.
+
+    Parameters
+    ----------
+    results : Dict
+        Analysis results from analyze_behavior_detailed
+    witness_value : float
+        The witness value (W) for this behavior
+    """
+    print("Verdict: W: {:.1f}   K(P): {:.6f} bits   α*: {:.6f}   FI?: {}".format(
+        witness_value, results['contradiction'], results['alpha'],
+        "NO" if not results['frame_independent'] else "YES"))
+
+    if not results['frame_independent'] and results['lambda_star'] is not None:
+        print("  Witness information:")
+        pretty_witness(results['lambda_star'], results['context_scores'], tol=WITNESS_TOLERANCE)
+
 
 def create_perturbed_predictions(perturbation_strength=0.1, mode="classical"):
     """
@@ -354,51 +503,32 @@ q_witness, q_products = compute_contradiction_witness(q_contexts)
 c_witness, c_products = compute_contradiction_witness(c_contexts)
 
 # Verify theoretical predictions are reproduced
-expected_quantum_witness = 6.0
-expected_classical_witness = 4.0
-assert np.isclose(q_witness, expected_quantum_witness), f"Quantum witness should be {expected_quantum_witness}, got {q_witness}"
-assert np.isclose(c_witness, expected_classical_witness), f"Classical witness should be {expected_classical_witness}, got {c_witness}"
+assert np.isclose(q_witness, EXPECTED_QUANTUM_WITNESS), f"Quantum witness should be {EXPECTED_QUANTUM_WITNESS}, got {q_witness}"
+assert np.isclose(c_witness, EXPECTED_CLASSICAL_WITNESS), f"Classical witness should be {EXPECTED_CLASSICAL_WITNESS}, got {c_witness}"
 print("✓ Theoretical predictions verified numerically")
 print("This confirms the algebraic structure. Nothing is hiding in the proof.")
 
 # Analyze behaviors
 print("We now analyze the behaviors. Consider the contradiction measures.")
-q_alpha = q_behavior.alpha_star
-q_contradiction = q_behavior.contradiction_bits
-q_fi = FrameIndependence.check(q_behavior)
-q_lambda_star = q_behavior.least_favorable_lambda()
-q_context_scores = q_behavior.per_context_scores(mu="optimal")
-
-c_alpha = c_behavior.alpha_star
-c_contradiction = c_behavior.contradiction_bits
-c_fi = FrameIndependence.check(c_behavior)
-c_lambda_star = c_behavior.least_favorable_lambda()
-c_context_scores = c_behavior.per_context_scores(mu="optimal")
+q_analysis = analyze_behavior_detailed(q_behavior, "Quantum")
+c_analysis = analyze_behavior_detailed(c_behavior, "Classical")
 
 print("QUANTUM MECHANICAL PREDICTIONS:")
-print("  Verdict: W: {:.1f}   K(P): {:.6f} bits   α*: {:.6f}   FI?: {}".format(
-    q_witness, q_contradiction, q_alpha, "NO" if not q_fi.is_fi else "YES"))
+print_behavior_analysis(q_analysis, q_witness)
 print("  Row triple products: ⟨R₁⟩ = {:.0f}, ⟨R₂⟩ = {:.0f}, ⟨R₃⟩ = {:.0f}".format(*q_products[:3]))
 print("  Column triple products: ⟨C₁⟩ = {:.0f}, ⟨C₂⟩ = {:.0f}, ⟨C₃⟩ = {:.0f}".format(*q_products[3:]))
-if not q_fi.is_fi and q_lambda_star is not None:
-    print("  Witness information:")
-    pretty_witness(q_lambda_star, q_context_scores, tol=1e-9)
 print("  State-independent: W = 6 and K(P) > 0 hold for the Magic-Square algebra (independent of the underlying quantum state).")
 print()
 
 print("CLASSICAL MODEL PREDICTIONS:")
-print("  Verdict: W: {:.1f}   K(P): {:.6f} bits   α*: {:.6f}   FI?: {}".format(
-    c_witness, c_contradiction, c_alpha, "NO" if not c_fi.is_fi else "YES"))
+print_behavior_analysis(c_analysis, c_witness)
 print("  Row triple products: ⟨R₁⟩ = {:.0f}, ⟨R₂⟩ = {:.0f}, ⟨R₃⟩ = {:.0f}".format(*c_products[:3]))
 print("  Column triple products: ⟨C₁⟩ = {:.0f}, ⟨C₂⟩ = {:.0f}, ⟨C₃⟩ = {:.0f}".format(*c_products[3:]))
-if not c_fi.is_fi and c_lambda_star is not None:
-    print("  Witness information:")
-    pretty_witness(c_lambda_star, c_context_scores, tol=1e-9)
 print()
 
 print_section_header("Parametric Analysis: Magic Square Perturbations")
 print("Performing parametric analysis with perturbations...")
-perturbation_levels = np.linspace(0, 1.0, 30)
+perturbation_levels = np.linspace(0, 1.0, PERTURBATION_LEVELS_COUNT)
 witness_values = []
 contradiction_values = []
 
@@ -415,7 +545,7 @@ for eps in perturbation_levels:
     
     # Analytic cross-check: for mode="classical", W(ε) = 6 - 2ε
     expected_w = 6 - 2*eps
-    assert np.isclose(w_eps, expected_w, atol=1e-10), f"Expected W({eps}) = {expected_w}, got {w_eps}"
+    assert np.isclose(w_eps, expected_w, atol=ANALYTIC_CROSS_CHECK_TOLERANCE), f"Expected W({eps}) = {expected_w}, got {w_eps}"
 
 print("✓ All perturbation levels satisfy consistency checks")
 
@@ -424,27 +554,27 @@ boundary_w_values = []
 boundary_k_values = []
 
 # Check points near the classical boundary
-for eps in np.linspace(0, 0.1, 50):  # ε from 0 to 0.1 (W from 6 to 5.8)
+for eps in np.linspace(0, 0.1, BOUNDARY_ANALYSIS_COUNT):  # ε from 0 to 0.1 (W from 6 to 5.8)
     _, ctxs_eps, beh_eps = create_perturbed_predictions(eps, mode="classical")
     w_eps, _ = compute_contradiction_witness(ctxs_eps)
     boundary_w_values.append(w_eps)
     boundary_k_values.append(beh_eps.contradiction_bits)
 
-print_boundary_analysis(boundary_w_values, boundary_k_values, 4.0, "W", "K(P)")
+print_boundary_analysis(boundary_w_values, boundary_k_values, EXPECTED_CLASSICAL_WITNESS, "W", "K(P)")
 
 print()
 print("=" * 70)
 print("Invariant checks")
 print("=" * 70)
 print()
-print(f"[PASS] W ≤ 4  ⇒  K ≈ 0    (|K| < 1e-9)")
-print(f"[PASS] W = 6  ⇒  K > 0")
-print(f"[PASS] α* = 2^(-K)  (|K + log2(α*)| < 1e-12)")
+print(f"[PASS] W ≤ {EXPECTED_CLASSICAL_WITNESS}  ⇒  K ≈ 0    (|K| < {WITNESS_TOLERANCE})")
+print(f"[PASS] W = {EXPECTED_QUANTUM_WITNESS}  ⇒  K > 0")
+print(f"[PASS] α* = 2^(-K)  (|K + log2(α*)| < {DUALITY_GAP_TOLERANCE})")
 print(f"[INFO] No-signalling max deviation = 0.00e+00 (within 1e-12)")
 print()
 
 # Create comprehensive visualization - all plots in one figure
-fig = plt.figure(figsize=(20, 14))
+fig = plt.figure(figsize=FIGURE_SIZE_LARGE)
 fig.suptitle('Mermin-Peres Magic Square: State-Independent Contradiction',
              fontsize=20, fontweight='bold', y=0.96)
 
@@ -455,9 +585,9 @@ gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.3)
 ax1 = fig.add_subplot(gs[0, 0])
 
 # Create 3x3 grid with better spacing
-grid_size = 3
-cell_size = 1
-colors = ['#E3F2FD', '#FFEBEE', '#E8F5E8', '#FFF3E0', '#F3E5F5', '#E0F2F1']
+grid_size = GRID_SIZE
+cell_size = CELL_SIZE
+colors = COLORS_GRID
 
 # Draw the magic square grid
 for i in range(grid_size):
@@ -505,8 +635,8 @@ ax1.axis('off')
 ax2 = fig.add_subplot(gs[0, 1])
 
 categories = ['Classical\nBound', 'Quantum\nValue']
-witness_vals = [4, q_witness]
-colors_bars = ['#FF7F7F', '#7FB3D3']
+witness_vals = [EXPECTED_CLASSICAL_WITNESS, q_witness]
+colors_bars = [COLOR_CLASSICAL, COLOR_QUANTUM]
 
 bars = ax2.bar(categories, witness_vals, width=0.6, color=colors_bars, 
                edgecolor='black', linewidth=2, alpha=0.8)
@@ -527,8 +657,8 @@ ax2.tick_params(axis='both', which='major', labelsize=12)
 # Plot 3: Information Content (top-right)
 ax3 = fig.add_subplot(gs[0, 2])
 
-contradiction_vals = [c_contradiction, q_contradiction]
-colors_contra = ['#FFB3B3', '#B3D9FF']
+contradiction_vals = [c_analysis['contradiction'], q_analysis['contradiction']]
+colors_contra = [COLOR_CONTRADICTION_CLASSICAL, COLOR_CONTRADICTION_QUANTUM]
 
 bars = ax3.bar(categories, contradiction_vals, width=0.6, color=colors_contra, 
                edgecolor='black', linewidth=2, alpha=0.8)
@@ -559,12 +689,12 @@ line1 = ax4.plot(perturbation_levels, witness_values, 'b-', linewidth=4,
                 label='Contextuality Witness W', marker='o', markersize=8, alpha=0.8)
 
 # Highlight reference points
-ax4.axhline(y=4, color='gray', linestyle='--', linewidth=3, alpha=0.8, label='Classical bound')
-ax4.axhline(y=6, color='blue', linestyle='--', linewidth=3, alpha=0.8, label='Quantum value')
+ax4.axhline(y=EXPECTED_CLASSICAL_WITNESS, color=COLOR_BOUNDARY_CLASSICAL, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.8, label='Classical bound')
+ax4.axhline(y=EXPECTED_QUANTUM_WITNESS, color=COLOR_BOUNDARY_QUANTUM, linestyle='--', linewidth=LINE_WIDTH_REFERENCE, alpha=0.8, label='Quantum value')
 
 # Highlight pure quantum point
-ax4.scatter([0], [q_witness], color='blue', s=300, marker='*', 
-           edgecolors='black', linewidth=3, zorder=10, label='Pure quantum')
+ax4.scatter([0], [q_witness], color=COLOR_QUANTUM, s=SCATTER_SIZE_HIGHLIGHT, marker='*',
+           edgecolors='black', linewidth=LINE_WIDTH_REFERENCE, zorder=10, label='Pure quantum')
 
 # Secondary axis: Contradiction measure
 ax4_twin = ax4.twinx()
@@ -572,8 +702,8 @@ line2 = ax4_twin.plot(perturbation_levels, contradiction_values, 'r-', linewidth
                      label='Contradiction K(P)', marker='s', markersize=6, alpha=0.7)
 
 # Highlight pure quantum point on twin axis
-ax4_twin.scatter([0], [q_contradiction], color='red', s=200, marker='*',
-                edgecolors='black', linewidth=2, zorder=9)
+ax4_twin.scatter([0], [q_analysis['contradiction']], color=COLOR_PERTURBATION, s=SCATTER_SIZE_MEDIUM, marker='*',
+                edgecolors='black', linewidth=LINE_WIDTH_THIN, zorder=9)
 
 ax4.set_xlabel('Perturbation Strength', fontsize=16, fontweight='bold')
 ax4.set_ylabel('Contextuality Witness W', fontsize=16, fontweight='bold', color='blue')
@@ -608,9 +738,9 @@ scatter = ax5.scatter(witness_values, contradiction_values,
                      c=perturbation_levels, cmap='viridis', s=100, alpha=0.9, linewidths=0.6)
 
 # Highlight special points
-ax5.scatter([c_witness], [c_contradiction], color='red', s=300, marker='s',
+ax5.scatter([c_witness], [c_analysis['contradiction']], color='red', s=300, marker='s',
            edgecolors='black', linewidth=3, zorder=10)
-ax5.scatter([q_witness], [q_contradiction], color='blue', s=300, marker='*',
+ax5.scatter([q_witness], [q_analysis['contradiction']], color='blue', s=300, marker='*',
            edgecolors='black', linewidth=3, zorder=10)
 
 # Add theoretical boundaries
@@ -624,18 +754,18 @@ ax5.grid(True, alpha=0.3)
 ax5.tick_params(axis='both', which='major', labelsize=16)
 
 # Set reasonable limits for clean appearance
-ax5.set_xlim(left=1.5, right=6.5)
-ax5.set_ylim(bottom=-0.005)
+ax5.set_xlim(left=X_LIMIT_LEFT_DEFAULT, right=X_LIMIT_RIGHT_DEFAULT)
+ax5.set_ylim(bottom=Y_LIMIT_BOTTOM_DEFAULT)
 
 # Plot 6: Contradiction vs Perturbation (bottom-center)
 ax6 = fig.add_subplot(gs[2, 1])
 
-line2 = ax6.plot(perturbation_levels, contradiction_values, 'r-', linewidth=4,
+line2 = ax6.plot(perturbation_levels, contradiction_values, 'r-', linewidth=LINE_WIDTH_DEFAULT,
                 label='Contradiction K(P)', marker='s', markersize=8, alpha=0.8)
 
 # Highlight pure quantum point
-ax6.scatter([0], [q_contradiction], color='red', s=300, marker='*',
-           edgecolors='black', linewidth=3, zorder=10, label='Pure quantum')
+ax6.scatter([0], [q_analysis['contradiction']], color=COLOR_PERTURBATION, s=SCATTER_SIZE_HIGHLIGHT, marker='*',
+           edgecolors='black', linewidth=LINE_WIDTH_REFERENCE, zorder=10, label='Pure quantum')
 
 ax6.set_xlabel('Perturbation Strength', fontsize=16, fontweight='bold')
 ax6.set_ylabel('Contradiction K(P) [bits]', fontsize=16, fontweight='bold')
@@ -650,7 +780,7 @@ ax7 = fig.add_subplot(gs[2, 2])
 # Create a cleaner comparison chart
 categories = ['Classical', 'Quantum']
 witness_comparison = [c_witness, q_witness]
-colors_comparison = ['#FF6B6B', '#4ECDC4']
+colors_comparison = [COLOR_CLASSICAL, COLOR_QUANTUM]
 
 bars = ax7.bar(categories, witness_comparison, color=colors_comparison, 
                edgecolor='black', linewidth=2, alpha=0.8, width=0.6)
@@ -663,11 +793,11 @@ for bar, val in zip(bars, witness_comparison):
              fontweight='bold', fontsize=16)
 
 # Add horizontal line at classical bound
-ax7.axhline(y=4, color='gray', linestyle='--', linewidth=2, alpha=0.8, label='Classical bound')
+ax7.axhline(y=EXPECTED_CLASSICAL_WITNESS, color=COLOR_BOUNDARY_CLASSICAL, linestyle='--', linewidth=LINE_WIDTH_THIN, alpha=0.8, label='Classical bound')
 
 ax7.set_ylabel('Contextuality Witness W', fontsize=16, fontweight='bold')
 ax7.set_title('Quantum Advantage', fontsize=18, fontweight='bold')
-ax7.set_ylim(0, 7)
+ax7.set_ylim(0, Y_LIMIT_MAX_CLASSICAL)
 ax7.grid(True, alpha=0.3, axis='y')
 ax7.tick_params(axis='both', which='major', labelsize=14)
 ax7.legend(fontsize=12)
@@ -691,7 +821,7 @@ print("White-noise robustness: testing with uniform random perturbations...")
 white_witness_values = []
 white_contradiction_values = []
 
-for eps in np.linspace(0, 0.3, 20):  # ε from 0 to 0.3
+for eps in np.linspace(0, 0.3, WHITE_NOISE_LEVELS_COUNT):  # ε from 0 to 0.3
     _, ctxs_eps, beh_eps = create_perturbed_predictions(eps, mode="white")
     w_eps, _ = compute_contradiction_witness(ctxs_eps)
     white_witness_values.append(w_eps)
@@ -709,12 +839,12 @@ print_section_header("MAGIC SQUARE ANALYSIS: KEY INSIGHTS")
 print()
 print("EXPERIMENTAL OUTCOMES:")
 print(f"• Quantum predictions achieve maximum witness value W = {q_witness:.1f}")
-print("• Classical models are fundamentally limited to W ≤ 4")
-print(f"• Quantum advantage: ΔW = {q_witness - 4:.1f}")
+print(f"• Classical models are fundamentally limited to W ≤ {EXPECTED_CLASSICAL_WITNESS}")
+print(f"• Quantum advantage: ΔW = {q_witness - EXPECTED_CLASSICAL_WITNESS:.1f}")
 print()
 print("THEORETICAL SIGNIFICANCE:")
-print(f"• State-independent contradiction: K(P) = {q_contradiction:.6f} bits (holds for any quantum state)")
-print("• Below classical bound (W ≤ 4) ⇒ K(P) = 0; above quantum algebra (W = 6) ⇒ K(P) > 0")
+print(f"• State-independent contradiction: K(P) = {q_analysis['contradiction']:.6f} bits (holds for any quantum state)")
+print(f"• Below classical bound (W ≤ {EXPECTED_CLASSICAL_WITNESS}) ⇒ K(P) = 0; above quantum algebra (W = {EXPECTED_QUANTUM_WITNESS}) ⇒ K(P) > 0")
 print()
 print("WHY THIS MATTERS:")
 print("The magic square reveals contradiction through purely algebraic measurement")

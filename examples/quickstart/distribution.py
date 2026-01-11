@@ -177,7 +177,8 @@ print("\n8. Working with Random Distributions")
 print("-" * 36)
 
 # Set seed for reproducibility
-rng = np.random.default_rng(42)
+from contrakit.constants import DEFAULT_SEED
+rng = np.random.default_rng(DEFAULT_SEED)
 
 # Generate several random distributions
 random_distributions = []

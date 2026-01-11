@@ -8,6 +8,7 @@ Each test runs on laptop hardware and uses synthetic data where ground truth is 
 
 import numpy as np
 import pytest
+from contrakit.constants import DEFAULT_SEED
 import scipy.optimize
 import scipy.stats
 from sklearn.linear_model import LinearRegression
@@ -75,7 +76,7 @@ class TestMathematicalAcceptance:
     def test_insight_02_temporal_contextuality_three_step_loop(self):
         """Test Insight #2: Temporal Contextuality - Three-Step Loop."""
         # Setup: Generate 1000 random triplets for cascade analysis
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_samples = 1000
 
         # Generate random error rates for three-step chains
@@ -99,7 +100,7 @@ class TestMathematicalAcceptance:
     def test_insight_03_selection_bias_abstention_oracle(self):
         """Test Insight #3: Selection Bias in Measurement - Abstention Oracle."""
         # Setup: Generate 1000 samples with ground truth difficulty
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_samples = 1000
         K_true = np.random.uniform(0, 0.5, n_samples)
 
@@ -167,7 +168,7 @@ class TestMathematicalAcceptance:
     def test_insight_05_confidence_allocation_signal_calibration_inversion(self):
         """Test Insight #5: Confidence as Capacity Allocation Signal - Calibration Inversion."""
         # Setup: Generate predictions with known allocated capacity
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_samples = 1000
         r_allocated = np.random.uniform(0.1, 2.0, n_samples)  # True allocated capacity
 
@@ -202,7 +203,7 @@ class TestMathematicalAcceptance:
         not prove the general mathematical theorem.
         """
         # Setup: Generate synthetic tasks with varying contradiction levels
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_tasks = 100
         K_values = np.random.uniform(0, 1.0, n_tasks)  # Contradiction values in bits
 
@@ -227,7 +228,7 @@ class TestMathematicalAcceptance:
     def test_insight_07_architecture_determines_capacity_structure_comparison(self):
         """Test Insight #7: Architecture Determines Capacity - Structure Comparison."""
         # Setup: Compare three architectures with identical parameter count
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_params = 1000
         K_task = 0.2  # Task difficulty
 
@@ -290,7 +291,7 @@ class TestMathematicalAcceptance:
     def test_insight_09_ols_catastrophe_exponential_masquerade(self):
         """Test Insight #9: OLS Catastrophe - Exponential Masquerade."""
         # Setup: Generate data from exponential relationship
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_points = 1000
         alpha = 1.5  # Steeper exponential growth
         x = np.linspace(0.1, 15, n_points)  # Wider range
@@ -332,7 +333,7 @@ class TestMathematicalAcceptance:
     def test_insight_10_witness_error_tradeoff_constraint_violation_check(self):
         """Test Insight #10: Witness-Error Tradeoff - Constraint Violation Check."""
         # Setup: Tasks with known K and C (contradiction and partiality)
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_tasks = 100
         K_true = np.random.uniform(0.1, 0.5, n_tasks)
         C_partiality = np.random.uniform(0.5, 2.0, n_tasks)
@@ -419,7 +420,7 @@ class TestMathematicalAcceptance:
     def test_insight_12_multiplicative_cascade_amplification_ratio_test(self):
         """Test Insight #12: Multiplicative Cascade Amplification - Ratio Test."""
         # Setup: Generate cascade with known propagation rule
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_steps = 5
         n_sequences = 100
 
@@ -584,7 +585,7 @@ class TestMathematicalAcceptance:
     def test_insight_16_quantum_classical_equivalence_bell_inequality(self):
         """Test Insight #16: Quantum-Classical Equivalence via Temporal Cycles - Bell Inequality."""
         # Setup: Create temporal behavior with cyclic dependencies using contrakit
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
 
         # Create three observables representing temporal measurements
         space = Space.create(
@@ -633,7 +634,7 @@ class TestMathematicalAcceptance:
     def test_insight_17_confidence_allocation_signal_dual_prediction_competition(self):
         """Test Insight #17: Confidence as Allocation Signal - Dual Prediction Competition."""
         # Setup: Create behaviors with different context weights simulating allocation
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
 
         # Create a behavior with actual contradiction
         base_behavior = self._create_contradictory_behavior()
@@ -659,7 +660,7 @@ class TestMathematicalAcceptance:
     def test_insight_18_context_richness_reveals_contradiction(self):
         """Test Insight #18: Context Richness Reveals Contradiction."""
         # Setup: Test sigmoid scaling with actual contrakit behaviors
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
 
         # Create base contradictory behavior
         base_behavior = self._create_contradictory_behavior()
@@ -684,7 +685,7 @@ class TestMathematicalAcceptance:
     def test_insight_19_information_complexity_orthogonality_independence_check(self):
         """Test Insight #19: Information Complexity Orthogonality - Independence Check."""
         # Setup: Generate 500 tasks with varying H and K
-        np.random.seed(42)
+        np.random.seed(DEFAULT_SEED)
         n_tasks = 500
         H_entropy = np.random.uniform(0, 1, n_tasks)  # Entropy (independent)
         K_contradiction = np.random.uniform(0, 0.5, n_tasks)  # Contradiction (independent)

@@ -34,6 +34,10 @@ examples/
 │   ├── day_or_night.py      # Multiple observer perspectives
 │   ├── meta_lens.py         # Recursive framework application
 │   └── run.py               # Execute all intuition examples
+├── consensus/               # Distributed systems and Byzantine consensus
+│   ├── __init__.py          # Package initialization
+│   ├── run.py               # Byzantine consensus contradiction theorem
+│   └── README.md            # Consensus theory explanation
 ├── statistics/              # Statistical paradoxes and frame integration
 │   ├── __init__.py          # Package initialization
 │   ├── simpsons_paradox.py  # Frame integration and paradox resolution

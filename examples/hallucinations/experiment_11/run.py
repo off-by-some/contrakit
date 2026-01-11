@@ -33,6 +33,7 @@ from tqdm import tqdm
 from contrakit import Observatory
 from sklearn.metrics import roc_auc_score, brier_score_loss
 import random
+from contrakit.constants import DEFAULT_SEED
 
 # Experiment configuration constants
 TRAINING_EPOCHS = 20
@@ -45,7 +46,7 @@ OOD_SUBSET_SIZE = 2000
 EVALUATION_SAMPLE_SIZE = 200
 CONTRADICTION_RATIO_DEFAULT = 0.3
 BALANCED_CONTRADICTION_RATIO = 0.5
-RANDOM_SEED = 42
+RANDOM_SEED = DEFAULT_SEED
 
 # Task computation
 DEFAULT_NUM_CONTEXTS = 3

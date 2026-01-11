@@ -93,7 +93,7 @@ class FrameIndependence:
         probabilities must match what would be expected from a single underlying
         probability distribution.
         """
-        assignments = behavior.space.assignments()
+        assignments = list(behavior.space.assignments())
         n = behavior.space.assignment_count()
 
         constraint_rows = []

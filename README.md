@@ -28,18 +28,16 @@ Our work has shown it's not only measurable, but it's useful too.
 
 ## But What Does it Do, Practically?
 
-It's a general-purpose yardstick for measuring disagreement. We've used contrakit to quantify structural tension across several domains: 
+K(P) is a universal yardstick that quantifies structural disagreement — wherever it appears. We've applied contrakit across wildly different fields and found surprisingly consistent behavior:
 
 * In quantum systems, $K(P)$ measures "how quantum" a system is—whether you're looking at Bell inequalities, KCBS polytopes, or magic squares, the measure stays consistent and comparable ([quantum examples](examples/quantum/)). 
 * In neural networks, $K(P)$ computed from task structure alone predicts minimum hallucination rates before any training happens ([hallucination experiments](examples/hallucinations/)). 
 * In statistical paradoxes like Simpson's, $K(P)$ reveals exactly how much the aggregated view contradicts the stratified view ([statistical examples](examples/statistics/)), even in cases MI returns 0.
+* In consensus algorithms, You can use it to measure how much real disagreement/conflict exists, and only spend extra checking effort exactly where the trouble actually is. ([consensus examples](examples/consensus/))
 
 
 
 ## Quickstart
-> **⚠️ Under Construction**: This project is currently under active development. Currently i'm in the process of translating all of my Coq formalizations, notebooks, and personal scripts into API functionality and documentation. The core functionality is ready to use, but APIs, documentation, and features will change.
-
-
 **Install:**
 
 ```bash

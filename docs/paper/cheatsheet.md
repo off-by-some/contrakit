@@ -122,6 +122,7 @@ $$
 - Tensoring with FI ancillas: $K(P \otimes R) \leq K(P)$ for $R \in \mathrm{FI}$
 
 **A5: Independent Composition** - For disjoint observables:
+
 $$
 K(P \otimes R) = K(P) + K(R)
 $$
@@ -277,11 +278,13 @@ $$
 ### Prediction & Simulation
 
 **Proposition 7.2** *(Importance Sampling Penalty)*:
+
 $$
 \inf_{Q \in \mathrm{FI}} \max_c \mathrm{Var}_{Q_c}[w_c] \geq 2^{2K(P)} - 1
 $$
 
 **Proposition 7.3** *(Single-Predictor Regret)*:
+
 $$
 \inf_{Q \in \mathrm{FI}} \max_c \mathbb{E}_{p_c}[\log_2(p_c(X)/q_c(X))] \geq 2K(P) \text{ bits/round}
 $$
@@ -294,6 +297,7 @@ Optimal $\lambda^\star$ simultaneously optimal for testing, simulation, and codi
 ### Geometric Properties
 
 **Proposition 7.6** *(Hellinger Sphere Structure)*:
+
 $$
 \alpha^\star(P) = 1 - D_H^2(P, \mathrm{FI}) \quad \text{where} \quad D_H^2(P, \mathrm{FI}) = \min_Q \max_c H^2(p_c, q_c)
 $$
@@ -309,6 +313,7 @@ $$
 ### Smoothing & Interpolation
 
 **Proposition 7.7** *(Smoothing Bound)*:
+
 $$
 K((1-t)P + tR) \leq -\log_2((1-t)2^{-K(P)} + t) \leq (1-t)K(P)
 $$
@@ -322,6 +327,7 @@ $$
 ### Computational Properties
 
 **Proposition 7.8** *(Convex Program for K)*:
+
 $$
 D_H^2(P, \mathrm{FI}) = \min_\mu \max_c H^2(p_c, q_c(\mu)), \quad K(P) = -\log_2(1 - D_H^2(P, \mathrm{FI}))
 $$
@@ -336,6 +342,7 @@ Active contexts satisfy $\mathrm{BC}(p_c, q_c^\star) = \alpha^\star(P)$, with op
 ### Computational Methods
 
 **Convex Program Formulation:**
+
 $$
 \min_\mu \max_c H^2(p_c, q_c(\mu)) \quad \text{where} \quad q_c(\mu) = \sum_s \mu(s) \cdot \delta_{s|_c}
 $$
@@ -358,6 +365,7 @@ $\hat{K}$ from empirical frequencies with bootstrap confidence intervals
 
 **Regularized Estimation:**
 Add pseudocounts $\epsilon > 0$ for consistency when zeros occur:
+
 $$
 \tilde{p}_o = \frac{n_o + \epsilon}{n + k\epsilon} \quad \text{where } k \text{ is number of outcomes}
 $$
@@ -379,6 +387,7 @@ $$
 $\lambda^\star$ locates tension; $Q^\star$ maximizes agreement; active contexts saturate bound
 
 **Odd-Cycle Bounds:**
+
 $$
 \alpha^\star(P) \leq \sqrt{2/3}, \quad \mu^\star = \text{Unif}(\{100,010,001,011,101,110\})
 $$
@@ -390,6 +399,7 @@ Pairwise anti-correlations imply $K(P) > 0$
 
 **Lenticular Coin** *(Minimal Contradiction Device)*:
 Three contexts with perfect disagreement, yielding:
+
 $$
 \alpha^\star = \sqrt{2/3}, \quad K = \frac{1}{2} \log_2(3/2) \approx 0.29 \text{ bits per observation}
 $$
@@ -398,6 +408,7 @@ $$
 
 **Gaussian Contradiction** *(Continuous Extension)*:
 For N(0,σ₁²) vs N(0,σ₂²) measurement conflicts:
+
 $$
 \alpha^\star(P) = \sqrt{\frac{2 \sqrt{\sigma_1 \sigma_2}}{\sigma_1 + \sigma_2}}, \quad K(P) = -\log_2 \sqrt{\frac{2 \sqrt{\sigma_1 \sigma_2}}{\sigma_1 + \sigma_2}}
 $$
@@ -409,21 +420,25 @@ $$
 ### Key Identities
 
 **Product Law:**
+
 $$
 \alpha^\star(P \otimes R) = \alpha^\star(P) \cdot \alpha^\star(R), \quad K(P \otimes R) = K(P) + K(R)
 $$
 
 **Hellinger Geometry:**
+
 $$
 H(p,q) = \sqrt{1 - \mathrm{BC}(p,q)}, \quad D_H^2(P, \mathrm{FI}) = \min_Q \max_c H^2(p_c, q_c), \quad \alpha^\star(P) = 1 - D_H^2(P, \mathrm{FI})
 $$
 
 **Information Bounds:**
+
 $$
 d_{\mathrm{TV}}(P, \mathrm{FI}) \geq 1 - 2^{-K(P)}, \quad E + r \geq K(P)
 $$
 
 **Smoothing Properties:**
+
 $$
 K((1-t)P + tR) \leq -\log_2((1-t)2^{-K(P)} + t), \quad t \geq \frac{1 - 2^{-\kappa}}{1 - 2^{-K(P)}}
 $$

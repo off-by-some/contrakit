@@ -14,9 +14,7 @@
   <a href="https://github.com/off-by-some/contrakit/tree/main/docs"><img src="https://img.shields.io/badge/docs-reference-blue.svg" alt="Docs"></a>
 </p>
 
-When multiple experts give conflicting advice about the same problem, most systems try to force artificial consensus or pick a single "winner." 
-
-**Contrakit takes a different approach:** it measures exactly how much those perspectives actually contradict—in bits.
+When multiple experts give conflicting advice about the same problem, most systems try to force artificial consensus or pick a single "winner." **Contrakit takes a different approach:** it measures exactly how much those perspectives actually contradict—in bits.
 
 
 

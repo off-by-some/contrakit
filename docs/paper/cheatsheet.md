@@ -20,6 +20,7 @@
 
 ### Essential Definition
 **Contradiction Measure:**
+
 $$
 K(P) = -\log_2 \alpha^\star(P) \quad \text{where} \quad \alpha^\star(P) = \max_{Q \in \mathrm{FI}} \min_c \mathrm{BC}(p_c, q_c)
 $$
@@ -52,6 +53,7 @@ $$
 
 ### Frame-Independent Baseline
 **Definition:** The set of behaviors admitting unified explanations
+
 $$
 \mathrm{FI} := \text{conv}\{q_s : s \in \mathcal{O}_{\mathcal{X}}\}
 $$
@@ -61,6 +63,7 @@ $$
 
 ### Agreement Measure
 **Bhattacharyya Coefficient:** Quantifies distributional overlap
+
 $$
 \mathrm{BC}(p,q) = \sum_o \sqrt{p(o) q(o)} \quad (\text{discrete}) \quad \text{or} \quad \int \sqrt{p(x) q(x)} \, dx \quad (\text{continuous})
 $$

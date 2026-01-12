@@ -1,0 +1,21 @@
+## References
+
+- Abramsky, S., & Brandenburger, A. (2011). The sheaf-theoretic structure of non-locality and contextuality. *New Journal of Physics, 13*, 113036. https://doi.org/10.1088/1367-2630/13/11/113036
+- Berger, T. (1971). *Rate distortion theory: A mathematical basis for data compression*. Prentice-Hall.
+- Bhattacharyya, A. (1943). On a measure of divergence between two statistical populations defined by their probability distributions. *Bulletin of the Calcutta Mathematical Society, 35*, 99–109.
+- Chernoff, H. (1952). A measure of asymptotic efficiency for tests of a hypothesis based on the sum of observations. *Annals of Mathematical Statistics, 23*(4), 493–507.
+- Cover, T. M., & Thomas, J. A. (2006). *Elements of information theory* (2nd ed.). Wiley.
+- Fine, A. (1982). Hidden variables, joint probability, and the Bell inequalities. *Physical Review Letters, 48*(5), 291–295. https://doi.org/10.1103/PhysRevLett.48.291
+- Han, T. S., & Verdú, S. (1993). Approximation theory of output statistics. *IEEE Transactions on Information Theory, 39*(3), 752–772.
+- Klyachko, A. A., Can, M. A., Binicioğlu, S., & Shumovsky, A. S. (2008). Simple test for hidden variables in spin-1 systems. *Physical Review Letters, 101*(2), 020403. https://doi.org/10.1103/PhysRevLett.101.020403
+- Rényi, A. (1961). On measures of entropy and information. In J. Neyman (Ed.), *Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability* (Vol. 1, pp. 547–561). University of California Press.
+- Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal, 27*(3–4), 379–423, 623–656.
+- Shannon, C. E. (1959). Coding theorems for a discrete source with a fidelity criterion. *IRE National Convention Record* (Part 4), 142–163.
+- Sion, M. (1958). On general minimax theorems. *Pacific Journal of Mathematics, 8*(1), 171–176.
+- van Erven, T., & Harremoës, P. (2014). Rényi divergence and Kullback–Leibler divergence. *IEEE Transactions on Information Theory, 60*(7), 3797–3820. https://doi.org/10.1109/TIT.2014.2326845
+- Cuff, P. (2013). Distributed channel synthesis. *IEEE Transactions on Information Theory, 59*(11), 7071–7096. https://doi.org/10.1109/TIT.2013.2276160
+- Gray, R. M., & Wyner, A. D. (1974). Source coding for a simple network. *Bell System Technical Journal, 53*(9), 1681–1721.
+- Han, T. S., & Verdú, S. (1993). Approximation theory of output statistics. *IEEE Transactions on Information Theory, 39*(3), 752–772.
+- Heisenberg, W. (1958). *Physics and philosophy: The revolution in modern science*. Harper.
+- Kolmogorov, A. N. (1956). *Foundations of the theory of probability* (2nd English ed.). Chelsea Publishing Company. (Original work published 1933)
+- Steinberg, Y. (2009). Coding and common reconstruction. *IEEE Transactions on Information Theory, 55*(11), 4995–5010.

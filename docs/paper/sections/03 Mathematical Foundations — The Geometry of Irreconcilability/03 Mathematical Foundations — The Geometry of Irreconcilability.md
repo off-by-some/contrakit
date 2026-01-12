@@ -1,0 +1,3 @@
+# 3. Mathematical Foundations — The Geometry of Irreconcilability
+
+Having established the foundations, the lenticular coin showed something we can now make precise: **contradiction has structure**. When Nancy, Dylan, and Tyler couldn't agree despite all being correct, they encountered an irreducible incompatibility built into their situation's geometry. **Contradiction has geometry just as information has entropy.** While Shannon showed us that uncertainty follows precise mathematical laws, we'll show that clashes between irreconcilable perspectives follow equally discoverable patterns with measurable costs.

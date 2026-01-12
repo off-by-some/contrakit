@@ -497,8 +497,9 @@ class ReferenceParser:
             prev_token = tokens[preceding_idx]
             
             # Allow after these punctuation marks
-            if prev_token.type in (TokenType.LPAREN, TokenType.COLON, 
-                                  TokenType.COMMA, TokenType.SEMICOLON):
+            if prev_token.type in (TokenType.LPAREN, TokenType.COLON,
+                                  TokenType.COMMA, TokenType.SEMICOLON,
+                                  TokenType.DASH):
                 pass  # Good context
             # Also allow after words like "cf.", "via", "see", and other common reference contexts
             elif prev_token.type == TokenType.WORD and prev_token.value.lower() in ['cf', 'via', 'see', 'as', 'in', 'from', 'by', 'using', 'for', 'with', 'to', 'of', 'on', 'at', 'closure', 'structure', 'bound', 'test', 'result', 'proof', 'theorem', 'proposition', 'lemma', 'definition']:

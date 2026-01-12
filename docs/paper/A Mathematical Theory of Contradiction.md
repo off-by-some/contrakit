@@ -2,7 +2,7 @@
 This file was automatically generated from organized sections in docs/paper/sections/
 using the rebuild_paper.py script.
 
-Generated on: 2026-01-11 18:43:04 UTC
+Generated on: 2026-01-11 18:44:29 UTC
 
 To regenerate this file after editing sections:
     python scripts/rebuild_paper.py
@@ -358,7 +358,7 @@ Let's be precise about what we measured when our three friends observed the lent
 
 A **behavior** functions like a comprehensive experimental logbook. For every way you might probe the system, it records the probability distribution over what you'll observe. In our rotating coin experiment, this logbook includes entries like: "When Nancy and Tyler both look simultaneously, there's a 50% chance Nancy sees $\text{YES}$ while Tyler sees $\text{NO}$, a 50% chance Nancy sees $\text{NO}$ while Tyler sees $\text{YES}$, and 0% chance they agree."
 
-The mathematical formalization captures this intuitive picture directly. We have observables $\mathcal{X} = \{X_1, X_2, \ldots, X_n\}$, where each can display various outcomes. A **context** $c$ is simply a subset of observables we examine together. A **behavior** $P$ assigns to each context $c$ a probability distribution $p_c$ over the outcomes we might see ([Appendix A.1.1](#a11-basic-structures)–A.1.4).
+The mathematical formalization captures this intuitive picture directly. We have observables $\mathcal{X} = \{X_1, X_2, \ldots, X_n\}$, where each can display various outcomes. A **context** $c$ is simply a subset of observables we examine together. A **behavior** $P$ assigns to each context $c$ a probability distribution $p_c$ over the outcomes we might see ([Appendix A.1.1](#a11-basic-structures)–[A.1.4](#definition-a14-frame-independent-set)).
 
 This isn't exotic machinery—just systematic bookkeeping for multi-perspective experiments.
 
@@ -2079,11 +2079,11 @@ The formula $F(p,q)=\langle \sqrt{p},\sqrt{q} \rangle$ identifies the **Hellinge
 
 **Sharpness.**
 
-Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. [Appendix B.3.5](#b35-data-processing-monotonicity-a3)–B.3.7).
+Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. [Appendix B.3.5](#b35-data-processing-monotonicity-a3)–[B.3.7](#b37-additivity-a5)).
 
 **Cross-refs.**
 
-Representation (see [A.7](#a7-theorem-2-contradiction-as-a-game-representation)); log law and additivity on products use $\mathrm{BC}$ (see [A.9](#a9-theorem-4-fundamental-formula-log-law)–A.10).
+Representation (see [A.7](#a7-theorem-2-contradiction-as-a-game-representation)); log law and additivity on products use $\mathrm{BC}$ (see [A.9](#a9-theorem-4-fundamental-formula-log-law)–[A.10](#a10-theorem-5-additivity-on-independent-products)).
 
 ## A.9 Theorem 4: Fundamental Formula (Log Law)
 
@@ -2156,7 +2156,7 @@ If $\tilde K$ also satisfies A0–A5, then $\tilde K=h\circ\alpha^\star$ for som
 
 **Cross-refs.**
 
-Product law for $\alpha^\star$ (see [A.10](#a10-theorem-5-additivity-on-independent-products)); bounds (see [A.4.1](#lemma-a41-uniform-law-lower-bound)–A.4.2); representation (see [A.7](#a7-theorem-2-contradiction-as-a-game-representation)); kernel uniqueness $F=\mathrm{BC}$ (see [A.8](#a8-theorem-3-uniqueness-of-the-agreement-kernel-bhattacharyya)).
+Product law for $\alpha^\star$ (see [A.10](#a10-theorem-5-additivity-on-independent-products)); bounds (see [A.4.1](#lemma-a41-uniform-law-lower-bound)–[A.4.2](#corollary-a42-bounds-on-k)); representation (see [A.7](#a7-theorem-2-contradiction-as-a-game-representation)); kernel uniqueness $F=\mathrm{BC}$ (see [A.8](#a8-theorem-3-uniqueness-of-the-agreement-kernel-bhattacharyya)).
 
 # Appendix B — Worked Examples
 

@@ -501,7 +501,7 @@ class ReferenceParser:
                                   TokenType.COMMA, TokenType.SEMICOLON):
                 pass  # Good context
             # Also allow after words like "cf.", "via", "see", and other common reference contexts
-            elif prev_token.type == TokenType.WORD and prev_token.value.lower() in ['cf', 'via', 'see', 'as', 'in', 'from', 'by', 'using', 'for', 'with', 'to', 'of', 'on', 'at']:
+            elif prev_token.type == TokenType.WORD and prev_token.value.lower() in ['cf', 'via', 'see', 'as', 'in', 'from', 'by', 'using', 'for', 'with', 'to', 'of', 'on', 'at', 'closure', 'structure', 'bound', 'test', 'result', 'proof', 'theorem', 'proposition', 'lemma', 'definition']:
                 pass  # Good context
             # Also allow after "App." or "Appendix" (for cases already handled by other parsers)
             elif prev_token.type == TokenType.WORD and prev_token.value.lower() in ['app', 'appendix']:

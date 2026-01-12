@@ -112,7 +112,7 @@ The formula $F(p,q)=\langle \sqrt{p},\sqrt{q} \rangle$ identifies the **Hellinge
 
 **Sharpness.**
 
-Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. [App. B.3.5–B.3.7](#b35-data-processing-monotonicity-a3)).
+Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. Appendix B.3.5–B.3.7).
 
 **Cross-refs.**
 

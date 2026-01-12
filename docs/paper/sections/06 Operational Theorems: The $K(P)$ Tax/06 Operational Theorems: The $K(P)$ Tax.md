@@ -18,17 +18,17 @@ The mechanism is simple: a **witness** is a short string of rate $K(P)$ that cer
 
 **Core Information Theory (§6.1-6.5):**
 
-- **Theorem 6:** Typical sets for $(X^n, W_n)$ have size $2^{n(H(X|C) + K(P))}$ (see App. A.3.2, A.2.2, A.5.1, A.9)
-- **Theorems 7-8:** Compression rates are $H(X|C) + K(P)$ (known contexts) or $H(X) + K(P)$ (latent) (see App. A.9)
-- **Theorem 9:** Testing against frame-independence requires type-II exponent $\ge K(P)$ (see App. A.3.2, A.9)
-- **Theorem 10:** Eliminating contradiction needs witness rate $\ge K(P)$ (achievability via App. A.12; TV lower bound cf. App. A.11)
+- **Theorem 6:** Typical sets for $(X^n, W_n)$ have size $2^{n(H(X|C) + K(P))}$ (see Appendix A.3.2, Appendix A.2.2, Appendix A.5.1, Appendix A.9)
+- **Theorems 7-8:** Compression rates are $H(X|C) + K(P)$ (known contexts) or $H(X) + K(P)$ (latent) (see Appendix A.9)
+- **Theorem 9:** Testing against frame-independence requires type-II exponent $\ge K(P)$ (see Appendix A.3.2, Appendix A.9)
+- **Theorem 10:** Eliminating contradiction needs witness rate $\ge K(P)$ (achievability via Appendix A.12; TV lower bound cf. Appendix A.11)
 
 **Multi-Context Communication (§6.6-6.8):**
 
-- **Theorem 11:** Common messages decodable by all contexts cost $H(X|C) + K(P)$ (see App. A.9)
-- **Theorem 12:** Any common representation carries $\ge H(X|C) + K(P)$ bits per symbol (see App. A.9, A.10)
-- **Theorems 13-14:** Channel capacity and rate-distortion both lose exactly $K(P)$ (see App. A.9, A.10)
+- **Theorem 11:** Common messages decodable by all contexts cost $H(X|C) + K(P)$ (see Appendix A.9)
+- **Theorem 12:** Any common representation carries $\ge H(X|C) + K(P)$ bits per symbol (see Appendix A.9, Appendix A.10)
+- **Theorems 13-14:** Channel capacity and rate-distortion both lose exactly $K(P)$ (see Appendix A.9, Appendix A.10)
 
 **Geometric Structure (§6.9):**
 
-- **Theorem 15:** Hellinger geometry explains why contradiction costs compose linearly in $K$ (and subadditively in angle) (App. A.2.2, A.10; FI product closure A.1.8)
+- **Theorem 15:** Hellinger geometry explains why contradiction costs compose linearly in $K$ (and subadditively in angle) (Appendix A.2.2, Appendix A.10; FI product closure Appendix A.1.8)

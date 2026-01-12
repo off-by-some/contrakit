@@ -60,7 +60,7 @@ Composing with $h$ proves both displays. □
 with optima attained and $\lambda^\star$ interpretable as adversarial context weights ([A.5.1](#theorem-a51-minimax-duality)).
 
 **Sharpness.**
-Drop A4 and averaging over contexts can be forced (violates weakest-link, [App. B.3.6](#b36-context-grouping-a4)). Drop DPI and post-processing can manufacture contradiction ([App. B.3.5](#b35-data-processing-monotonicity-a3)). Either failure breaks the game form.
+Drop A4 and averaging over contexts can be forced (violates weakest-link, Appendix B.3.6). Drop DPI and post-processing can manufacture contradiction (Appendix B.3.5). Either failure breaks the game form.
 
 **Cross-refs.**
 

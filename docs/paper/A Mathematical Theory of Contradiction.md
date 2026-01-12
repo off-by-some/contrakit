@@ -2,7 +2,7 @@
 This file was automatically generated from organized sections in docs/paper/sections/
 using the rebuild_paper.py script.
 
-Generated on: 2026-01-11 18:18:54 UTC
+Generated on: 2026-01-11 18:43:04 UTC
 
 To regenerate this file after editing sections:
     python scripts/rebuild_paper.py
@@ -73,7 +73,7 @@ In practice, we often encounter situations where equally reasonable frameworks g
 
 Consider how this plays out across domains with irreconcilable perspectives. Ensembles and multi-view models carry multiple contexts explicitly; distillation collapses them into a single frame-independent predictor. Whenever $K(P)>0$, any such single predictor incurs a worst-context log-loss regret of at least $2K(P)$ bits per example (Prop. 7.3). The cost isn't in the ensemble—it's in forcing unity where diversity is warranted.
 
-Similarly, in distributed systems, replicas can disagree not just on values but on validity predicates—different "contexts" of correctness based on their local message histories. Forcing a single global state imposes an information-rate overhead of at least $K(P)$ bits per decision. This $K(P)$-tax manifests as extra metadata, witness proofs, additional consensus rounds, or expanded quorum requirements (cf. [App. B.4](#b4-consensus-as-decoding-kp-tax)). **When $K(P)=0$, the tax vanishes and classical Shannon baselines are achievable.**
+Similarly, in distributed systems, replicas can disagree not just on values but on validity predicates—different "contexts" of correctness based on their local message histories. Forcing a single global state imposes an information-rate overhead of at least $K(P)$ bits per decision. This $K(P)$-tax manifests as extra metadata, witness proofs, additional consensus rounds, or expanded quorum requirements (cf. [Appendix B.4](#b4-consensus-as-decoding-kp-tax)). **When $K(P)=0$, the tax vanishes and classical Shannon baselines are achievable.**
 
 
 
@@ -134,12 +134,12 @@ The paper moves from motivation → mechanism → consequences. While [§§1](#1
 - Motivation by example ([§2](#2-building-intuition-with-the-lenticular-coin)). The Lenticular Coin is a minimal classical device exhibiting odd-cycle incompatibility; it previews how $K(P)$ registers contradiction in bits.
 - Framework → axioms → results ([§§3](#3-mathematical-foundations-the-geometry-of-irreconcilability)-[5](#5-representation-uniqueness-and-additivity)). [§3](#3-mathematical-foundations-the-geometry-of-irreconcilability) formalizes observables, contexts (frames), behaviors, the baseline $\mathrm{FI}$, Bhattacharyya overlap, and the minimax program (with standing assumptions). [§4](#4-the-axioms) states and motivates axioms A0–A5. [§5](#5-representation-uniqueness-and-additivity) presents the main theorems, including the fundamental formula $K(P)=-\log_2 \alpha^{\star}(P)$ and additivity.
 - From quantity to consequences ([§6](#6-operational-theorems-the-kp-tax)) and practice ([§7](#7-operational-interpretations-the-contradiction-toolbox)). [§6](#6-operational-theorems-the-kp-tax) presents operational theorems in discrimination, simulation, and prediction. [§7](#7-operational-interpretations-the-contradiction-toolbox) provides operational interpretations with a practical minimax program for $\alpha^{\star}$, a plug-in estimator for $K$ with bootstrap intervals.
-- Context and boundaries ([§§8](#8-position-in-the-larger-field)-[10](#10-conclusion)). [§8](#8-position-in-the-larger-field) positions the work relative to contextuality, Dempster–Shafer, social choice, and information distances. [§9](#9-limitations-scope-and-future-directions) states limitations and scope. [§10](#10-conclusion) sketches near-term extensions. [App. A](#a-mathematical-theory-of-contradiction) contains full proofs and technical lemmas; [App. B](#appendix-b-worked-examples) holds worked examples, and [App. C](#appendix-c-case-studies) offers case studies for review.
+- Context and boundaries ([§§8](#8-position-in-the-larger-field)-[10](#10-conclusion)). [§8](#8-position-in-the-larger-field) positions the work relative to contextuality, Dempster–Shafer, social choice, and information distances. [§9](#9-limitations-scope-and-future-directions) states limitations and scope. [§10](#10-conclusion) sketches near-term extensions. [Appendix A](#a-mathematical-theory-of-contradiction) contains full proofs and technical lemmas; [Appendix B](#appendix-b-worked-examples) holds worked examples, and [Appendix C](#appendix-c-case-studies) offers case studies for review.
 
 **How to read:**
 
-- For guarantees, skim [§2](#2-building-intuition-with-the-lenticular-coin), then read [§§3](#3-mathematical-foundations-the-geometry-of-irreconcilability)-[5](#5-representation-uniqueness-and-additivity) for the formal core and [§6](#6-operational-theorems-the-kp-tax) for operational meaning; see [App. A](#a-mathematical-theory-of-contradiction) for proofs.
-- For implementation, jump from [§2](#2-building-intuition-with-the-lenticular-coin) to [§§6](#6-operational-theorems-the-kp-tax)-[7](#7-operational-interpretations-the-contradiction-toolbox) (algorithms, estimation), backfilling definitions from [§3](#3-mathematical-foundations-the-geometry-of-irreconcilability) as needed; see [App. B](#appendix-b-worked-examples) for worked cases.
+- For guarantees, skim [§2](#2-building-intuition-with-the-lenticular-coin), then read [§§3](#3-mathematical-foundations-the-geometry-of-irreconcilability)-[5](#5-representation-uniqueness-and-additivity) for the formal core and [§6](#6-operational-theorems-the-kp-tax) for operational meaning; see [Appendix A](#a-mathematical-theory-of-contradiction) for proofs.
+- For implementation, jump from [§2](#2-building-intuition-with-the-lenticular-coin) to [§§6](#6-operational-theorems-the-kp-tax)-[7](#7-operational-interpretations-the-contradiction-toolbox) (algorithms, estimation), backfilling definitions from [§3](#3-mathematical-foundations-the-geometry-of-irreconcilability) as needed; see [Appendix B](#appendix-b-worked-examples) for worked cases.
 
 **Scope:**
 
@@ -228,7 +228,7 @@ With three seats the law is now *context-indexed*. For a fixed seat $P$:
 - $P=\text{RIGHT}$: $\text{NO}$ on $\text{HEADS}$, $\text{YES}$ on $\text{TAILS}$ (the inverse of $\text{LEFT}$).
 - $P=\text{MIDDLE}$: $\text{BOTH}$ on both flips (constant).
 
-As a consequence, you cannot tell the full story unless **you model** $P$. There is a small but steady information loss—about  $\frac{2}{3}$ of a bit per record ([App B.1](#b1-worked-example-the-irreducible-perspective-carrying-the-frame))—if you drop the frame. It'd be no different than asking 'did they break the law?' without saying where it happened. Run the experiment for many flips and this structure shows up in plain statistics: $\text{LEFT}$ and $\text{RIGHT}$ disagree predictably; the $\text{MIDDLE}$ registers a stable experience of $\text{BOTH}$ events; and the frame labels are continually required to reconcile otherwise incompatible yet honest reports.
+As a consequence, you cannot tell the full story unless **you model** $P$. There is a small but steady information loss—about  $\frac{2}{3}$ of a bit per record ([Appendix B.1](#b1-worked-example-the-irreducible-perspective-carrying-the-frame))—if you drop the frame. It'd be no different than asking 'did they break the law?' without saying where it happened. Run the experiment for many flips and this structure shows up in plain statistics: $\text{LEFT}$ and $\text{RIGHT}$ disagree predictably; the $\text{MIDDLE}$ registers a stable experience of $\text{BOTH}$ events; and the frame labels are continually required to reconcile otherwise incompatible yet honest reports.
 
 The disagreement is no longer just "they always oppose" (a rule you learn once). The extra content is small, but it never goes away. It is not the one-off surprise of model identification; it is a steady coordination cost—bits you must carry every time if downstream agreement is the goal. **The** **frame is part of the message**—an operational reading of Heisenberg's dictum.
 
@@ -358,7 +358,7 @@ Let's be precise about what we measured when our three friends observed the lent
 
 A **behavior** functions like a comprehensive experimental logbook. For every way you might probe the system, it records the probability distribution over what you'll observe. In our rotating coin experiment, this logbook includes entries like: "When Nancy and Tyler both look simultaneously, there's a 50% chance Nancy sees $\text{YES}$ while Tyler sees $\text{NO}$, a 50% chance Nancy sees $\text{NO}$ while Tyler sees $\text{YES}$, and 0% chance they agree."
 
-The mathematical formalization captures this intuitive picture directly. We have observables $\mathcal{X} = \{X_1, X_2, \ldots, X_n\}$, where each can display various outcomes. A **context** $c$ is simply a subset of observables we examine together. A **behavior** $P$ assigns to each context $c$ a probability distribution $p_c$ over the outcomes we might see ([App. A.1.1](#a11-basic-structures)-[A.1.4](#definition-a14-frame-independent-set)).
+The mathematical formalization captures this intuitive picture directly. We have observables $\mathcal{X} = \{X_1, X_2, \ldots, X_n\}$, where each can display various outcomes. A **context** $c$ is simply a subset of observables we examine together. A **behavior** $P$ assigns to each context $c$ a probability distribution $p_c$ over the outcomes we might see ([Appendix A.1.1](#a11-basic-structures)–A.1.4).
 
 This isn't exotic machinery—just systematic bookkeeping for multi-perspective experiments.
 
@@ -382,7 +382,7 @@ Three equivalent ways to understand this baseline:
 
 In the sheaf-theoretic account, this is exactly the existence of a global section reproducing all contextual marginals *(Abramsky & Brandenburger, 2011)*.
 
-The **frame-independent set** ([App. A.1.6](#proposition-a16-topological-properties)) contains all behaviors admitting such unified explanations. These form our "no-contradiction" baseline. Crucially, FI has excellent mathematical properties in our finite setting: it's nonempty, convex, compact, and closed. This gives us a solid foundation for measuring distances from it.
+The **frame-independent set** ([Appendix A.1.6](#proposition-a16-topological-properties)) contains all behaviors admitting such unified explanations. These form our "no-contradiction" baseline. Crucially, FI has excellent mathematical properties in our finite setting: it's nonempty, convex, compact, and closed. This gives us a solid foundation for measuring distances from it.
 
 Two cases will matter later. If there exists $Q\in\mathrm{FI}$ with $Q=P$, then $\alpha^\star(P)=1$ and $K(P)=0$ (no contradiction). If no such $Q$ exists, then $\alpha^\star(P)<1$ and $K(P)>0$ quantifies the minimal deviation any unified account must incur to explain all contexts at once
 
@@ -396,19 +396,19 @@ $$
 \text{BC}(p,q) = \sum_{\text{outcomes}} \sqrt{p(\text{outcome}) \cdot q(\text{outcome})}
 $$
 
-This measures "probability overlap" ([App. A.2.1](#definition-a21-bhattacharyya-coefficient)). When $p$ and $q$ are identical, $\text{BC}(p,q) = 1$ (perfect overlap). When they assign probability to completely disjoint supports, $\text{BC}(p,q) = 0$ (no overlap). Between these extremes, the coefficient tracks how much the distributions have in common.
+This measures "probability overlap" ([Appendix A.2.1](#definition-a21-bhattacharyya-coefficient)). When $p$ and $q$ are identical, $\text{BC}(p,q) = 1$ (perfect overlap). When they assign probability to completely disjoint supports, $\text{BC}(p,q) = 0$ (no overlap). Between these extremes, the coefficient tracks how much the distributions have in common.
 
 
 
 Three properties make this measure particularly suitable:
 
 **Perfect agreement detection**:
-$\text{BC}(p,q) = 1$ if and only if $p = q$ (see [App. A.2.2](#lemma-a22-bhattacharyya-properties))
+$\text{BC}(p,q) = 1$ if and only if $p = q$ (see [Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
 **Mathematical tractability**:
-It's concave and well-behaved for optimization (see [App. A.2.2](#lemma-a22-bhattacharyya-properties))
+It's concave and well-behaved for optimization (see [Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
-**Compositional structure**: (see [App. A.2.2](#lemma-a22-bhattacharyya-properties))
+**Compositional structure**: (see [Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 For independent systems,
 $$
 \text{BC}(p_1 \otimes p_2, q_1 \otimes q_2) = \text{BC}(p_1,q_1) \cdot \text{BC}(p_2,q_2)
@@ -422,7 +422,7 @@ A subtle but important choice emerges. We could measure agreement context-by-con
 
 
 
-This leads to our **agreement measure** ([App. A.3.1](#definition-a31-agreement-and-contradiction)):
+This leads to our **agreement measure** ([Appendix A.3.1](#definition-a31-agreement-and-contradiction)):
 
 $$
 \alpha^\star(P) = \max_{Q \in \text{FI}} \min_{\text{contexts } c} \text{BC}(p_c, q_c)
@@ -436,7 +436,7 @@ This optimization problem has well-behaved mathematical structure. By Sion's min
 
 $$ \alpha^\star(P) = \min_{\lambda\in\Delta(\mathcal{C})} \max_{Q \in \text{FI}} \sum_{\text{contexts } c} \lambda_c \cdot \text{BC}(p_c, q_c) $$
 
-where $\lambda$ is a probability distribution over contexts. The optimal weighting $\lambda^\star$ identifies which contexts create the worst contradictions—they receive the highest weights in the sum. (see [App. A.3](#a3-the-agreement-measure-and-minimax-theorem))
+where $\lambda$ is a probability distribution over contexts. The optimal weighting $\lambda^\star$ identifies which contexts create the worst contradictions—they receive the highest weights in the sum. (see [Appendix A.3](#a3-the-agreement-measure-and-minimax-theorem))
 
 ### 3.3.1 The Contradiction Bit
 
@@ -446,21 +446,21 @@ $$
 K(P) = -\log_2 \alpha^\star(P)
 $$
 
-This is the contradiction bit count—the minimal number of bits required, per observation, to reconcile irreducible perspective clashes. It captures the cost of acting as if all contexts agree, when structurally, they do not ([App. A.3.1](#definition-a31-agreement-and-contradiction)).
+This is the contradiction bit count—the minimal number of bits required, per observation, to reconcile irreducible perspective clashes. It captures the cost of acting as if all contexts agree, when structurally, they do not ([Appendix A.3.1](#definition-a31-agreement-and-contradiction)).
 
 When $\alpha^\star(P) = 1$, no contradiction exists: all contexts align perfectly, and $K(P) = 0$. But as $\alpha^\star(P)$ falls toward zero, the mismatch grows—and $K(P)$ rises, quantifying the informational toll of compression into a single coherent story. In effect, $K(P)$ prices contradiction in the same way Shannon priced uncertainty: logarithmically, additively, and in bits.
 
 **Some key properties:**
 
-- $K(P) = 0$ exactly when $P \in \mathrm{FI}$ ([App. A.4.3](#theorem-a43-characterization-of-frame-independence))
-- $K(P) \leq \frac{1}{2} \log_2 \max_{c \in \mathcal{C}} |\mathcal{O}_c|$ (contradiction is bounded) ([App. A.4](#a4-bounds-and-characterizations))
-- For our lenticular coin: $K(P) = \frac{1}{2} \log_2(3/2) \approx 0.29$ bits per observation ([App. B.2](#b2-the-lenticular-coin-oddcycle-example))
+- $K(P) = 0$ exactly when $P \in \mathrm{FI}$ ([Appendix A.4.3](#theorem-a43-characterization-of-frame-independence))
+- $K(P) \leq \frac{1}{2} \log_2 \max_{c \in \mathcal{C}} |\mathcal{O}_c|$ (contradiction is bounded) ([Appendix A.4](#a4-bounds-and-characterizations))
+- For our lenticular coin: $K(P) = \frac{1}{2} \log_2(3/2) \approx 0.29$ bits per observation ([Appendix B.2](#b2-the-lenticular-coin-oddcycle-example))
 
 That number—$0.29$ bits—is small but persistent. It recurs with every observation, like a tax on forced agreement. Each context fits on its own; the contradiction emerges only when forcing them into a shared model.
 
 ## 3.4 The Game-Theoretic Structure
 
-The minimax formulation ([App. A.3.2](#theorem-a32-minimax-equality)) reveals the deeper structure of contradiction, expressing the same quantity as a worst-case average:
+The minimax formulation ([Appendix A.3.2](#theorem-a32-minimax-equality)) reveals the deeper structure of contradiction, expressing the same quantity as a worst-case average:
 
 $$ \alpha^\star(P) = \min_{\lambda\in\Delta(\mathcal{C})} \max_{Q \in \text{FI}} \sum_c \lambda_c \cdot \text{BC}(p_c, q_c) $$
 
@@ -480,7 +480,7 @@ At the balance point, three things happen ([Theorem A.5.1](#theorem-a51-minimax-
 **For our lenticular coin**, the symmetry forces a fair outcome:
 
 - $\lambda^\star = (1/3, 1/3, 1/3)$: every context applies equal pressure
-- $Q^\star$ assigns $(1/6,\ 1/3,\ 1/3,\ 1/6)$ to the four outcomes in each context (see [App. B.2](#b2-the-lenticular-coin-oddcycle-example))
+- $Q^\star$ assigns $(1/6,\ 1/3,\ 1/3,\ 1/6)$ to the four outcomes in each context (see [Appendix B.2](#b2-the-lenticular-coin-oddcycle-example))
 - $\alpha^\star(P) = \sqrt{2/3}$ and $K(P)=\frac{1}{2}\log_2\frac{3}{2}\approx 0.29$ bits per observation
 
 This isn't coincidental—it reflects the nature of the lenticular coin's odd-cycle contradictions. No single participant was responsible for the contradiction; together, they establish the bound.
@@ -520,7 +520,7 @@ Let's recall what the coin revealed:
 7. Contradictions obey patterns—they aren't noise.
 8. Coordinating across views incurs real cost.
 
-Taken together, these insights tell us what contradiction must be. They narrow the field of admissible measures—ruling out those that ignore ambiguity, neglect context, or fail to track structural strain. An ablation analysis is available within [App. B.3](#b3-axiom-ablation-analysis) for readers that are interested. We'll now formalize these constraints as six axioms. They are elementary, but together, they uniquely determine the contradiction measure:
+Taken together, these insights tell us what contradiction must be. They narrow the field of admissible measures—ruling out those that ignore ambiguity, neglect context, or fail to track structural strain. An ablation analysis is available within [Appendix B.3](#b3-axiom-ablation-analysis) for readers that are interested. We'll now formalize these constraints as six axioms. They are elementary, but together, they uniquely determine the contradiction measure:
 $$
 K(P) = -\log_2 \alpha^\star(P)
 $$
@@ -534,7 +534,7 @@ $K$ is invariant under outcome and context relabelings (permutations).
 
 **This allows multiple perspectives to exist.** No matter whether Nancy said "YES," Dylan "NO," and Tyler "BOTH", they all could be written as $(1,0,\tfrac12)$ without changing anything operational. Only the *pattern of compatibility* matters.
 
-**Without A0**, renaming outcomes or contexts could change the contradiction count. We could thus "game" $K$ by relabeling alone—despite identical experiments and decisions ([App B.3.2](#b32-label-invariance-a0)). This would make $K$ about notation, not structure — leading to semantic bias where truth becomes cosmetic; privileging some vocabularies and allowing erasure of other perspectives.
+**Without A0**, renaming outcomes or contexts could change the contradiction count. We could thus "game" $K$ by relabeling alone—despite identical experiments and decisions ([Appendix B.3.2](#b32-label-invariance-a0)). This would make $K$ about notation, not structure — leading to semantic bias where truth becomes cosmetic; privileging some vocabularies and allowing erasure of other perspectives.
 
 ### 4.2 Axiom A1: Reduction
 
@@ -548,7 +548,7 @@ $$
 
 **Without A1**, even if every individual tells their story clearly, and no contradictions arise between them, the theory could still assign nonzero contradiction. We would lose the ability to distinguish structural conflict from peaceful coexistence. In such a world, $\mathrm{FI}$ would no longer anchor the notion of consistency—it would become unstable or ill-defined.
 
-Multiple perspectives would exist but none could be valid. You'd have *plurality*—but not *legitimacy* ([App B.3.3](#b33-fi-characterization-a1)).
+Multiple perspectives would exist but none could be valid. You'd have *plurality*—but not *legitimacy* ([Appendix B.3.3](#b33-fi-characterization-a1)).
 
 ### 4.3 Axiom A2: Continuity
 
@@ -565,7 +565,7 @@ $$
 
 If Tyler moves from Nancy's position toward Dylan's, the coin's appearance shifts gradually from "YES" through ambiguous states to "NO." The contradiction doesn't jump discontinuously—it evolves smoothly with the changing perspective.
 
-**Without A2** there is no continuous path toward resolution—contradiction either suddenly appears, or doesn't exist at all ([App B.3.4](#b34-continuity-a2)). It's like saying war either is happening or it's not—and that there was never any in-between.
+**Without A2** there is no continuous path toward resolution—contradiction either suddenly appears, or doesn't exist at all ([Appendix B.3.4](#b34-continuity-a2)). It's like saying war either is happening or it's not—and that there was never any in-between.
 
 ### 4.4 Axiom A3: Free Operations
 
@@ -590,7 +590,7 @@ $K$ is monotone under:
 
 Within our example, the contradiction wasn't an artifact of how information is encoded—it was embedded into the geometry of perspective itself.  This axiom guarantees that any blurring, merging, or randomizing of information can mask contradiction, but never invent it. If a behavior shows contradictory after transformation, it was already contradictory before.
 
-**Without A3**, we could inflate disagreement by simply mixing or simplifying—confusing noise with structure, and destroying the integrity of $K$ as a faithful witness to tension. ([App B.3.5](#b35-data-processing-monotonicity-a3)). You could take two people who completely agree, blur their positions, and find yourself facing a contradiction that wasn't there before. Or worse—you could take two people who fundamentally disagree, mix their perspectives randomly, and suddenly create consensus.
+**Without A3**, we could inflate disagreement by simply mixing or simplifying—confusing noise with structure, and destroying the integrity of $K$ as a faithful witness to tension. ([Appendix B.3.5](#b35-data-processing-monotonicity-a3)). You could take two people who completely agree, blur their positions, and find yourself facing a contradiction that wasn't there before. Or worse—you could take two people who fundamentally disagree, mix their perspectives randomly, and suddenly create consensus.
 
 The monotonicity conditions mirror what **resolvability** and **synthesis** demand operationally (Han & Verdú, 1993; Cuff, 2013).
 
@@ -605,7 +605,7 @@ $K$ depends only on refined statistics when contexts are split via public lotter
 
 Whether Nancy states her observation once or ten times, her disagreement with Dylan remains the same. Repeating a context doesn't generate new evidence, and splitting it through public coin flips doesn't change what can be jointly satisfied. The contradiction isn't about how many times a perspective is reported—it's about the existence of distinct, irreconcilable perspectives.
 
-**Without A4**, frequency—not structure—would drive contradiction ([App B.3.6](#b36-context-grouping-a4)). We'd effectively agree that the loudest voice is the most valid perspective.
+**Without A4**, frequency—not structure—would drive contradiction ([Appendix B.3.6](#b36-context-grouping-a4)). We'd effectively agree that the loudest voice is the most valid perspective.
 
 ### 4.6 Axiom A5: Independent Composition
 
@@ -625,7 +625,7 @@ This requires that FI be closed under products: for any $Q_A \in \mathrm{FI}_A$ 
 
 This axiom guarantees that $K$ scales coherently. A disagreement about topic $A$ and a disagreement about topic $B$ together cost more than either alone.
 
-**Without A5**, additivity would fail ([App B.3.7](#b37-additivity-a5)). A clash over pizza toppings might erase a clash over politics, as though disagreement in one domain could dissolve disagreement in another. Any operation that allowed such cancellations would reduce contradiction to noise—negotiable bookkeeping rather than a faithful measure of perspectival tension.
+**Without A5**, additivity would fail ([Appendix B.3.7](#b37-additivity-a5)). A clash over pizza toppings might erase a clash over politics, as though disagreement in one domain could dissolve disagreement in another. Any operation that allowed such cancellations would reduce contradiction to noise—negotiable bookkeeping rather than a faithful measure of perspectival tension.
 
 ## 4.1 Axioms: A Summary
 
@@ -721,20 +721,20 @@ The mechanism is simple: a **witness** is a short string of rate $K(P)$ that cer
 
 **Core Information Theory ([§6.1](#61-asymptotic-equipartition-with-tax)-[6.5](#65-multi-decoder-communication)):**
 
-- **Theorem 6:** Typical sets for $(X^n, W_n)$ have size $2^{n(H(X|C) + K(P))}$ (see [App. A.3.2](#theorem-a32-minimax-equality), [A.2.2](#lemma-a22-bhattacharyya-properties), [A.5.1](#theorem-a51-minimax-duality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Theorems 7-8:** Compression rates are $H(X|C) + K(P)$ (known contexts) or $H(X) + K(P)$ (latent) (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Theorem 9:** Testing against frame-independence requires type-II exponent $\ge K(P)$ (see [App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Theorem 10:** Eliminating contradiction needs witness rate $\ge K(P)$ (achievability via [App. A.12](#a12-proposition-smoothing-bound-tightness); TV lower bound cf. [App. A.11](#a11-proposition-total-variation-gap-tvg))
+- **Theorem 6:** Typical sets for $(X^n, W_n)$ have size $2^{n(H(X|C) + K(P))}$ (see [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.5.1](#theorem-a51-minimax-duality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Theorems 7-8:** Compression rates are $H(X|C) + K(P)$ (known contexts) or $H(X) + K(P)$ (latent) (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Theorem 9:** Testing against frame-independence requires type-II exponent $\ge K(P)$ (see [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Theorem 10:** Eliminating contradiction needs witness rate $\ge K(P)$ (achievability via [Appendix A.12](#a12-proposition-smoothing-bound-tightness); TV lower bound cf. [Appendix A.11](#a11-proposition-total-variation-gap-tvg))
 
 **Multi-Context Communication ([§6.6](#66-noisy-channels-and-rate-distortion)-[6.8](#6-operational-theorems-the-kp-tax)):**
 
-- **Theorem 11:** Common messages decodable by all contexts cost $H(X|C) + K(P)$ (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Theorem 12:** Any common representation carries $\ge H(X|C) + K(P)$ bits per symbol (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.10](#a10-theorem-5-additivity-on-independent-products))
-- **Theorems 13-14:** Channel capacity and rate-distortion both lose exactly $K(P)$ (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.10](#a10-theorem-5-additivity-on-independent-products))
+- **Theorem 11:** Common messages decodable by all contexts cost $H(X|C) + K(P)$ (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Theorem 12:** Any common representation carries $\ge H(X|C) + K(P)$ bits per symbol (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products))
+- **Theorems 13-14:** Channel capacity and rate-distortion both lose exactly $K(P)$ (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products))
 
 **Geometric Structure ([§6.9](#6-operational-theorems-the-kp-tax)):**
 
-- **Theorem 15:** Hellinger geometry explains why contradiction costs compose linearly in $K$ (and subadditively in angle) ([App. A.2.2](#lemma-a22-bhattacharyya-properties), [A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure A.1.8)
+- **Theorem 15:** Hellinger geometry explains why contradiction costs compose linearly in $K$ (and subadditively in angle) ([Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [Appendix A.1.8](#proposition-a18-product-structure))
 
 ## 6.1 Asymptotic Equipartition with Tax
 
@@ -774,7 +774,7 @@ $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X|C) + K(P)
 $$
 
-with a strong converse. (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law))
+with a strong converse. (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 **Theorem 8** *(Compression with Latent Contexts)*
 
@@ -784,7 +784,7 @@ $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X) + K(P)
 $$
 
-with a strong converse. (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law))
+with a strong converse. (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 **Proof Strategy for Both:**
 
@@ -800,7 +800,7 @@ $$
 -\frac{1}{n} \log_2 \inf_{\text{level-}\eta} \sup_{Q \in \mathrm{FI}} \Pr_Q[\text{accept } \mathcal{H}_1] \ge K(P)
 $$
 
-(see [App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+(see [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 **Proof Strategy:**
 
@@ -810,7 +810,7 @@ The Chernoff bound at $s = 1/2$ gives exactly the Bhattacharyya coefficient $\al
 
 **Theorem 10** *(Witnessing for TV-Approximation)*
 
-There exist witnesses $W_n$ with rate $K(P)+o(1)$ and FI laws $\tilde{Q}_n$ such that $\mathrm{TV}((X^n, W_n), \tilde{Q}_n) \to 0$. No rate $< K(P)$ achieves vanishing $\mathrm{TV}$. (achievability via [App. A.12](#a12-proposition-smoothing-bound-tightness); TV lower bound cf. [App. A.11](#a11-proposition-total-variation-gap-tvg))
+There exist witnesses $W_n$ with rate $K(P)+o(1)$ and FI laws $\tilde{Q}_n$ such that $\mathrm{TV}((X^n, W_n), \tilde{Q}_n) \to 0$. No rate $< K(P)$ achieves vanishing $\mathrm{TV}$. (achievability via [Appendix A.12](#a12-proposition-smoothing-bound-tightness); TV lower bound cf. [Appendix A.11](#a11-proposition-total-variation-gap-tvg))
 
 **Proof Strategy:**
 
@@ -830,10 +830,10 @@ $$
 \lim_{n \to \infty} \frac{1}{n} \mathbb{E}[\ell_n^*] = H(X|C) + K(P)
 $$
 
-(see [App. A.9](#a9-theorem-4-fundamental-formula-log-law))
+(see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 **Theorem 12** *(Common Representation Cost)*
-If representation $Z = Z(X^n)$ enables every context decoder to recover $X^n$ with vanishing error: (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.10](#a10-theorem-5-additivity-on-independent-products))
+If representation $Z = Z(X^n)$ enables every context decoder to recover $X^n$ with vanishing error: (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products))
 
 - Known contexts: $\frac{1}{n} I(X^n; Z) \ge H(X|C) + K(P) - o(1)$
 - Latent contexts: $\frac{1}{n} I(X^n; Z) \ge H(X) + K(P) - o(1)$
@@ -849,7 +849,7 @@ $$
 R_{\text{payload}} = C_{\text{Shannon}} - K(P)
 $$
 
-with a strong converse. (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.10](#a10-theorem-5-additivity-on-independent-products))
+with a strong converse. (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products))
 
 **Proof Strategy:**
 
@@ -864,7 +864,7 @@ $$
 R(D) = R_{\text{Shannon}}(D) + K(P)
 $$
 
-This is the **Steinberg** regime—our surcharge shifts the classical $R_{\text{Shannon}}(D)$ by **+K(P)** because the single reconstruction must harmonize incompatible frames (Steinberg, 2009) with a strong converse. (see [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.10](#a10-theorem-5-additivity-on-independent-products))
+This is the **Steinberg** regime—our surcharge shifts the classical $R_{\text{Shannon}}(D)$ by **+K(P)** because the single reconstruction must harmonize incompatible frames (Steinberg, 2009) with a strong converse. (see [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products))
 
 **Proof Strategy:**
 
@@ -873,7 +873,7 @@ This is the **Steinberg** regime—our surcharge shifts the classical $R_{\text{
 
 ## 6.7 Geometric Structure of Contradiction
 
-**Theorem 15** *(Contradiction Geometry)* ([App. A.2.2](#lemma-a22-bhattacharyya-properties), [A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure A.1.8)
+**Theorem 15** *(Contradiction Geometry)* ([Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [Appendix A.1.8](#proposition-a18-product-structure))
 
 **(a) Pairwise Hellinger Metric:**
 
@@ -912,7 +912,7 @@ The results unify previously disparate impossibility results across quantum mech
 
 ### Detection Power Against Fake Data
 
-**Proposition 7.1** *(Testing Real vs Frame-Independent)* ([App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+**Proposition 7.1** *(Testing Real vs Frame-Independent)* ([Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 For testing $\mathcal{H}_0: Q \in \mathrm{FI}$ vs $\mathcal{H}_1: P$ with contexts drawn i.i.d. from $\lambda \in \Delta(\mathcal{C})$:
 
@@ -934,7 +934,7 @@ Chernoff bound for composite $\mathcal{H}_0$ yields $E_{\mathrm{BH}}(\lambda)$; 
 
 ### Simulation Variance Cost
 
-**Proposition 7.2** *(Importance Sampling Penalty)* ([App. A.2.2](#lemma-a22-bhattacharyya-properties))
+**Proposition 7.2** *(Importance Sampling Penalty)* ([Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
 To simulate $P$ using a single $Q \in \mathrm{FI}$ with importance weights $w_c = p_c/q_c$:
 
@@ -950,13 +950,13 @@ $$
 \mathbb{E}_{Q_c}[w_c^2] = e^{D_2(p_c \,\|\, q_c)} \,\ge\, e^{D_{1/2}(p_c \,\|\, q_c)} = \mathrm{BC}(p_c,q_c)^{-2}
 $$
 
-Thus $\mathrm{Var} \,\ge\, \mathrm{BC}^{-2} - 1$. Taking $\max_c$ and then $\inf_Q$ gives $\alpha^\star(P)^{-2} - 1$ (use $\alpha^\star = \max_Q \min_c \mathrm{BC}(p_c, q_c)$ from [App. A.3.2](#theorem-a32-minimax-equality)).
+Thus $\mathrm{Var} \,\ge\, \mathrm{BC}^{-2} - 1$. Taking $\max_c$ and then $\inf_Q$ gives $\alpha^\star(P)^{-2} - 1$ (use $\alpha^\star = \max_Q \min_c \mathrm{BC}(p_c, q_c)$ from [Appendix A.3.2](#theorem-a32-minimax-equality)).
 
 ---
 
 ### Predictive Regret Under Log-Loss
 
-**Proposition 7.3** *(Single-Predictor Penalty)* ([App. A.2.2](#lemma-a22-bhattacharyya-properties))
+**Proposition 7.3** *(Single-Predictor Penalty)* ([Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
 Using one predictor $Q \in \mathrm{FI}$ across all contexts under log-loss:
 
@@ -968,7 +968,7 @@ $$
 
 ### The Witness-Error Conservation Principle
 
-**Theorem 7.4** *(Witness-Error Tradeoff)* ([App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+**Theorem 7.4** *(Witness-Error Tradeoff)* ([Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 
 Let a scheme use witness rate $r$ bits/symbol and achieve type-II error exponent $E$ for testing $\mathrm{FI}$ vs $P$. Then:
 
@@ -985,7 +985,7 @@ The optimal tradeoff is exactly linear: $E^*(r) = K(P) - r$ for $r \in [0, K(P)]
 **Proof Strategy:**
 
 - *Converse:* With $nr$ bits of witness, there are $\leq 2^{nr}$ witness values; union bound with the Bhattacharyya (Rényi-1/2) floor $K(P)$ gives an exponent shortfall of at most $r$.
-- *Achievability:* Split resource: spend $nr$ bits on a witness (reducing the contradiction by $r$ via the product law/additivity), then test the residual with a Bhattacharyya-optimal statistic. The exponents add ([App. A.9](#a9-theorem-4-fundamental-formula-log-law), Log Law).
+- *Achievability:* Split resource: spend $nr$ bits on a witness (reducing the contradiction by $r$ via the product law/additivity), then test the residual with a Bhattacharyya-optimal statistic. The exponents add ([Appendix A.9](#a9-theorem-4-fundamental-formula-log-law)).
 
 **Interpretation:**
 
@@ -1000,7 +1000,7 @@ This is a conservation law—every bit not spent on coordination must reappear a
 
 ### Universal Adversarial Structure
 
-**Theorem 7.5** *(Universal Adversarial Prior)* ([App. A.5.1](#theorem-a51-minimax-duality))
+**Theorem 7.5** *(Universal Adversarial Prior)* ([Appendix A.5.1](#theorem-a51-minimax-duality))
 
 Any optimal context weights $\lambda^\star$ in the minimax representation:
 
@@ -1017,7 +1017,7 @@ are **simultaneously optimal adversaries** for:
 
 **Proof Strategy:**
 
-All four operational problems reduce to the same minimax in Theorem 2 ([App. A.3.2](#theorem-a32-minimax-equality)), then inherit the same $\lambda^*$.
+All four operational problems reduce to the same minimax in Theorem 2 ([Appendix A.3.2](#theorem-a32-minimax-equality)), then inherit the same $\lambda^*$.
 
 ## 7.3 Geometric and Analytic Tools
 
@@ -1053,7 +1053,7 @@ $$
 d_{\mathrm{TV}}(P, \mathrm{FI}) \,\ge\, 1 - \alpha^\star(P) = 1 - 2^{-K(P)}
 $$
 
-*(See [App. A.11](#a11-proposition-total-variation-gap-tvg) for proof.)*
+*(See [Appendix A.11](#a11-proposition-total-variation-gap-tvg) for proof.)*
 
 ---
 
@@ -1073,7 +1073,7 @@ This bound is tight when $R = Q^*$ is an optimal FI simulator for $P$.
 
 Using the dual form $\alpha^\star(P) = \min_\lambda \max_Q \sum_c \lambda_c \mathrm{BC}(p_c, q_c)$ and concavity of $\mathrm{BC}$ in its first argument:
 $\alpha^\star((1-t)P + tR) \,\ge\, (1-t)\alpha^\star(P) + t$
-Applying $K = -\log_2 \alpha^\star$ gives the bound; tightness holds when $R = Q^*$ (concavity met with equality). *(See [App. A.12](#a12-proposition-smoothing-bound-tightness) for details.)*
+Applying $K = -\log_2 \alpha^\star$ gives the bound; tightness holds when $R = Q^*$ (concavity met with equality). *(See [Appendix A.12](#a12-proposition-smoothing-bound-tightness) for details.)*
 
 **Corollary 7.7.1** *(Minimal Smoothing)*
 
@@ -1083,7 +1083,7 @@ $$
 t \,\ge\, \frac{1 - 2^{-\kappa}}{1 - 2^{-K(P)}}
 $$
 
-**Proof Strategy:** Rearrangement of the bound with $\alpha^\star = 2^{-K}$ *([App. A.12](#a12-proposition-smoothing-bound-tightness))*.
+**Proof Strategy:** Rearrangement of the bound with $\alpha^\star = 2^{-K}$ *([Appendix A.12](#a12-proposition-smoothing-bound-tightness))*.
 
 **Interpretation:**
 
@@ -1128,22 +1128,22 @@ At the optimum, all binding contexts tie exactly at $\alpha^\star$. There's alwa
 
 The theorems in Sections 6-7 establish that $K(P) = -\log_2 \alpha^\star(P)$ is a universal **information tax** in every multi-context problem:
 
-- **Storage:** 
-  Typical sets expand by factor $2^{nK(P)}$ (Theorem 6, [App. A.3.2](#theorem-a32-minimax-equality), [A.2.2](#lemma-a22-bhattacharyya-properties), [A.5.1](#theorem-a51-minimax-duality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Compression:** 
-  Rates increase by exactly $K(P)$ bits/symbol (Theorems 7-8, [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.5.1](#theorem-a51-minimax-duality))
-- **Communication:** 
-  Channel capacity decreases by $K(P)$ (Theorem 13, [App. A.10](#a10-theorem-5-additivity-on-independent-products), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Lossy Coding:** 
-  Rate-distortion functions shift up by $K(P)$ (Theorem 14, [App. A.10](#a10-theorem-5-additivity-on-independent-products), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Testing:** 
-  Detection requires $K(P)$ extra bits of evidence (Theorem 9, [App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
-- **Simulation:** 
-  Variance costs grow exponentially in $K(P)$ (Proposition 7.2, [App. A.2.2](#lemma-a22-bhattacharyya-properties))
+- **Storage:**
+  Typical sets expand by factor $2^{nK(P)}$ (Theorem 6, [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.5.1](#theorem-a51-minimax-duality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Compression:**
+  Rates increase by exactly $K(P)$ bits/symbol (Theorems 7-8, [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.5.1](#theorem-a51-minimax-duality))
+- **Communication:**
+  Channel capacity decreases by $K(P)$ (Theorem 13, [Appendix A.10](#a10-theorem-5-additivity-on-independent-products), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Lossy Coding:**
+  Rate-distortion functions shift up by $K(P)$ (Theorem 14, [Appendix A.10](#a10-theorem-5-additivity-on-independent-products), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Testing:**
+  Detection requires $K(P)$ extra bits of evidence (Theorem 9, [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
+- **Simulation:**
+  Variance costs grow exponentially in $K(P)$ (Proposition 7.2, [Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
 The **witness mechanism** provides the unifying explanation: contexts must coordinate through short certificates of rate $K(P)$ to maintain consistency. When witnesses are underfunded, some decoder must fail—creating the fundamental tradeoff captured in Theorem 7.4.
 
-The **geometric structure** (Theorem 15, [App. A.2.2](#lemma-a22-bhattacharyya-properties), [A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [App. A.1.8](#proposition-a18-product-structure)) reveals that these costs arise from Hellinger angles in probability space. Frame-independence sits at the origin of a natural metric structure, with contradiction measured by worst-context distances that compose additively under products.
+The **geometric structure** (Theorem 15, [Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [Appendix A.1.8](#proposition-a18-product-structure)) reveals that these costs arise from Hellinger angles in probability space. Frame-independence sits at the origin of a natural metric structure, with contradiction measured by worst-context distances that compose additively under products.
 
 Together, these results show that **contradiction is not free**—it imposes an exact, universal tax on all information-theoretic operations, with the tax rate determined by the minimax game $\alpha^\star(P)$ between behaviors and frame-independent approximations.
 
@@ -1152,21 +1152,21 @@ Together, these results show that **contradiction is not free**—it imposes an 
 The theorems in Sections 6-7 establish that $K(P) = -\log_2 \alpha^\star(P)$ is a universal **information tax** in every multi-context problem:
 
 - **Storage:**
-  Typical sets expand by factor $2^{nK(P)}$ (Theorem 6, [App. A.3.2](#theorem-a32-minimax-equality), [A.2.2](#lemma-a22-bhattacharyya-properties), [A.5.1](#theorem-a51-minimax-duality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+  Typical sets expand by factor $2^{nK(P)}$ (Theorem 6, [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.5.1](#theorem-a51-minimax-duality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 - **Compression:**
-  Rates increase by exactly $K(P)$ bits/symbol (Theorems 7-8, [App. A.9](#a9-theorem-4-fundamental-formula-log-law), [A.5.1](#theorem-a51-minimax-duality))
+  Rates increase by exactly $K(P)$ bits/symbol (Theorems 7-8, [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law), [Appendix A.5.1](#theorem-a51-minimax-duality))
 - **Communication:**
-  Channel capacity decreases by $K(P)$ (Theorem 13, [App. A.10](#a10-theorem-5-additivity-on-independent-products), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+  Channel capacity decreases by $K(P)$ (Theorem 13, [Appendix A.10](#a10-theorem-5-additivity-on-independent-products), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 - **Lossy Coding:**
-  Rate-distortion functions shift up by $K(P)$ (Theorem 14, [App. A.10](#a10-theorem-5-additivity-on-independent-products), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+  Rate-distortion functions shift up by $K(P)$ (Theorem 14, [Appendix A.10](#a10-theorem-5-additivity-on-independent-products), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 - **Testing:**
-  Detection requires $K(P)$ extra bits of evidence (Theorem 9, [App. A.3.2](#theorem-a32-minimax-equality), [A.9](#a9-theorem-4-fundamental-formula-log-law))
+  Detection requires $K(P)$ extra bits of evidence (Theorem 9, [Appendix A.3.2](#theorem-a32-minimax-equality), [Appendix A.9](#a9-theorem-4-fundamental-formula-log-law))
 - **Simulation:**
-  Variance costs grow exponentially in $K(P)$ (Proposition 7.2, [App. A.2.2](#lemma-a22-bhattacharyya-properties))
+  Variance costs grow exponentially in $K(P)$ (Proposition 7.2, [Appendix A.2.2](#lemma-a22-bhattacharyya-properties))
 
 The **witness mechanism** provides the unifying explanation: contexts must coordinate through short certificates of rate $K(P)$ to maintain consistency. When witnesses are underfunded, some decoder must fail—creating the fundamental tradeoff captured in Theorem 7.4.
 
-The **geometric structure** (Theorem 15, [App. A.2.2](#lemma-a22-bhattacharyya-properties), [A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [App. A.1.8](#proposition-a18-product-structure)) reveals that these costs arise from Hellinger angles in probability space. Frame-independence sits at the origin of a natural metric structure, with contradiction measured by worst-context distances that compose additively under products.
+The **geometric structure** (Theorem 15, [Appendix A.2.2](#lemma-a22-bhattacharyya-properties), [Appendix A.10](#a10-theorem-5-additivity-on-independent-products); FI product closure [Appendix A.1.8](#proposition-a18-product-structure)) reveals that these costs arise from Hellinger angles in probability space. Frame-independence sits at the origin of a natural metric structure, with contradiction measured by worst-context distances that compose additively under products.
 
 Together, these results show that **contradiction is not free**—it imposes an exact, universal tax on all information-theoretic operations, with the tax rate determined by the minimax game $\alpha^\star(P)$ between behaviors and frame-independent approximations.
 
@@ -1957,7 +1957,7 @@ Composing with $h$ proves both displays. □
 with optima attained and $\lambda^\star$ interpretable as adversarial context weights ([A.5.1](#theorem-a51-minimax-duality)).
 
 **Sharpness.**
-Drop A4 and averaging over contexts can be forced (violates weakest-link, [App. B.3.6](#b36-context-grouping-a4)). Drop DPI and post-processing can manufacture contradiction ([App. B.3.5](#b35-data-processing-monotonicity-a3)). Either failure breaks the game form.
+Drop A4 and averaging over contexts can be forced (violates weakest-link, [Appendix B.3.6](#b36-context-grouping-a4)). Drop DPI and post-processing can manufacture contradiction ([Appendix B.3.5](#b35-data-processing-monotonicity-a3)). Either failure breaks the game form.
 
 **Cross-refs.**
 
@@ -2079,7 +2079,7 @@ The formula $F(p,q)=\langle \sqrt{p},\sqrt{q} \rangle$ identifies the **Hellinge
 
 **Sharpness.**
 
-Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. [App. B.3.5–B.3.7](#b35-data-processing-monotonicity-a3)).
+Dropping *any* of refinement separability, product multiplicativity, or DPI admits non-$\mathrm{BC}$ kernels (cf. [Appendix B.3.5](#b35-data-processing-monotonicity-a3)–B.3.7).
 
 **Cross-refs.**
 

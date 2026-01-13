@@ -89,7 +89,7 @@ Shannon's framework handles randomness brilliantly within a single coherent cont
 
 This assumption traces back to Boole, who fixed propositions as true or false. Kolmogorov built probability on that logic. Shannon showed how such decisions travel as bits. None of these frameworks claimed the world was binary—they just assumed our *records* could be. One message, one symbol, one frame.
 
-That inheritance runs deep. Modern databases, communication protocols, neural network outputs—all collapse observations to single values. It's not a flaw in those systems; it's the foundation they were built on.
+That inheritance runs deep. Modern databases, communication protocols, neural network outputs—all collapse observations to single values. This single-value assumption is the foundation those systems were built on, not a flaw.
 
 Contrakit measures what happens when that assumption breaks down. When multiple valid observations cannot be reconciled into a single record, classical measures assign the disagreement a cost of zero. They price *which outcome* occurred within a framework, not *whether frameworks can be reconciled at all*. That's the gap—and $K(P)$ fills it.
 

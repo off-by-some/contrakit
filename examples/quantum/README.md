@@ -6,19 +6,17 @@ Specifically, K(P) measures distance from the classical (local/noncontextual) FI
 
 ## The Big Picture
 
-Formally, these examples explore one of the deepest puzzles in physics: why quantum mechanics defies our classical intuitions. Having established the basic setup, we now turn to the contradiction measure $K(P)$.
+These examples explore how quantum mechanics differs from classical physics. We use the contradiction measure $K(P)$ to quantify how much info it costs to reconcile quantum action with classical expectations.
 
-These examples explore one of the deepest puzzles in physics: why quantum mechanics defies our classical intuitions. We use the contradiction measure $K(P)$ to quantify how much info it costs to reconcile quantum action with classical expectations.
-
-Let us summarize the key insights; each reveals key aspects of quantum-classical boundaries:
+The key insights are as follows; each shows aspects of quantum-classical boundaries:
 - **Classical region:** $K(P) = 0$;
 - **Quantum region:** $K(P) > 0$ and grows smoothly with violation strength;
 - **Two flavors:** probabilistic violations $\sim 0.012$ bits; algebraic impossibility $\sim 0.132$ bits;
 
 
-We examine three landmark quantum scenarios that each represent a different facet of quantum nonclassic: Bell inequalities (CHSH) that reveal links exceeding classic limits, contextuality cycles (KCBS) that show measure incompatibilities in single systems, and the Magic Square that shows logical impossibilities resolved through quantum mechanics.
+We examine three quantum scenarios that each represent a different facet of quantum nonclassic: Bell inequalities (CHSH) that show links exceeding classic limits, contextuality cycles (KCBS) that show measure incompatibilities in single systems, and the Magic Square that shows logical impossibilities resolved through quantum mechanics.
 
-Across all examples, we verify the universal invariant that establishes an info-based boundary between classical and quantum physics: classical behavior costs nothing to explain classically ($K(P) = 0$), while genuinely quantum behavior always incurs a positive info cost ($K(P) > 0$) that grows smoothly as quantum effects strengthen, providing a continuous measure of quantum nonclassic that enables precise quantification of how quantum a given phenomenon truly is.
+Across all examples, we observe an invariant that establishes an info-based boundary between classical and quantum physics: classical behavior costs nothing to explain classically ($K(P) = 0$), while genuinely quantum behavior always incurs a positive info cost ($K(P) > 0$) that grows smoothly as quantum effects strengthen, providing a continuous measure of quantum nonclassic that enables precise quantification of how quantum a given phenomenon is.
 
 
 ### At a Glance
@@ -67,34 +65,32 @@ print(f"Classical overlap: {behavior.alpha_star:.4f}")              # 0.9914 (.a
 
 Consider the following.
 
-Traditional approaches to quantum foundations ask a yes-or-no question: *Can this behavior be explained classically?* This binary perspective, known as **contextuality**, has been enormously successful in identifying quantum phenomena. But it leaves an important question unanswered: when the answer is "no," just how non-classical is the behavior?
+Traditional approaches to quantum foundations ask a yes-or-no question: *Can this behavior be explained classically?* This binary perspective, known as **contextuality**, has been successful in identifying quantum phenomena. But it leaves an important question unanswered: when the answer is "no," just how non-classical is the behavior?
 
-Our contradiction measure $K(P)$ transforms this binary question into a quantitative one. Instead of asking whether quantum behavior can be explained classically, we ask: *What is the minimum information cost of forcing a classical explanation?*
+Our contradiction measure $K(P)$ converts this binary question into a quantitative one. Instead of asking whether quantum behavior can be explained classically, we ask: *What is the minimum information cost of forcing a classical explanation?*
 
-### The Power of Quantification
-
-To continue our analysis, we examine the advantages of this quantitative approach.
+### Advantages of Quantification
 
 This shift from binary to quantitative brings several advantages; each addressing limitations of traditional quantum tests:
 
 1. **Precise comparison across phenomena.** Different quantum experiments violate different inequalities with different units and scales; but contradiction is always measured in the same universal currency: bits of information. This lets us directly compare the "quantumness" of Bell violations (~0.012 bits) with Magic Square puzzles (~0.132 bits); and this reveals that algebraic quantum constraints are roughly ten times more costly to explain classically than probabilistic ones.
 
-2. **Localization of quantum effects.** While traditional tests tell you *that* an experiment violates classical bounds; our dual witness $\lambda^*$ tells you *where* the violation is concentrated. Which measure contexts are the bottlenecks? Which experimental configurations contribute most to the quantum advantage? This localization guides both theoretical understanding and experimental design; but it also opens new questions about quantum measure structure.
+2. **Localization of quantum effects.** While traditional tests tell you *that* an experiment violates classical bounds; our dual witness $\lambda^*$ tells you *where* the violation is concentrated. Which measure contexts are the bottlenecks? Which experimental configurations contribute most to the quantum advantage? This localization guides both theoretical understanding and experimental design; but it also raises questions about quantum measure structure.
 
 3. **Engineering applications.** Abstract concepts like "nonclassical correlations" become concrete engineering parameters; the contradiction measure translates directly into resource budgets: How much side-information per experimental run? What sampling strategies minimize detection time? How much noise can the quantum advantage tolerate? These questions have precise, computable answers.
 
 4. **Smooth scaling laws.** In repeated experiments, contradiction costs add linearly: $n$ independent runs require approximately $n \cdot K(P)$ bits of side-information to maintain classical explanations. This clean scaling law enables precise resource planning and statistical analysis. So binary violation tests cannot provide this level of detail.
 
-5. **Boundary precision.** The measure exhibits mathematical elegance at the classical-quantum boundary: exactly zero cost for any classically explainable behavior, positive cost that grows continuously as quantum effects strengthen. This precision enables detection of quantum effects arbitrarily close to classical bounds and solid analysis of near-threshold experiments. Yet the mathematical elegance here is striking. Or consider the implications for quantum computing.
+5. **Boundary precision.** The measure exhibits mathematical precision at the classical-quantum boundary: exactly zero cost for any classically explainable behavior, positive cost that grows continuously as quantum effects strengthen. This precision enables detection of quantum effects arbitrarily close to classical bounds and solid analysis of near-threshold experiments.
 
 
 ## Key Discoveries
 
-To continue our exploration, we now examine the fundamental discoveries enabled by this quantitative approach.
+The quantitative approach enables the following discoveries:
 
 ### A Universal Quantum Signature
 
-Our analysis reveals that the contradiction measure $K(P)$ Behaves like a resource monotone in our setting with consistent mathematical properties:
+The contradiction measure $K(P)$ behaves like a resource monotone in our setting with consistent mathematical properties:
 
 **Sharp classical-quantum boundary.** The measure exhibits perfect discrimination: exactly zero for any behavior explainable by classical physics, and strictly positive for genuinely quantum phenomena. In our runs, boundary detection achieves $K(P) \leq 10^{-9}$ below classical bounds and $K(P) \geq 10^{-5}$ above them, providing an unambiguous test for quantum effects.
 
@@ -102,7 +98,7 @@ Our analysis reveals that the contradiction measure $K(P)$ Behaves like a resour
 
 ### A taxonomy of Quantum Contradiction Costs
 
-Our three case studies reveal that different types of quantum behavior incur dramatically different information costs:
+Our three case studies reveal that different types of quantum behavior incur different information costs:
 
 | Phenomenon | Information Cost | Quantum Parameter | Character |
 |------------|------------------|-------------------|-----------|
@@ -110,7 +106,7 @@ Our three case studies reveal that different types of quantum behavior incur dra
 | **Measurement Contextuality (KCBS)** | 0.013 bits | $`\alpha^* = 0.991`$ | Probabilistic, state-dependent |
 | **Logical Impossibility (Magic Square)** | 0.132 bits | $`\alpha^* = 0.913`$ | Algebraic, state-independent |
 
-**The fundamental distinction.** Quantum phenomena fall into two categories with vastly different contradiction costs:
+**The fundamental distinction.** Quantum phenomena fall into two categories with different contradiction costs:
 
 - **Probabilistic violations** (Bell inequalities, contextuality cycles) arise from quantum correlations that exceed classical bounds but remain logically consistent. These incur modest information costs (~0.012 bits).
 
@@ -126,15 +122,15 @@ The three figures below tell a unified story of how quantum behavior emerges fro
 
 **Precision at the boundary.** The logarithmic panels in each figure reveal a key detail: our measure achieves machine-level precision at classical boundaries, with contradiction costs dropping to zero within computational limits (better than 10⁻⁹). This precision validates the mathematical sharpness of the classical-quantum transition.
 
-**Universal patterns.** Despite examining very different physical scenarios, all three figures exhibit the same fundamental behavior: zero cost in classical regions, continuous growth in quantum regions, and smooth scaling that reflects the underlying physics. This universality indicates that information cost is a fundamental feature of quantum mechanics itself.
+**Universal patterns.** Despite examining very different physical scenarios, all three figures exhibit the same fundamental behavior: zero cost in classical regions, continuous growth in quantum regions, and smooth scaling that reflects the underlying physics. This universality indicates that information cost is a feature of quantum mechanics.
 
 ## The Magic Square: When Logic Itself Becomes Quantum
 
-The Magic Square represents the clearest example in our collection—a scenario where quantum mechanics doesn't just violate statistical bounds, but achieves something that classical logic declares impossible.
+The Magic Square represents a clear example—a scenario where quantum mechanics doesn't just violate statistical bounds, but achieves something that classical logic declares impossible.
 
 **The puzzle.** Imagine a 3×3 grid where each cell contains either +1 or -1. The constraint is simple: each row must multiply to +1, and each column must multiply to +1, except the last column which must multiply to -1. Try to fill in such a grid with classical logic—you'll find it's impossible. The mathematical constraint is self-contradictory.
 
-**The quantum solution.** Quantum mechanics solves this "impossible" puzzle effortlessly. Using quantum measures, we can construct a scenario that satisfies all constraints simultaneously, achieving a witness value of W = 6 compared to the classical maximum of W = 4.
+**The quantum solution.** Quantum mechanics solves this "impossible" puzzle. Using quantum measures, we can construct a scenario that satisfies all constraints simultaneously, achieving a witness value of W = 6 compared to the classical maximum of W = 4.
 
 **What the figure reveals.** The eight-panel analysis shows this logical impossibility translating into information cost. The contradiction measure reaches $K = 0.132$ bits—roughly ten times higher than the probabilistic violations in Bell tests. **Why Magic Square costs ~10× more:** Because the contradiction is **algebraic** (parity constraints) rather than merely **statistical**; no probability rescaling can satisfy all contexts simultaneously.
 
@@ -155,7 +151,7 @@ $ poetry run python -m examples.quantum.magic_squares
 
 ### Practical Interpretations
 
-**Information budgets.** The contradiction measure $K(P)$ represents the minimal extra information (in bits) needed per experimental run to maintain a classical explanation of quantum behavior. This transforms abstract quantum effects into concrete resource requirements for classical simulation.
+**Information budgets.** The contradiction measure $K(P)$ represents the minimal extra information (in bits) needed per experimental run to maintain a classical explanation of quantum behavior. This converts abstract quantum effects into concrete resource requirements for classical simulation.
 
 **Optimal experimental strategies.** The dual witness $\lambda^*$ provides mathematically optimal guidance for experimental design. It tells researchers which measure contexts deserve the most attention and how to distribute limited experimental resources to maximize evidence for quantum effects.
 
@@ -175,13 +171,13 @@ These benchmarks provide reference points for comparing the "quantumness" of oth
 
 ## Bell's Theorem Made Quantitative: The CHSH Analysis
 
-The CHSH inequality, derived from John Bell's work and showing that quantum particles can exhibit correlations stronger than any classical theory allows, is transformed by our analysis from Bell's binary insight—"quantum correlations violate classical bounds"—into a precise quantitative measure of quantum nonclassic that reveals the fundamental information cost of maintaining classical explanations in the face of quantum correlations.
+The CHSH inequality, derived from John Bell's work and showing that quantum particles can exhibit correlations stronger than any classical theory allows, is converted by our analysis from Bell's binary insight—"quantum correlations violate classical bounds"—into a precise quantitative measure of quantum nonclassic that reveals the information cost of maintaining classical explanations in the face of quantum correlations.
 
 **The experimental setup.** Two separated particles are measured along different angles. Classical physics predicts that the correlation strength $S$ cannot exceed 2, regardless of any hidden variables or local mechanisms. Quantum mechanics, however, can achieve $S = 2\sqrt{2} \approx 2.828$—a violation that Einstein famously called "spooky action at a distance."
 
 **From threshold to quantity.** The figure traces how information cost grows as we move from classical ($S \leq 2$) to quantum ($S > 2$) regimes. The red line marks the classical boundary—a sharp threshold where contradiction cost jumps from exactly zero to positive values. This transition occurs with mathematical precision: no classical behavior incurs any information cost, while even the smallest quantum violation requires positive information to explain classically.
 
-**The Tsirelson point.** At quantum mechanics' maximum violation ($S = 2\sqrt{2}$), the contradiction cost reaches $K = 0.012$ bits per measure. This small number represents the fundamental information gap between classical and quantum descriptions of nature. To maintain a classical worldview in the face of maximal Bell violations, you must invoke approximately $0.012$ bits of additional information per measure.
+**The Tsirelson point.** At quantum mechanics' maximum violation ($S = 2\sqrt{2}$), the contradiction cost reaches $K = 0.012$ bits per measure. This small number represents the information gap between classical and quantum descriptions of nature. To maintain a classical worldview in the face of maximal Bell violations, you must invoke approximately $0.012$ bits of additional information per measure.
 
 **Precision and continuity.** The logarithmic panel reveals the smooth mathematical transition: contradiction costs drop to $K(P) \leq 10^{-9}$ at the classical boundary and grow continuously beyond it. This continuity enables precise detection of quantum effects arbitrarily close to classical limits—a key capability for experiments operating near the quantum threshold.
 
@@ -228,7 +224,7 @@ The KCBS scenario reveals a subtle aspect of quantum mechanics: the impossibilit
 
 **The pentagonal puzzle.** Imagine five quantum observables arranged in a pentagon, where adjacent observables can be measured together, but non-adjacent ones cannot. Classical physics assumes each observable has a definite value (+1 or -1) independent of which measures we choose to perform. The KCBS inequality tests this assumption by examining the sum of all five expectation values.
 
-**Classical limits and quantum transcendence.** Classical physics constrains this sum to be at most 2. Quantum mechanics, however, can achieve $\Sigma\langle E_i \rangle = \sqrt{5} \approx 2.236$ by exploiting the measure incompatibilities. This violation shows that quantum observables cannot possess definite values independent of measure context—a phenomenon known as contextuality.
+**Classical limits and quantum violations.** Classical physics constrains this sum to be at most 2. Quantum mechanics, however, can achieve $\Sigma\langle E_i \rangle = \sqrt{5} \approx 2.236$ by exploiting the measure incompatibilities. This violation shows that quantum observables cannot possess definite values independent of measure context—a phenomenon known as contextuality.
 
 **Information cost of contextuality.** At the quantum optimum, maintaining a classical (context-independent) explanation requires $K = 0.013$ bits per measure—nearly identical to the Bell violation cost. This near-equality reveals a connection between different forms of quantum nonclassic, despite their distinct physical origins.
 
@@ -247,7 +243,7 @@ $ poetry run python -m examples.quantum.KCBS
 
 ## Universal Patterns Across Quantum Phenomena
 
-Despite examining three very different physical scenarios—particle correlations, measure contextuality, and logical constraints—we show this analysis reveals consistent universal patterns. Consider the implications: these patterns suggest deep principles underlying quantum mechanics.
+Despite examining three very different physical scenarios—particle correlations, measure contextuality, and logical constraints—this analysis shows consistent universal patterns. These patterns reflect principles underlying quantum mechanics.
 
 **The classical-quantum boundary is mathematically sharp.** Across all scenarios, the transition from classical to quantum behavior occurs at defined thresholds with machine-level accuracy. Below these boundaries, contradiction costs are exactly zero; above them, costs become strictly positive. This sharpness validates the fundamental distinction between classical and quantum physics.
 
@@ -255,7 +251,7 @@ Despite examining three very different physical scenarios—particle correlation
 
 **Quantum effects scale continuously.** Beyond classical boundaries, contradiction costs grow smoothly rather than jumping discontinuously. This continuity enables precise measure of "quantumness" and solid analysis of near-threshold experiments—capabilities impossible with binary violation tests.
 
-**Symmetry reflects underlying structure.** The uniform distribution of dual witness weights ($\lambda^*$) across measure contexts reflects the inherent symmetries in each scenario: the four-fold symmetry of Bell tests, the five-fold symmetry of KCBS pentagons, and the six-fold symmetry of Magic Square constraints. This mathematical consistency suggests that contradiction measures capture fundamental geometric properties of quantum theory.
+**Symmetry reflects underlying structure.** The uniform distribution of dual witness weights ($\lambda^*$) across measure contexts reflects the inherent symmetries in each scenario: the four-fold symmetry of Bell tests, the five-fold symmetry of KCBS pentagons, and the six-fold symmetry of Magic Square constraints. This mathematical consistency suggests that contradiction measures capture geometric properties of quantum theory.
 
 ## What the Data Says
 
@@ -266,13 +262,13 @@ Despite examining three very different physical scenarios—particle correlation
 
 ## From Theory to Practice: Applications of Quantified Quantum Weirdness
 
-The contradiction measure transforms abstract quantum foundations into practical tools with applications spanning fundamental research, experimental design, and technological development.
+The contradiction measure converts abstract quantum foundations into practical tools with applications spanning fundamental research, experimental design, and technological development.
 
 ### Advancing Quantum Foundations
 
 **Graded quantum effects.** Traditional tests answer "Is this quantum?" with yes or no. Our measure answers "How quantum is this?" with precise numerical values, enabling fine-grained analysis of quantum phenomena. Researchers can now quantify the relative "quantumness" of different experiments, states, and protocols using a common information-theoretic scale.
 
-**Universal comparison framework.** The bit-based measure enables direct comparison across disparate quantum phenomena. A Bell violation can be directly compared to a contextuality demonstration or a quantum computational advantage, revealing deep connections between seemingly unrelated quantum effects.
+**Universal comparison framework.** The bit-based measure enables direct comparison across disparate quantum phenomena. A Bell violation can be directly compared to a contextuality demonstration or a quantum computational advantage, revealing connections between seemingly unrelated quantum effects.
 
 **Geometric insights.** The measure provides information-geometric distances between quantum behaviors and their closest classical approximations. This geometric perspective reveals the structure of quantum theory's departure from classical physics, potentially guiding the development of new quantum theories or modifications.
 
@@ -294,7 +290,7 @@ The contradiction measure transforms abstract quantum foundations into practical
 
 ## The Road Ahead: Expanding the Quantum Information Landscape
 
-The contradiction measure opens new avenues for understanding quantum mechanics that extend beyond the scenarios examined here. Several directions emerge naturally from our framework.
+The contradiction measure enables further analysis of quantum mechanics that extends beyond the scenarios examined here. Several directions emerge naturally from our framework.
 
 ### Scaling to Complex Quantum Systems
 
@@ -318,7 +314,7 @@ The contradiction measure opens new avenues for understanding quantum mechanics 
 
 ### Fundamental Questions
 
-**The information-theoretic structure of quantum mechanics.** Our work indicates that information cost is a fundamental feature of quantum theory. Contradiction measures provide new axiomatizations of quantum mechanics based on information-theoretic principles.
+**The information-theoretic structure of quantum mechanics.** Our work indicates that information cost is a feature of quantum theory. Contradiction measures provide axiomatizations of quantum mechanics based on information-theoretic principles.
 
 **Quantum gravity and spacetime.** If spacetime itself is quantum mechanical, how do contradiction measures behave in quantum gravitational systems? This question connects quantum foundations to fundamental questions in theoretical physics.
 

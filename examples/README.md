@@ -303,13 +303,53 @@ I needed to know if $K(P)$ was just mutual information wearing a different hat, 
 
 Take the digit 7 with two contradictory labeling rules: parity says "1" (odd), roundness says "0" (angular). Standard setup. Now vary how often each rule applies—10% parity versus 90%, then 30/70, then 50/50, and so on. If $K(P)$ measures the same thing as Shannon's mutual information $I(X;C)$, both should move together as these probabilities shift.
 
-| Context Split | $I(X;C)$ | $K(P)$ |
-|--------------|----------|--------|
-| 10% / 90%    | 0.469 bits | 0.500 bits |
-| 30% / 70%    | 0.881 bits | 0.500 bits |
-| 50% / 50%    | 1.000 bits | 0.500 bits |
-| 70% / 30%    | 0.881 bits | 0.500 bits |
-| 90% / 10%    | 0.469 bits | 0.500 bits |
+
+```python
+import math
+from contrakit import Observatory
+
+# Create contradictory behaviors: parity vs roundness for digit "7"
+obs = Observatory.create(symbols=['0', '1'])
+label = obs.concept('Label')
+
+parity = obs.lens('Parity')
+with parity:
+    parity.perspectives[label] = {'1': 1.0, '0': 0.0}  # Says "odd"
+
+roundness = obs.lens('Roundness')  
+with roundness:
+    roundness.perspectives[label] = {'0': 1.0, '1': 0.0}  # Says "angular"
+
+behavior = (parity | roundness).to_behavior()
+
+# Vary context probabilities, compute both measures
+context_weights = [0.1, 0.3, 0.5, 0.7, 0.9]
+
+print("| Context Split | I(X;C) | K(P) |")
+print("|--------------|--------|------|")
+
+for w in context_weights:
+    # Compute mutual information I(X;C)
+    p_parity = w
+    p_roundness = 1 - w
+    p_label_0 = p_parity * 0.0 + p_roundness * 1.0
+    p_label_1 = p_parity * 1.0 + p_roundness * 0.0
+    
+    H_X = sum(-p * math.log2(p) for p in [p_label_0, p_label_1] if p > 0)
+    H_C = sum(-p * math.log2(p) for p in [p_parity, p_roundness] if p > 0)
+    I_X_C = H_X  # H(X|C) = 0 for deterministic contexts
+    
+    print(f"| {w:.1f} / {1-w:.1f}      | {I_X_C:.3f}  | {behavior.K:.3f} |")
+
+# Output:
+# | Context Split | I(X;C) | K(P) |
+# |--------------|--------|------|
+# | 0.1 / 0.9    | 0.469  | 0.500 |
+# | 0.3 / 0.7    | 0.881  | 0.500 |
+# | 0.5 / 0.5    | 1.000  | 0.500 |
+# | 0.7 / 0.3    | 0.881  | 0.500 |
+# | 0.9 / 0.1    | 0.469  | 0.500 |
+```
 
 Mutual information more than doubles—0.469 to 1.000 bits—as context probabilities change. $K(P)$ stays at 0.500 bits. Exactly. Not approximately, not within rounding error. The same 0.500 across every tested configuration.
 

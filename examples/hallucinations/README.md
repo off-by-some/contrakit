@@ -12,7 +12,7 @@ We can quantify the structural pressure using a measure we call $K$, computed in
 
 The architectural pressure operates independently. We measured this by quantifying witness capacity $r$, which indicates how much uncertainty an architecture can express. Standard softmax provides $r \approx 0$ bits because it forces probability distributions summing to 1.0 across all outputs. That means there's no way to represent "I don't know" or "none of these options apply." Architectures with explicit abstention mechanisms provide $r \geq 1$ bit, giving the model ways to express uncertainty rather than guessing.
 
-These two pressures interact in predictable ways. When $r$ exceeds $K$, we observed sharp phase transitions where error collapsed from near 100% to near 0% in a narrow zone around $r = K$. This demonstrates that $K$ indicates required capacity rather than task difficulty—systems need adequate $r$ to handle structural contradictions. Without it, failure is nearly certain regardless of training.
+These two pressures interact in predictable ways. When $r$ significantly exceeds $K$, we observed gradual phase transitions where error rates show substantial reduction from near 100% toward theoretical minima. This demonstrates that $K$ indicates required capacity rather than task difficulty—systems need adequate $r$ to handle structural contradictions, though practical networks require more capacity than idealized theory suggests. Without sufficient $r$, failure is nearly certain regardless of training.
 
 Training composition affects how far above the theoretical minimum you land, but it cannot eliminate structural impossibility when $K > 0$. We varied the ratio of defined to undefined examples from 10% to 90% and found a sigmoid relationship. Hallucination rises rapidly from 10-30% defined, then saturates beyond 70%. This means composition modulates distance from the theoretical floor but cannot break through it.
 
@@ -111,11 +111,11 @@ The 75-point gap isolated architectural pressure, showing its effect on a single
 
 ![Error Rate Heatmap](experiment_9/results/error_rate_heatmap.png)
 
-The results showed sharp transitions. When $r$ fell well below $K$, error stayed at 100%—forced hallucination on all contradictory inputs across all seeds. When $r$ exceeded $K$ by a comfortable margin, error dropped to 0%—successful abstention across all runs. The transition happened in a narrow zone near $r = K$.
+The results showed gradual phase transitions. When $r$ is well below $K$, error rates remain high (near 80-100%) across all seeds. When $r$ significantly exceeds $K$, error rates show substantial reduction, though rarely reaching theoretical minima. The transition occurs gradually, with higher-K tasks requiring considerably more witness capacity before meaningful improvements begin.
 
 ![Phase Transition](experiment_9/results/error_vs_witness.png)
 
-This confirms $K$ indicates required capacity, not difficulty. Systems need $r$ above $K$ for reliable success, and training cannot compensate for insufficient architectural capacity. If $r$ is well below $K$, failure is nearly certain regardless of data or optimization.
+This confirms $K$ indicates required capacity, but practical systems show smoother transitions than idealized theory. The relationship holds qualitatively—insufficient witness capacity leads to persistent high error rates—but quantitatively, networks need r substantially above K to approach theoretical performance bounds. Training cannot fully compensate for insufficient architectural capacity.
 
 Standard softmax architectures have $r \approx 0$, which explains why we observed 76% hallucination on $K=0.70$ bit tasks when forced to commit. The model simply lacked capacity to abstain.
 
@@ -137,7 +137,7 @@ Task structure is fixed. If different contexts demand incompatible behaviors, th
 
 Architecture determines whether you can approach that floor. Standard softmax provides $r \approx 0$ bits of witness capacity, leaving models well below $K$ for any contradictory task. Explicit witness heads providing $r \geq K$ enable approaching theoretical bounds through the relation $E + r \geq K$, where $E$ is error exponent in hypothesis testing and $r$ is witness rate. This establishes a trade-off: uncertainty in the task must be paid for either through error or through architectural capacity to express ignorance. You cannot achieve $E + r < K$—it's an impossibility, not merely difficult.
 
-For neural networks, we observe this as a phase transition. When $r$ crosses $K$, error rate drops sharply from near 100% to near 0%. Tasks with contradiction $K$ can achieve arbitrarily low hallucination rates when the architecture provides witness capacity $r \geq K$, but cannot when $r < K$.
+For neural networks, we observe this as a gradual phase transition. When $r$ significantly exceeds $K$, error rates show substantial reduction from near 100% toward theoretical minima, though practical networks rarely achieve perfect performance. Tasks with contradiction $K$ show persistent high error rates when $r$ is insufficient, requiring considerably more witness capacity than idealized theory suggests.
 
 Training composition affects how far above the floor you land when architectural support is insufficient. The sigmoid relationship shows rapid increases early (10-30% defined), saturation later (70-90% defined). Small composition changes have large effects in the early phase but diminishing effects later.
 
@@ -173,7 +173,7 @@ Standard accuracy metrics miss these failures. A network achieving 100% training
 
 Confidence thresholds don't reliably filter unreliable predictions. The 59.5% confidence on fabricated answers sits between random guessing (20%) and learned certainty (98.85%), suggesting interpolation rather than abstention. Without explicit training on contradictions, confidence scores reflect geometric position in feature space rather than epistemic uncertainty.
 
-This experiment tests the operational predictions of the contradiction theory for epistemic detection. Instead of benchmarking against heuristic OOD scores, we directly measure the witness–error tradeoff predicted by Theorem 7.4 and verify the existence of a sharp phase transition at the contradiction threshold ($K(P) = 0.792$ bits).
+This experiment tests the operational predictions of the contradiction theory for epistemic detection. Instead of benchmarking against heuristic OOD scores, we directly measure the witness–error tradeoff predicted by Theorem 7.4 and verify the existence of a gradual phase transition at the contradiction threshold ($K(P) = 0.792$ bits).
 
 We construct contradiction tasks with two mutually exclusive behavioral demands: classify in-distribution samples correctly vs. abstain when predictions are epistemically invalid. These contexts are incompatible: a single predictor cannot satisfy both without access to additional witness information.
 
@@ -181,7 +181,7 @@ We evaluate four contradiction families (permutation, rotation, multi-label, adv
 
 From Theorem 7.4 (Witness–Error Tradeoff): $E + r \geq K(P)$ where $E$ is the optimal type-II error exponent, $r$ is witness rate, and $K(P)$ is the contradiction of the task. This implies a phase transition: if $r < K(P)$, optimal behavior is forced prediction; if $r \geq K(P)$, optimal behavior is selective abstention.
 
-The transition occurs sharply between $r = 0.5$ and $r = 1.0$, exactly as predicted. For all contradiction families:
+The transition occurs gradually, with error rates remaining elevated until r significantly exceeds K. For all contradiction families:
 
 - **Permutation contradictions**: $r \geq 1.0$ achieves 54.5-63.5% abstention on contradictory inputs, 49.5-61.0% on consistent inputs, and 60.5-76.5% on OOD (SVHN)
   ![Permutation Contradictions](experiment_11/results/generalization_test_permutation.png)
@@ -217,8 +217,8 @@ The training objective is to maximize log probability of correct labels on train
 - **Experiment 8**: [TruthfulQA Benchmark](experiment_8/) — 20% forced vs 10% with abstention
 - **Experiment 9**: [Quantifying Witness Capacity](experiment_9/) — Phase transition at r=K across 100 training runs
 - **Experiment 10**: [Generalization to High-Dimensional Real Data](experiment_10/) — Predicted 70% worst-case error before training, achieved 69.0% ± 0.1%
-- **Experiment 11**: [Phase Transition in Epistemic Detection via Witness Capacity](experiment_11/) — Tests operational predictions of contradiction theory for epistemic detection; verifies witness–error tradeoff ($E + r \geq K$) and sharp phase transition at contradiction threshold ($K = 0.792$ bits); demonstrates generalization from structural contradictions to epistemic uncertainty on OOD data
+- **Experiment 11**: [Phase Transition in Epistemic Detection via Witness Capacity](experiment_11/) — Tests operational predictions of contradiction theory for epistemic detection; verifies witness–error tradeoff ($E + r \geq K$) and gradual phase transition at contradiction threshold ($K = 0.792$ bits); demonstrates generalization from structural contradictions to epistemic uncertainty on OOD data
 
 ---
 
-**Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a sharp phase transition in error rate when $r$ crosses $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.
+**Note on mathematical foundations**: The paper's Theorem 7.4 states $E + r \geq K$ where $E$ is error exponent (bits) in hypothesis testing, not error rate (0-1 scale). What we observe in neural networks is the implication of this law: a gradual phase transition in error rate when $r$ significantly exceeds $K$. See [Experiment 9's theory validation](experiment_9/THEORY_VALIDATION.md) for detailed discussion of how the information-theoretic conservation law relates to neural network behavior.

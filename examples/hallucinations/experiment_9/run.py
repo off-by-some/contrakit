@@ -25,13 +25,14 @@ def set_seed(seed: int):
         torch.cuda.manual_seed(seed)
 
 class WitnessNetwork(nn.Module):
-    """Neural network with configurable witness capacity."""
-    
-    def __init__(self, input_dim: int, hidden_dim: int, num_classes: int, witness_bits: float):
+    """Neural network with configurable witness capacity for context identification."""
+
+    def __init__(self, input_dim: int, hidden_dim: int, num_classes: int, num_contexts: int, witness_bits: float):
         super().__init__()
         self.num_classes = num_classes
+        self.num_contexts = num_contexts
         self.witness_bits = witness_bits
-        
+
         # Shared feature extractor
         self.features = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -39,14 +40,17 @@ class WitnessNetwork(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU()
         )
-        
+
         # Classification head
         self.classifier = nn.Linear(hidden_dim, num_classes)
-        
-        # Witness channel: number of uncertainty states
-        # witness_bits determines the cardinality of the uncertainty channel
-        self.num_witness_states = max(1, int(2 ** witness_bits))
-        if self.num_witness_states > 1:
+
+        # Witness channel: predict which context generated the input
+        # witness_bits determines capacity, but we need at least num_contexts states
+        min_states = num_contexts
+        max_states = max(min_states, int(2 ** witness_bits))
+        self.num_witness_states = max_states
+
+        if self.num_witness_states >= min_states:
             self.witness_head = nn.Linear(hidden_dim, self.num_witness_states)
         else:
             self.witness_head = None
@@ -61,57 +65,51 @@ class WitnessNetwork(nn.Module):
         return logits, None
 
 
-def create_weekday_task(num_contexts: int = 2, ambiguous_ratio: float = 0.5, 
+def create_weekday_task(num_contexts: int = 2, ambiguous_ratio: float = 0.5,
                         seed: int = DEFAULT_SEED) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Create a weekday prediction task with controlled contradiction.
-    
+
     Args:
         num_contexts: Number of contradictory contexts (2-7, more contexts = higher K)
         ambiguous_ratio: Ratio of examples that are context-dependent vs. context-independent
         seed: Random seed
-    
+
     Returns:
-        X_defined, y_defined, X_undefined, context_labels
+        X_all, y_all, context_labels, None (for compatibility)
     """
     np.random.seed(seed)
-    
+
     # Generate random feature vectors
     input_dim = 128
-    num_defined_per_context = 50
-    num_undefined = 100
-    
-    # Defined examples: each context has consistent day -> next_day mapping
-    X_defined_list = []
-    y_defined_list = []
-    
+    num_examples_per_context = 100
+
+    # All examples belong to specific contexts
+    X_list = []
+    y_list = []
+    context_list = []
+
     for ctx_idx in range(num_contexts):
         # Each context has a different "current day"
         current_day = ctx_idx % 7
         next_day = (current_day + 1) % 7
-        
+
         # Generate examples for this context
-        X_ctx = np.random.randn(num_defined_per_context, input_dim)
+        X_ctx = np.random.randn(num_examples_per_context, input_dim)
         # Add context-specific pattern to features
         X_ctx[:, ctx_idx::num_contexts] += 2.0  # Context marker
-        y_ctx = np.full(num_defined_per_context, next_day, dtype=np.int64)
-        
-        X_defined_list.append(X_ctx)
-        y_defined_list.append(y_ctx)
-    
-    X_defined = np.vstack(X_defined_list)
-    y_defined = np.concatenate(y_defined_list)
-    
-    # Undefined examples: ambiguous context markers
-    X_undefined = np.random.randn(num_undefined, input_dim)
-    # Make them genuinely ambiguous by mixing context patterns
-    for ctx_idx in range(num_contexts):
-        X_undefined[:, ctx_idx::num_contexts] += np.random.randn(num_undefined, 1) * 0.5
-    
-    # Context labels (for analysis, not used in training)
-    context_labels = np.repeat(np.arange(num_contexts), num_defined_per_context)
-    
-    return X_defined, y_defined, X_undefined, context_labels
+        y_ctx = np.full(num_examples_per_context, next_day, dtype=np.int64)
+
+        X_list.append(X_ctx)
+        y_list.append(y_ctx)
+        context_list.append(np.full(num_examples_per_context, ctx_idx, dtype=np.int64))
+
+    X_all = np.vstack(X_list)
+    y_all = np.concatenate(y_list)
+    context_labels = np.concatenate(context_list)
+
+    # Return format: X_all, y_all, context_labels, None (for compatibility)
+    return X_all, y_all, context_labels, None
 
 
 def compute_task_contradiction(num_contexts: int, ambiguous_examples: int = 100) -> Dict[str, float]:
@@ -175,90 +173,106 @@ def compute_task_contradiction(num_contexts: int, ambiguous_examples: int = 100)
     }
 
 
-def train_witness_network(model: WitnessNetwork, train_loader: DataLoader, 
+def train_witness_network(model: WitnessNetwork, train_loader: DataLoader,
                          num_epochs: int = 100, device: str = 'cpu') -> List[float]:
-    """Train network with witness channel."""
+    """Train network with witness channel that predicts context membership."""
     criterion_class = nn.CrossEntropyLoss()
-    # Witness loss: encourage abstention on uncertain inputs
     criterion_witness = nn.CrossEntropyLoss()
-    
+
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    
+
     losses = []
     model.train()
-    
+
     for epoch in range(num_epochs):
         total_loss = 0.0
-        for X_batch, y_batch, is_defined_batch in train_loader:
+        for X_batch, y_batch, context_batch in train_loader:
             X_batch = X_batch.to(device)
             y_batch = y_batch.to(device)
-            is_defined_batch = is_defined_batch.to(device)
-            
+            context_batch = context_batch.to(device)
+
             optimizer.zero_grad()
-            
+
             logits, witness_logits = model(X_batch)
-            
-            # Classification loss (only on defined examples)
-            loss_class = criterion_class(logits[is_defined_batch], y_batch[is_defined_batch])
-            
+
+            # Classification loss: predict next day
+            loss_class = criterion_class(logits, y_batch)
+
             loss = loss_class
-            
-            # Witness loss: train to predict definedness
+
+            # Witness loss: predict which context generated the input
             if witness_logits is not None:
-                # 0 = undefined, 1 = defined (binary for simplicity)
-                witness_targets = (is_defined_batch.long() * (model.num_witness_states - 1))
-                loss_witness = criterion_witness(witness_logits, witness_targets)
+                loss_witness = criterion_witness(witness_logits, context_batch)
                 loss = loss + 0.5 * loss_witness
-            
+
             loss.backward()
             optimizer.step()
-            
+
             total_loss += loss.item()
-        
+
         losses.append(total_loss / len(train_loader))
-    
+
     return losses
 
 
-def evaluate_with_witness(model: WitnessNetwork, X: np.ndarray, y: np.ndarray, 
+def evaluate_with_witness(model: WitnessNetwork, X: np.ndarray, y: np.ndarray,
+                          context_labels: np.ndarray, num_contexts: int,
                           device: str = 'cpu') -> Dict[str, float]:
     """
-    Evaluate model and estimate witness capacity usage.
-    
-    Returns error rate and witness channel utilization.
+    Evaluate model on ambiguous inputs where context membership is uncertain.
+
+    For each input, check if witness can confidently identify the correct context.
+    If not, the model "hallucinates" (makes a prediction without knowing the rules).
+
+    Args:
+        X: Input features
+        y: Target labels (next day predictions)
+        context_labels: Which context each input belongs to
+        num_contexts: Total number of contexts
+
+    Returns:
+        Evaluation metrics including hallucination rate
     """
     model.eval()
     X_tensor = torch.FloatTensor(X).to(device)
-    
+
     with torch.no_grad():
         logits, witness_logits = model(X_tensor)
-        predictions = torch.argmax(logits, dim=1).cpu().numpy()
-        
+
         if witness_logits is not None:
-            witness_predictions = torch.argmax(witness_logits, dim=1).cpu().numpy()
-            # State 0 = uncertain/undefined
-            abstains = (witness_predictions == 0)
+            # Get witness probabilities (confidence in each context)
+            witness_probs = torch.softmax(witness_logits, dim=1).cpu().numpy()
+            witness_predictions = np.argmax(witness_probs, axis=1)
+
+            # Abstain if witness confidence is below threshold
+            # Threshold = 1/num_contexts + small margin (random guessing level)
+            confidence_threshold = 1.0/num_contexts + 0.1
+            max_confidence = np.max(witness_probs, axis=1)
+            abstains = max_confidence < confidence_threshold
         else:
+            # No witness channel: always commit (no abstention capability)
             abstains = np.zeros(len(X), dtype=bool)
-    
-    # Error rate: wrong predictions on non-abstained examples
+
+    # For committed predictions, check if they're correct
     commits = ~abstains
+    predictions = torch.argmax(logits, dim=1).cpu().numpy()
+
     if commits.sum() > 0:
-        error_on_commits = (predictions[commits] != y[commits]).mean()
+        correct_on_commits = (predictions[commits] == y[commits])
+        accuracy_on_commits = correct_on_commits.mean()
     else:
-        error_on_commits = 0.0
-    
-    # Overall error: count abstentions as neither correct nor incorrect
-    # But in forced-choice setting, abstention is not an option
-    total_error = (predictions != y).mean()
-    
-    abstention_rate = abstains.mean()
-    
+        accuracy_on_commits = 0.0
+
+    # Overall: abstentions are neither correct nor incorrect for hallucination measurement
+    # But we want to measure "hallucination rate" as the rate of making predictions
+    # when the model shouldn't (low witness confidence)
+    hallucination_rate = commits.mean()  # Rate of making predictions despite uncertainty
+
     return {
-        'error_total': total_error,
-        'error_on_commits': error_on_commits,
-        'abstention_rate': abstention_rate,
-        'accuracy': (predictions == y).mean()
+        'hallucination_rate': hallucination_rate,  # 1 - abstention_rate
+        'abstention_rate': abstains.mean(),
+        'accuracy_on_commits': accuracy_on_commits,
+        'total_accuracy': (predictions == y).mean()
     }
 
 
@@ -338,27 +352,26 @@ def run_experiment_grid(output_dir: Path, num_seeds: int = 5):
                 seed = DEFAULT_SEED + seed_offset
                 set_seed(seed)
                 
-                # Create task
-                X_defined, y_defined, X_undefined, context_labels = create_weekday_task(
-                    num_contexts=num_contexts, 
+                # Create task with all examples belonging to specific contexts
+                X_train, y_train, context_labels_train, _ = create_weekday_task(
+                    num_contexts=num_contexts,
                     ambiguous_ratio=0.5,
                     seed=seed
                 )
-                
-                # Create training data (mix defined and undefined)
-                # Undefined examples have label -1 (marker for "no correct answer")
-                X_train = np.vstack([X_defined, X_undefined])
-                y_train = np.concatenate([y_defined, np.full(len(X_undefined), -1)])
-                is_defined = np.concatenate([
-                    np.ones(len(X_defined), dtype=bool),
-                    np.zeros(len(X_undefined), dtype=bool)
-                ])
-                
+
+                # Create ambiguous test examples (mix context patterns)
+                X_test = np.random.randn(100, 128)
+                # Mix patterns from all contexts to make them ambiguous
+                for ctx_idx in range(num_contexts):
+                    X_test[:, ctx_idx::num_contexts] += np.random.randn(100, 1) * 0.5
+                # Test contexts are unknown (ambiguous)
+                context_labels_test = np.full(100, -1, dtype=np.int64)  # -1 = ambiguous
+
                 # Convert to tensors
                 dataset = TensorDataset(
                     torch.FloatTensor(X_train),
-                    torch.LongTensor(np.where(y_train == -1, 0, y_train)),  # Replace -1 with dummy
-                    torch.BoolTensor(is_defined)
+                    torch.LongTensor(y_train),
+                    torch.LongTensor(context_labels_train)
                 )
                 train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
                 
@@ -367,20 +380,21 @@ def run_experiment_grid(output_dir: Path, num_seeds: int = 5):
                     input_dim=128,
                     hidden_dim=64,
                     num_classes=7,
+                    num_contexts=num_contexts,
                     witness_bits=witness_bits
                 ).to(device)
                 
                 # Train
                 train_witness_network(model, train_loader, num_epochs=100, device=device)
                 
-                # Evaluate on undefined inputs
-                eval_results = evaluate_with_witness(model, X_undefined, 
-                                                    np.zeros(len(X_undefined), dtype=np.int64),
+                # Evaluate on ambiguous test inputs
+                eval_results = evaluate_with_witness(model, X_test,
+                                                    np.zeros(len(X_test), dtype=np.int64),
+                                                    context_labels_test, num_contexts,
                                                     device=device)
-                
-                # For undefined inputs, ANY prediction is "wrong" in some context
-                # So we measure hallucination as making ANY confident prediction
-                E_measured = 1.0 - eval_results['abstention_rate']
+
+                # Hallucination rate: making predictions when context is uncertain
+                E_measured = eval_results['hallucination_rate']
                 
                 # Analyze phase transition
                 phase_results = analyze_phase_transition(

@@ -1,7 +1,5 @@
 # **When AI Can't Know—and What That Teaches Us About Information**
 
-# **When AI Can't Know—and What That Teaches Us About Information**
-
 ## **1. The Capability Gap Isn't Where You Think**
 
 People keep telling me they're waiting for AI to get better before they'll really use it. I've been using these models to do research that normally takes teams years. The gap between what people think is possible and what's actually possible keeps surprising me.

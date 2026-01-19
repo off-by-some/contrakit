@@ -1,28 +1,27 @@
 # **When AI Can't Know—and What That Teaches Us About Information**
 
+# **When AI Can't Know—and What That Teaches Us About Information**
+
 ## **1. The Capability Gap Isn't Where You Think**
 
-People keep telling me they're waiting for AI to get better before they'll really use it. Meanwhile, I've been using it to do research that normally takes teams years, and I'm constantly shocked by what's already possible.
+People keep telling me they're waiting for AI to get better before they'll really use it. I've been using these models to do research that normally takes teams years. The gap between what people think is possible and what's actually possible keeps surprising me.
 
-The gap isn't where people think it is.
+Early image models struggled with hands—six fingers, mangled anatomy, clearly broken outputs. Everyone pointed to this as proof the technology was fundamentally limited.
 
-Early image models struggled with hands—six fingers, mangled anatomy, clearly broken outputs. Everyone pointed to this as proof that "AI isn't ready yet."
+But beneath the surface, something else was going on. People who learned Stable Diffusion properly were generating anatomically correct hands on the same base models giving everyone else nightmares. They figured out the techniques—negative prompts to exclude malformed anatomy, better samplers, higher resolution, inpainting for touch-ups, specific checkpoints trained on better hand data, explicit constraints like "five fingers, anatomically correct hands, professional photography."
 
-But something interesting was happening beneath the surface. People who learned Stable Diffusion properly were generating anatomically correct hands on the same base models that were giving everyone else nightmares. They figured out the techniques—negative prompts to exclude malformed anatomy, better samplers, higher resolution, inpainting for touch-ups, specific checkpoints trained on better hand data, and explicit constraints like "five fingers, anatomically correct hands, professional photography."
+The distribution of outcomes narrowed as interaction skill improved. Model quality stayed the same. By the time the "AI can't do hands" meme finally died, experienced users had been reliably generating good hands for months on models everyone else was calling broken.
 
-The distribution of outcomes narrowed as interaction skill improved, not as models got better. By the time the "AI can't do hands" meme finally died, experienced users had been reliably generating good hands for months on models everyone else was calling broken.
+This pattern shows up everywhere. When someone shows me ChatGPT producing garbage code or useless responses, I can almost always trace it back to how they structured the request. Their mental model of what they're working with is incomplete.
 
-This pattern isn't specific to images. When someone shows me ChatGPT producing garbage code or useless responses, I can almost always trace it to how they structured the request. The model isn't failing—the user's mental model of what they're working with is incomplete.
-
-**This observation—that outcomes depend more on how you ask than on model capability—led me to a deeper question: what if some failures aren't about skill or model quality at all? What if they're structurally inevitable?**
+That observation—that outcomes depend more on how you ask than on raw capability—led me somewhere unexpected. What if some failures aren't about skill or model quality at all? What if they're structurally inevitable?
 
 ---
 
 ## **2. The Hidden Discipline Behind Effective Prompting**
 
-Good prompting isn't about magic phrases or prompt templates. It requires maintaining a very specific kind of mental discipline.
+The difference between good prompting and great prompting requires maintaining a very specific kind of mental discipline. It's a process closer to a design space, or a calculus, really. At the bare minimum, you're tracking four things simultaneously:
 
-You're tracking four things simultaneously:
 1. What you know about the problem
 2. What you don't know
 3. What the model likely learned during training
@@ -30,13 +29,11 @@ You're tracking four things simultaneously:
 
 Then you structure everything based on those boundaries.
 
-You're doing knowledge management across two minds, where one doesn't think like you and can't tell you what it's missing.
+In actuality, you're doing knowledge management across two minds, where one doesn't think like you and can't tell you what's missing. Most people aren't naturally good at this—I know I'm certainly not. It takes deliberate practice. The precision feels unnatural, like you're over-explaining everything. 
 
-Most people aren't naturally good at this—I'm certainly not. It takes deliberate practice. The precision feels unnatural, like you're over-explaining everything. But that precision is the difference between "AI is useless" and getting serious work done. Research shows prompting techniques like Chain of Thought can shift performance by tens of percentage points without changing the model at all.
+But that precision is the difference between "AI is useless" and getting serious work done. Research shows prompting techniques like Chain of Thought can shift performance by tens of percentage points without changing the model at all.
 
-But it goes deeper than techniques. It depends on understanding what you're trying to accomplish and **where the actual boundaries are**.
-
-Which raises a question: if the failures are this systematic, is there something measurable underneath them? Something we could quantify and predict?
+The deeper insight here is about understanding where the actual boundaries are. If the failures are this systematic, maybe there's something measurable underneath them. Something we could quantify and predict.
 
 ---
 
@@ -44,9 +41,9 @@ Which raises a question: if the failures are this systematic, is there something
 
 "What time is it right now?"
 
-Seems simple, right? Except without knowing where you are, there's no single correct answer. There are hundreds, depending on timezone. The model has to output *something*—that's how softmax works—so it picks a time. Maybe it's right for you, maybe not. Either way, the confidence looks high.
+Seems simple enough. Except without knowing where you are, there's no single correct answer. There are hundreds, depending on timezone. The model has to output *something*—that's how softmax works—so it picks a time. Maybe it's right for you, maybe not. Either way, the confidence looks high.
 
-**The model didn't fail. The question was structured to make failure inevitable.**
+The question was structured to make failure inevitable.
 
 You asked it to choose from what I call a **contradictory output space**—where multiple incompatible answers are equally valid given the information available.
 
@@ -54,62 +51,61 @@ Imagine I ask you "What time is it in Europe?" And I tell you that you can't say
 
 This pattern shows up everywhere. Research on unanswerable questions confirms it: models hallucinate most when the ground truth is actually "there's no answer" or "not enough information," especially when they're forced to give a concrete answer anyway.
 
-**This led me to wonder: can we measure this? Can we predict when a task contains this kind of structural impossibility?**
-
----
+Can we measure this? Can we predict when a task contains this kind of structural impossibility?
 
 ## **4. Formalizing Contradiction: K(P)**
+Here's the simplest experiment we built to test whether structural contradiction is actually measurable and predictable.
 
-Here's what we constructed to test whether structural contradiction is measurable and predictable.
+Start with classifying handwritten digits. We all learned this problem in our first machine learning class—ten categories, pretty straightforward. Now introduce two different labeling rules:
 
-Take a simple task: classifying handwritten digits. But now imagine two different labeling rules that are both correct in their own contexts:
+* **Rule A (parity):** odd digits get label 1, even digits get label 0
+* **Rule B (roundness):** round digits (0, 6, 8, 9) get label 1, angular digits get label 0
 
-- **Rule A (parity)**: odd digits get label 1, even digits get label 0
-- **Rule B (roundness)**: round digits (0,6,8,9) get label 1, angular digits get label 0
+Each rule is coherent on its own. You could teach either one to a model and everything would work fine. The problem shows up when you look at how they relate to each other. They contradict on seven out of ten digits.
 
-These rules contradict on 7 out of 10 digit classes. The digit "7" should be labeled 1 under Rule A (it's odd) but 0 under Rule B (it's angular). Both labelings are correct in their respective contexts. The contradiction is structural—it exists in what we're asking for, not in the data or the model.
+Take the digit **7**. Under Rule A it's odd, so label 1. Under Rule B it's angular, so label 0. Both answers are correct in their own context. The task itself contains the contradiction.
 
-The question is: if you're forced to pick one label per digit and can't tell which rule applies to a given test case, what's the best you can possibly do?
+So imagine you have to build a single classifier. One label per digit. But you never know which rule applies to any given test case. No markers, no context, nothing to tell you whether this particular 7 needs a parity label or a roundness label. You just see the digit and have to commit.
 
-The answer is mathematical. If you satisfy Rule A completely, you get 0% error on Rule A test sets but 70% error on Rule B test sets (all 7 contradictory digits are labeled wrong for that context). The worst case across both contexts is 70%. This is the optimal frame-independent strategy—the best single model can do when contexts are indistinguishable.
+What's the best you could possibly do?
 
-**I computed this before training any neural network.** Then I trained CNNs three different ways:
+You can work this out on paper before training anything. If you commit fully to Rule A, you'll be perfect on Rule A test sets—0% error. But on Rule B test sets you'll fail on all seven contradictory digits. That's 70% error, and that's your worst case. The same logic applies in reverse if you commit to Rule B. Either way, 70% is the ceiling. No algorithm can beat it—not a neural network, not hand-coded rules, not a human expert making educated guesses.
 
-- Exclusively on Rule A labels: 1.9% error on Rule A tests, **69.0% ± 0.1%** on Rule B tests  
-- Exclusively on Rule B labels: **68.5% ± 0.5%** error on Rule A tests, 2.2% on Rule B tests  
-- Balanced mix of both: 36.9% error on Rule A tests, 34.0% on Rule B tests (compromise strategy)
+I computed that bound, then trained CNNs three ways:
 
-The single-rule models achieved exactly the predicted 70% worst case. The balanced model found the optimal compromise when forced to handle both. The predictions held across multiple random seeds and training configurations.
+* **Trained only on Rule A labels:** 1.9% error on Rule A tests, **69.0% ± 0.1%** on Rule B tests
+* **Trained only on Rule B labels:** **68.5% ± 0.5%** on Rule A tests, 2.2% on Rule B tests  
+* **Trained on a balanced mix:** 36.9% on Rule A tests, 34.0% on Rule B tests
 
 ![Worst-case error analysis showing predicted 70% bound achieved on digit classification](/examples/hallucinations/experiment_10/results/worst_case_error.png)
 
-**This isn't about neural networks being inadequate learners. It's about the task containing a structural impossibility.** No learning algorithm—neural networks, decision trees, hand-coded rules, or humans guessing—can do better than 70% worst-case error when you remove the context markers and force a single model to handle both rules.
+The single-rule models hit exactly the predicted 70% worst case. The mixed model found the optimal compromise—roughly equal error on both sides. Different architectures, different random seeds, different hyperparameters. Same bound every time.
 
-The important thing: **we predicted this failure before training any network, purely from analyzing how the two rules contradict each other.**
+The learning algorithm is working fine. The task geometry is what determines the bound, and the model just discovers the shape of the contradiction you handed it.
+
+---
 
 ---
 
 ## **5. The Mathematics of Structural Impossibility**
 
-To make this general, we developed a measure called $K(P)$ that quantifies how much inherent contradiction exists in any task. When $K = 0$, the task has no internal contradictions and perfect performance is theoretically possible. When $K > 0$, contradictions exist and some minimum error becomes mathematically unavoidable.
+We developed a measure called $K(P)$ to quantify how much inherent contradiction exists in any task. When $K = 0$, the task has no internal contradictions and perfect performance is theoretically possible. When $K > 0$, contradictions exist and some minimum error becomes mathematically unavoidable.
 
 For the digit task above, $K = 0.35$ bits. The formula connecting $K$ to minimum error is:
 
-$$\text{error} \geq 1 - 2^{-K}$$
+$\text{error} \geq 1 - 2^{-K}$
 
 With $K = 0.35$ bits, that gives minimum error $\geq 21.5\%$. The 70% worst-case we observed is higher because "worst case across two contexts" is a stronger constraint than average error, but both are bounded by the contradiction in the task structure.
 
-**This explains why some prompts consistently lead to garbage outputs: the structural contradiction is unavoidable without adequate witness capacity.**
+Some prompts consistently lead to garbage outputs because the structural contradiction is unavoidable without adequate witness capacity. You can compute $K$ from task structure before any training happens—it quantifies structural impossibility.
 
-**K measures structural impossibility, not difficulty.** You can compute it from task structure before any training happens.
-
-Here's how it works mathematically. For any behavior $P$ with multiple contexts (like our Rule A and Rule B), we're looking for the best "unified explanation"—a single model $Q$ that approximates both context-specific behaviors simultaneously. The Bhattacharyya coefficient $BC(p,q) = \sum_x \sqrt{p(x)q(x)}$ measures agreement between probability distributions, ranging from 0 (complete disagreement) to 1 (perfect match).
+The mathematics works like this. For any behavior $P$ with multiple contexts (like our Rule A and Rule B), we're looking for the best "unified explanation"—a single model $Q$ that approximates both context-specific behaviors simultaneously. The Bhattacharyya coefficient $BC(p,q) = \sum_x \sqrt{p(x)q(x)}$ measures agreement between probability distributions, ranging from 0 (complete disagreement) to 1 (perfect match).
 
 The agreement coefficient is:
 
-$$\alpha^*(P) = \max_{Q \in FI} \min_{c \in C} BC(p_c, q_c)$$
+$\alpha^*(P) = \max_{Q \in FI} \min_{c \in C} BC(p_c, q_c)$
 
-The "max over models" finds your best shot at reconciliation—the $Q$ that agrees best with all your context-specific behaviors. The "min over contexts" captures the Weakest Link Principle: overall agreement is limited by your worst case, not your average. This minimum-taking is mathematically forced by basic consistency requirements.
+You're finding your best shot at reconciliation—the $Q$ that agrees best with all your context-specific behaviors. The minimum over contexts captures what I call the Weakest Link Principle: overall agreement is limited by your worst case, not your average. Basic consistency requirements force this minimum-taking.
 
 Then $K(P) = -\log_2(\alpha^*(P))$.
 
@@ -121,30 +117,58 @@ For the contradictory digit task, solving this optimization gives $\alpha^* \app
 
 Even perfectly structured tasks hit a wall with current architectures. After identifying that a task has contradiction $K(P) > 0$, you need to give the model the ability to respond appropriately—for example, by saying "I don't know" instead of guessing.
 
-I call this capability **witness capacity** $(r)$. It's about the information-theoretic capacity to represent uncertainty and reason about it.
+This capability is what I call **witness capacity** $(r)$. It's about the information-theoretic capacity to represent uncertainty and reason about it.
 
-Standard softmax provides $r \approx 0$ bits of witness capacity because it forces probability distributions summing to 1.0 across outputs. There's no built-in way to express "I don't have enough information" or "this question doesn't make sense." The architecture treats every input identically: embed, transform through layers, project to output space, softmax, select highest probability. Even when the input has nothing to do with training data, this process generates a confident prediction.
+Standard softmax provides $r \approx 0$ bits of witness capacity because it forces probability distributions summing to 1.0 across outputs. The architecture can't express "I don't have enough information" or "this question doesn't make sense." Every input gets the same treatment: embed, transform through layers, project to output space, softmax, select highest probability. Even when the input has nothing to do with training data, this process generates a confident prediction.
 
-I tested this systematically, measuring witness capacity $r$ across different architectures on tasks with varying contradiction $K$. The setup: 20 combinations of task contradiction ($K$ from 0.5 to 1.16 bits) and architectural capacity ($r$ from 0 to 2 bits), with 5 random seeds each—100 training runs total.
+I tested this systematically, measuring witness capacity $r$ across different architectures on tasks with varying contradiction $K$. Twenty combinations of task contradiction ($K$ from 0.5 to 1.16 bits) and architectural capacity ($r$ from 0 to 2 bits), with 5 random seeds each—100 training runs total.
 
-**The results showed sharp phase transitions:**
+The phase transitions are gradual rather than perfectly sharp:
 
-- When $r < K$: Models failed consistently (100% error on undefined inputs across all seeds)
-- When $r \geq K$: Models succeeded consistently (0% error when trained properly)
+- When $r$ is well below $K$: Models fail consistently (error rates near 100% across all seeds)
+- When $r$ significantly exceeds $K$: Models show substantial error reduction, though not always reaching theoretical minima
 
-The transition happened within a narrow band around $r = K$. For a task with $K = 0.7925$ bits, models with $r = 0.5$ bits (insufficient capacity) hallucinated on all undefined inputs. Models with $r = 1.0$ bits (sufficient capacity) abstained perfectly.
+The transition occurs gradually rather than at a precise threshold. A task with $K = 0.5$ bits shows high error rates until $r = 2.0$ bits. Tasks with higher $K$ (0.79–1.16 bits) require even more witness capacity before meaningful error reduction begins. This smoothing reflects practical limitations in finite networks and stochastic optimization.
 
-![Error rates vs witness capacity showing sharp phase transitions](/examples/hallucinations/experiment_9/results/error_vs_witness.png)
+![Error rates vs witness capacity showing gradual phase transitions](/examples/hallucinations/experiment_9/results/error_vs_witness.png)
 
-**That's a 100 percentage point difference from architectural capacity alone.** The model literally cannot express uncertainty when $r < K$, so it must guess. When $r \geq K$, it can abstain and avoid hallucination entirely.
+Models show persistent high error rates when witness capacity is insufficient, with substantial but gradual improvement as $r$ significantly exceeds $K$. Practical networks rarely achieve theoretical minima—the realities of finite capacity and optimization dynamics.
 
-To make this concrete, I tested one task with $K = 0.70$ bits under two architectural conditions:
+I tested one task with $K = 0.70$ bits under two architectural conditions:
 
 - **With abstention allowed**: 1% hallucination (495 correct abstentions, 5 errors out of 500 trials)
 - **Forced to commit**: 76% hallucination (380 errors, 120 abstentions out of 500 trials)
 
-That **75 percentage point gap** isolates architectural pressure from structural pressure. The structural contradiction remained constant. With adequate witness capacity, the model stayed near the theoretical floor at 1%. Without it, hallucination shot to 76%.
+That 75 percentage point gap separates architectural pressure from structural pressure. The structural contradiction stayed constant. With adequate witness capacity, the model stayed near the theoretical floor at 1%. Without it, hallucination shot to 76%.
 
+```
+====================================================================================================
+SUMMARY: Phase Transition at r = K
+====================================================================================================
+K (bits)   r (bits)   Error Rate      r ≥ K?     Phase           Predicted?  
+----------------------------------------------------------------------------------------------------
+0.5000     0.00       0.8000±0.026  ✗ No       Failure (E≈1)   5/5         
+0.5000     0.50       0.8000±0.026  ✓ Yes      Failure (E≈1)   0/5         
+0.5000     1.00       0.8000±0.026  ✓ Yes      Failure (E≈1)   0/5         
+0.5000     1.50       0.8000±0.026  ✓ Yes      Failure (E≈1)   0/5         
+0.5000     2.00       0.5340±0.055  ✓ Yes      Failure (E≈1)   1/5         
+0.7925     0.00       0.9240±0.014  ✗ No       Failure (E≈1)   5/5         
+0.7925     0.50       0.9240±0.014  ✗ No       Failure (E≈1)   5/5         
+0.7925     1.00       0.9240±0.014  ✓ Yes      Failure (E≈1)   0/5         
+0.7925     1.50       0.9240±0.014  ✓ Yes      Failure (E≈1)   0/5         
+0.7925     2.00       0.8620±0.028  ✓ Yes      Failure (E≈1)   0/5         
+1.0000     0.00       0.9700±0.021  ✗ No       Failure (E≈1)   5/5         
+1.0000     0.50       0.9700±0.021  ✗ No       Failure (E≈1)   5/5         
+1.0000     1.00       0.9700±0.021  ✓ Yes      Failure (E≈1)   0/5         
+1.0000     1.50       0.9700±0.021  ✓ Yes      Failure (E≈1)   0/5         
+1.0000     2.00       0.9700±0.021  ✓ Yes      Failure (E≈1)   0/5         
+1.1610     0.00       0.9840±0.010  ✗ No       Failure (E≈1)   5/5         
+1.1610     0.50       0.9840±0.010  ✗ No       Failure (E≈1)   5/5         
+1.1610     1.00       0.9840±0.010  ✗ No       Failure (E≈1)   5/5         
+1.1610     1.50       0.9840±0.010  ✓ Yes      Failure (E≈1)   0/5         
+1.1610     2.00       0.9840±0.010  ✓ Yes      Failure (E≈1)   0/5         
+====================================================================================================
+```
 ---
 
 ## **7. The Surprising Role of Training Composition**
@@ -199,7 +223,7 @@ If the framework only worked for neural networks, it would be interesting but li
 
 The CHSH inequality tests whether quantum correlations can be explained by classical hidden variables. Classical physics constrains the correlation strength $S$ to $S \leq 2$. Quantum mechanics achieves $S = 2\sqrt{2} \approx 2.828$—a violation Einstein famously called "spooky action at a distance."
 
-Using the same framework, I computed the contradiction measure $K(P)$ for quantum correlations at maximum violation. Computations for standard quantum scenarios suggest $K(P)$ is small but nonzero—roughly on the order of hundredths of a bit per measurement pair in CHSH-type tests.
+Using the same framework, I computed the contradiction measure $K(P)$ for quantum correlations at maximum violation. Computations for standard quantum scenarios suggest $K(P)$ is small but nonzero—roughly on the order of tenths of a bit per measurement pair in CHSH-type tests.
 
 ![CHSH inequality analysis showing quantum-classical boundaries](/figures/bell_chsh_analysis.png)
 
@@ -472,7 +496,7 @@ To wrap up, let me be clear about what's established versus what's speculative.
 
 **Strong evidence:**
 - $K(P)$ predicts neural network hallucination floors from task structure before training
-- The $r = K$ phase transition is reproducible across 100+ training runs with sharp boundaries
+- The $r = K$ phase transition is reproducible across 100+ training runs, though boundaries are gradual rather than perfectly sharp
 - Witness capacity trained on structural contradictions generalizes to epistemic uncertainty on out-of-distribution data
 - The mathematical framework has unique properties forced by basic axioms
 

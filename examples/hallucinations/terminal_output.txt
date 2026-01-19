@@ -1,0 +1,261 @@
+HALLUCINATION EXPERIMENTS - COMPLETE RUN
+================================================================================
+Started at: 2026-01-19 13:05:18
+================================================================================
+
+EXPERIMENT 1 OUTPUT:
+Return code: 0
+
+STDOUT:
+Neural Network Hallucination Experiment
+==================================================
+DATASET SETUP
+------------------------------
+Input range: 0 to 127
+Defined inputs: 40%
+⊥ supervision: 5% of undefined inputs
+Output classes: ['A', 'B', 'C', 'D', '⊥']
+
+Data composition:
+  Defined inputs (A/B/C/D): 51
+  Undefined inputs labeled with ⊥: 3
+  Undefined inputs unlabeled (OOD test set): 74
+MODEL ARCHITECTURE
+------------------------------
+Input embedding: 128 → 64
+Hidden layer 1: 64 → 64
+Hidden layer 2: 64 → 64
+Output layer: 64 → 5
+TRAINING
+------------------------------
+Epoch 20/100, Loss: 0.4681
+Epoch 40/100, Loss: 0.0248
+Epoch 60/100, Loss: 0.0068
+Epoch 80/100, Loss: 0.0037
+Epoch 100/100, Loss: 0.0021
+EVALUATION
+------------------------------
+
+DEFINED inputs (training set - should predict A/B/C/D):
+  Accuracy: 100.00%
+  Average Confidence: 99.84%
+  Prediction Distribution:
+    A:  16 ( 31.4%)
+    B:  11 ( 21.6%)
+    C:  12 ( 23.5%)
+    D:  12 ( 23.5%)
+    ⊥:   0 (  0.0%)
+
+UNDEFINED inputs (OOD - should predict ⊥):
+  Accuracy: 3.90%
+  Average Confidence: 71.22%
+  Prediction Distribution:
+    A:  34 ( 44.2%)
+    B:  10 ( 13.0%)
+    C:  10 ( 13.0%)
+    D:  20 ( 26.0%)
+    ⊥:   3 (  3.9%)
+
+SUMMARY
+========================================
+Defined Accuracy (training inputs): 100.0%
+Hallucination Rate (OOD inputs): 96.1%
+
+RESULTS
+------------------------------
+Accuracy on defined inputs: 100.0%
+Hallucination rate on undefined inputs: 96.1%
+Standard model hallucinates on undefined inputs.
+
+================================================================================
+EXPERIMENT 2 OUTPUT:
+Return code: 0
+
+STDOUT:
+Comparing Standard vs Definedness-Head Models
+=======================================================
+
+Testing Standard Model (no definedness head)
+---------------------------------------------
+Defined ratio: 10%
+  Hallucination rate: 61.5% ± 2.8%
+Defined ratio: 20%
+  Hallucination rate: 82.5% ± 2.7%
+Defined ratio: 30%
+  Hallucination rate: 90.0% ± 1.8%
+Defined ratio: 40%
+  Hallucination rate: 91.8% ± 1.2%
+Defined ratio: 50%
+  Hallucination rate: 94.3% ± 1.5%
+Defined ratio: 60%
+  Hallucination rate: 96.2% ± 0.0%
+Defined ratio: 70%
+  Hallucination rate: 97.4% ± 0.0%
+Defined ratio: 80%
+  Hallucination rate: 96.2% ± 0.0%
+Defined ratio: 90%
+  Hallucination rate: 100.0% ± 0.0%
+
+Testing Definedness-Head Model
+-----------------------------------
+Defined ratio: 10%
+  Hallucination rate: 66.4% ± 0.0%
+  Abstention rate: 20.1%
+Defined ratio: 20%
+  Hallucination rate: 81.6% ± 3.2%
+  Abstention rate: 11.0%
+Defined ratio: 30%
+  Hallucination rate: 91.1% ± 0.9%
+  Abstention rate: 6.7%
+Defined ratio: 40%
+  Hallucination rate: 93.1% ± 1.6%
+  Abstention rate: 4.8%
+Defined ratio: 50%
+  Hallucination rate: 93.2% ± 1.9%
+  Abstention rate: 5.2%
+Defined ratio: 60%
+  Hallucination rate: 95.5% ± 0.9%
+  Abstention rate: 3.8%
+Defined ratio: 70%
+  Hallucination rate: 97.4% ± 0.0%
+  Abstention rate: 2.6%
+Defined ratio: 80%
+  Hallucination rate: 96.2% ± 0.0%
+  Abstention rate: 3.8%
+Defined ratio: 90%
+  Hallucination rate: 100.0% ± 0.0%
+  Abstention rate: 0.0%
+
+RESULTS COMPARISON
+-------------------------
+Standard Model:
+  Mean hallucination: 90.0%
+  Range: 61.5% to 100.0%
+Definedness-Head Model:
+  Mean hallucination: 90.5%
+  Range: 66.4% to 100.0%
+
+Chart saved to: /Users/fox/.pyenv/versions/3.10.19/lib/python3.10/site-packages/figures/model_comparison.png
+
+DIAGNOSTIC ANALYSIS
+--------------------
+Why does the definedness head underperform?
+Running diagnostic at 40% defined ratio across multiple seeds...
+
+Training performance on undefined inputs: 100.0% ± 0.0%
+Test performance on undefined inputs: 4.8% ± 0.6%
+Generalization gap: +95.2% ± 0.6%
+Training coverage: 3.9%
+  (3 labeled undefined examples in training)
+  (77 undefined examples in test)
+
+The definedness head shows poor generalization.
+It performs well on training data but poorly on unseen test data.
+This suggests memorization rather than learning general patterns.
+
+SUMMARY
+---------------
+Mean std ratio (definedness/standard): 0.85
+This measures within-condition variability (lower = more stable).
+
+Definedness head does not significantly reduce hallucination rates.
+The small amount of supervision (5% of undefined inputs) is insufficient.
+
+================================================================================
+EXPERIMENT 3 OUTPUT:
+Return code: 0
+
+STDOUT:
+======================================================================
+Hallucination Test with Conflicting Marginals
+======================================================================
+
+Step 1: Compute contradiction before experiment
+----------------------------------------------------------------------
+Task structure:
+  X-rule: Z=X (applies to all X,Y combinations)
+  Y-rule: Z=NOT Y (applies to all X,Y combinations)
+  Training: Equal mixture of both rules
+
+Conflicts in training data:
+  (X=0, Y=0): X-rule→Z=0, Y-rule→Z=1
+  (X=1, Y=1): X-rule→Z=1, Y-rule→Z=0
+Agreement cases:
+  (X=0, Y=1): X-rule→Z=0, Y-rule→Z=0
+  (X=1, Y=0): X-rule→Z=1, Y-rule→Z=1
+
+Measured contradiction: K = 0.0760 bits
+
+Minimum error rate (from information theory): 5.1%
+(Any model must fail on at least this fraction)
+
+Note: Observed rate may exceed this bound due to:
+  - Sub-optimal learning (gradient descent doesn't find best compromise)
+  - Architectural constraints (model capacity limitations)
+  - Training dynamics (loss function weighting)
+
+======================================================================
+Step 2: Run experiment
+----------------------------------------------------------------------
+Training: 10 seeds × 400 examples total
+  - 200 examples following X-rule (Z=X)
+  - 200 examples following Y-rule (Z=NOT Y)
+  - Same (X,Y) inputs appear in both rule sets with conflicting Z labels
+
+Test: 4 (X,Y) combinations
+  - 2 inputs where rules agree (X=0,Y=1 and X=1,Y=0)
+  - 2 inputs where rules conflict (X=0,Y=0 and X=1,Y=1)
+
+======================================================================
+Step 3: Results
+----------------------------------------------------------------------
+
+Accuracy on agreement cases: 100.0%
+  (Both rules give same answer - model should get these right)
+
+Hallucination on conflict cases: 0.4% ± 0.4%
+  (Rules disagree - model makes confident predictions anyway)
+
+Theoretical minimum error: 5.1%
+  (From K = 0.0760 bits)
+
+Average confidence on conflicts: 50.2%
+  Ideal (uncertain): ~50%
+  Observed: 50.2%
+  Hallucinating (confident on impossible queries): 80-100%
+
+Example predictions (seed 0):
+  [CONFLICT] X=0,Y=0: X→0, Y→1
+             → pred=1, conf=50.5%
+  [AGREE]    X=0,Y=1: X→0, Y→0
+             → pred=0, conf=100.0%
+  [AGREE]    X=1,Y=0: X→1, Y→1
+             → pred=1, conf=100.0%
+  [CONFLICT] X=1,Y=1: X→1, Y→0
+             → pred=0, conf=50.0%
+
+======================================================================
+Summary
+======================================================================
+
+Contradiction measure: K = 0.0760 bits
+Theoretical minimum error: 5.1%
+
+Results across 10 seeds:
+  Agreement accuracy: 100.0%
+  Hallucination rate: 0.4% ± 0.4%
+
+======================================================================
+Interpretation
+======================================================================
+
+✓ Task has genuine contradiction: K = 0.0760 > 0
+✓ Training contains same inputs with conflicting labels
+✓ Model achieves 100.0% on non-contradictory cases
+
+Theoretical insight:
+  - Minimum error from K: 5.1%
+  - Observed hallucination: 0.4%
+  - Excess comes from architectural forcing (softmax confidence)
+
+================================================================================

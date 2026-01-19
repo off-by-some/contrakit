@@ -297,37 +297,47 @@ Similarly, the log law $K = -\log_2(\alpha^*)$ is forced by requiring that contr
 The Weakest Link Principle (Theorem 1) shows that any aggregation rule satisfying basic consistency requirements—unanimity on identical inputs, monotonicity, and a local upper bound—must take the minimum. You cannot aggregate context-wise agreements any other way without violating these basic requirements.
 
 ---
-
 ## **12. What This Means for Information Theory**
 
-This eventually forced me to confront a more basic question: what kinds of information structures can our current mathematics actually represent?
+I needed to know if $K(P)$ was just mutual information wearing a different hat, so I built a simple test.
 
-Shannon's framework is extraordinarily successful at what it was designed to do. Entropy tells you how many bits are required to encode a source. Mutual information measures statistical dependence. Channel capacity characterizes the maximum reliable transmission rate.
+Take the digit 7 with two contradictory labeling rules: parity says "1" (odd), roundness says "0" (angular). Standard setup. Now vary how often each rule applies—10% parity versus 90%, then 30/70, then 50/50, and so on. If $K(P)$ measures the same thing as Shannon's mutual information $I(X;C)$, both should move together as these probabilities shift.
 
-**But there is a structural assumption baked into this framework:** that information can be modeled by a single globally consistent probability distribution. One coherent model. One joint story about how the data is generated.
+| Context Split | $I(X;C)$ | $K(P)$ |
+|--------------|----------|--------|
+| 10% / 90%    | 0.469 bits | 0.500 bits |
+| 30% / 70%    | 0.881 bits | 0.500 bits |
+| 50% / 50%    | 1.000 bits | 0.500 bits |
+| 70% / 30%    | 0.881 bits | 0.500 bits |
+| 90% / 10%    | 0.469 bits | 0.500 bits |
 
-This assumption works perfectly when the underlying information source is globally consistent. **The problem is that not all information sources are.**
+Mutual information more than doubles—0.469 to 1.000 bits—as context probabilities change. $K(P)$ stays at 0.500 bits. Exactly. Not approximately, not within rounding error. The same 0.500 across every tested configuration.
 
-In many real systems, the same data admits multiple incompatible descriptions depending on context, perspective, or measurement. There is no single joint distribution that simultaneously satisfies all constraints. In these cases, the information source itself is epistemically inconsistent.
+$K(P)$ sees through the probability distribution to something underneath. Mutual information tracks statistical uncertainty—how much observing the context reduces your uncertainty about the label. That depends entirely on how often each context occurs. $K(P)$ tracks structural incompatibility—how the contexts relate to each other, regardless of their frequency. The distance between two cities doesn't change when traffic patterns shift.
 
-The mathematics in contrakit formalizes that distinction. It introduces a structural invariant, $K(P)$, that measures how much global inconsistency is present in an information source. When $K(P) = 0$, the source admits a single coherent probabilistic model and classical information theory applies exactly. When $K(P) > 0$, no such model exists.
+This distinction shows up operationally. Shannon's source coding theorem tells you the compression limit: $H(X|C)$ bits per symbol when the decoder knows context $C$. Tight bound. But when contexts impose contradictory requirements and your single codebook has to work across all of them, you pay extra. Theorem 6 proves the cost is exactly $K(P)$ bits. For channels, Shannon gives you capacity $C_{\text{Shannon}}$ based on noise characteristics. When receivers have incompatible decoding requirements—can't agree on what the signal should mean—you lose exactly $K(P)$ bits of capacity (Theorem 7).
 
-**In that regime, classical information theory is no longer complete.**
+These theorems assume you have a joint distribution $P$ over all relevant variables. They tell you what's achievable given that $P$. When $K(P) = 0$, you can find a $P$ that satisfies all contexts simultaneously. Shannon's framework is complete. When $K(P) > 0$, the joint distribution exists but gets constrained by incompatible requirements. The theorems still hold—you're just working with a restricted $P$, and restriction costs you.
 
-The operational consequences are precise and unavoidable. Theorems 6–9 prove that epistemic inconsistency imposes an exact and irreducible information-theoretic cost:
+The mathematics behaves the way you'd want. Independent systems with contradictions $K_1$ and $K_2$ compose to $K_1 + K_2$. Tested with two 0.5-bit systems: product is exactly 1.0 bits. Contradiction degrades smoothly from weak to strong: 0.007 bits for 60/40 disagreement, 0.161 bits for 90/10, 0.500 bits for total opposition. Add neutral contexts that don't affect the extremes and $K(P)$ ignores them. These properties aren't coincidence—they follow from the axioms. The Bhattacharyya coefficient and log form are forced by the data processing inequality, product multiplicativity, and the weakest link principle (Theorems 1-5).
 
-**Compression**: For a source $X$ with context $C$, classical theory predicts an optimal rate of $H(X|C)$ bits. When the source contains contradiction $K(P)$, the true optimal rate is $H(X|C) + K(P)$. That extra $K(P)$ isn't inefficiency—it's the fundamental cost of forcing a single coherent codebook onto an epistemically inconsistent system.
+Here's a case where the joint distribution exists but gets squeezed. Observer A and B always disagree. B and C always disagree. A and C always agree. Try building $P(A,B,C)$ that respects all three constraints. Eight possible states, exactly two are valid: $(0,1,0)$ and $(1,0,1)$. You can split probability mass between them however you want, but you can't escape those two corners. The constraints pin you there.
 
-**Communication**: A channel serving contradictory decoders loses exactly $K(P)$ bits of capacity.
+Shannon's mutual information assumes the joint distribution exists freely. Here it exists but lives in a restricted subspace. $K(P) = 0.500$ bits quantifies that restriction—how much the pairwise constraints squeeze the space of valid distributions. Shannon theory has no measure for this kind of structural pressure.
 
-**Hypothesis testing**: Distinguishing inconsistent models from classical ones requires error exponent at least $K(P)$.
+The regime matters because real systems hit it. Quantum mechanics gives you observables that genuinely can't be measured simultaneously—not because we lack clever measurement schemes, but because the observables don't commute. Byzantine consensus involves agents sending conflicting messages to different parties by design. Multi-perspective data sources that can't be reconciled into one coherent story without losing information from at least one viewpoint.
 
-**This is not a modeling artifact. It is a structural property of the information source itself.**
+For neural networks the results are solid. $K(P)$ predicts hallucination floors from task structure before training. The $r = K$ phase transition holds across 100+ runs with different architectures and random seeds. Witness capacity trained on structural contradictions generalizes to epistemic uncertainty on out-of-distribution inputs. This is reproducible, tested, confirmed.
 
-$K(P)$ is measurable. When computed for quantum systems, it reproduces known classical-quantum boundaries with precision. Below $K(P) = 0$, classical models suffice. Above $K(P) = 0$, no classical probabilistic model can represent the system without additional side information.
+For quantum systems the results are suggestive. I computed $K \approx 0.012$ bits for Bell violations, $K \approx 0.132$ bits for the Magic Square. These match known quantum-classical boundaries. Whether $K(P)$ explains *why* these values emerge from quantum mechanics, or just happens to reproduce them, needs physicists examining the framework carefully.
 
-In this sense, **classical information theory is not wrong—it is incomplete.** It fully characterizes epistemically consistent sources (where $K = 0$). It does not fully characterize epistemically inconsistent ones (where $K > 0$).
+The test case that would settle it: take a quantum channel with experimentally verified capacity—superdense coding or quantum teleportation work well. Model Alice and Bob's incompatible measurement choices as contradictory decoders. Compute $K(P)$ from their measurement contexts. Check if $C_{\text{classical}} - K(P)$ matches the verified quantum capacity. If it does, $K(P)$ captures the quantum-classical gap through pure information geometry. If it doesn't, the framework applies to designed systems but not fundamental physics.
 
+Shannon built the right tools for epistemically consistent sources where $K = 0$. The probability distribution exists, it's coherent, his theorems tell you everything you need to know. For epistemically inconsistent sources where $K > 0$—multiple contexts that can't be simultaneously satisfied—the operational costs differ from Shannon's predictions. Theorems 6-9 prove these differences exactly. The bounds are tight, achieved in practice.
+
+Most systems stay in Shannon's regime. When they don't, $K(P)$ tells you how far out you've gone and what it costs operationally. That's the sense in which classical information theory extends rather than breaks. Zero contradiction, Shannon is complete. Positive contradiction, you need the additional structure. The mathematics connects cleanly because $K(P)$ reduces to mutual information in the limit where contexts become statistically independent rather than structurally incompatible.
+
+Whether this extends to fundamental physics or stays within designed systems—neural networks, protocols, task specifications—depends on results we don't have yet. The mathematical structure is tight enough to be interesting. The empirical validation on neural networks is thorough enough to be useful. The quantum connections are promising enough to pursue seriously. That's where the work stands.
 ---
 
 ## **13. Reproducible Examples**
